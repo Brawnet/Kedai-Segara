@@ -1,10 +1,12 @@
 import { useState } from 'preact/hooks';
-import { ArrowSquareOut, Clock, Database, Key, Link } from '@phosphor-icons/react';
+import { ArrowSquareOut, Clock, Database, Key, Link, Moon, Sun } from '@phosphor-icons/react';
+import { useApp } from '../lib/app';
 import { Button, Card, Field, Input, PageTitle } from '../components/ui';
 import { useAdmin } from './shared';
 
 export function PengaturanPage() {
   const { d, A, setPin } = useAdmin();
+  const { theme, setTheme } = useApp();
   const [jam, setJam] = useState(d.jamTutup);
   const [p1, setP1] = useState('');
   const [p2, setP2] = useState('');
@@ -65,6 +67,40 @@ export function PengaturanPage() {
         </form>
       </Card>
 
+      <Card class="flex flex-col gap-4 p-4 md:p-5">
+        <div class="flex items-center gap-2 font-bold">
+          <Moon size={20} aria-hidden /> Tema tampilan
+        </div>
+        <p class="text-sm text-muted-fg">
+          Pilih tampilan aplikasi untuk tablet dapur dan dashboard admin.
+        </p>
+        <div class="grid grid-cols-2 gap-3 max-w-md">
+          <button
+            type="button"
+            onClick={() => setTheme('light')}
+            class={`flex items-center justify-center gap-2.5 rounded-card border p-3 text-sm font-bold transition-all duration-150 cursor-pointer ${
+              theme === 'light'
+                ? 'border-primary bg-primary-soft text-primary ring-2 ring-primary/20 shadow-xs'
+                : 'border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
+            }`}
+          >
+            <Sun size={20} weight={theme === 'light' ? 'bold' : 'regular'} aria-hidden />
+            Mode Terang
+          </button>
+          <button
+            type="button"
+            onClick={() => setTheme('dark')}
+            class={`flex items-center justify-center gap-2.5 rounded-card border p-3 text-sm font-bold transition-all duration-150 cursor-pointer ${
+              theme === 'dark'
+                ? 'border-primary bg-primary-soft text-primary ring-2 ring-primary/20 shadow-xs'
+                : 'border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
+            }`}
+          >
+            <Moon size={20} weight={theme === 'dark' ? 'bold' : 'regular'} aria-hidden />
+            Mode Gelap
+          </button>
+        </div>
+      </Card>
       <div class="grid gap-4 md:grid-cols-2">
         <Card class="flex flex-col gap-2 p-4 md:p-5">
           <div class="flex items-center gap-2 font-bold">

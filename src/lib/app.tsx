@@ -1,10 +1,11 @@
 import { createContext } from 'preact';
-import { useCallback, useContext, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { call, pesan } from './api';
 import type { Api } from './types';
 
 type Toast = { id: number; msg: string; bad?: boolean };
+export type Theme = 'light' | 'dark';
 
 interface AppCtx {
   busy: boolean;
@@ -14,15 +15,48 @@ interface AppCtx {
    * Error ditampilkan sebagai toast; hasilnya `undefined` jika gagal atau sedang sibuk.
    */
   act<K extends keyof Api>(fn: K, args: Parameters<Api[K]>, onErr?: (e: unknown) => void): Promise<ReturnType<Api[K]> | undefined>;
+  theme: Theme;
+  toggleTheme(): void;
+  setTheme(t: Theme): void;
 }
-
 const Ctx = createContext<AppCtx>(null as unknown as AppCtx);
 export const useApp = () => useContext(Ctx);
+
+function initTheme(): Theme {
+  try {
+    const saved = localStorage.getItem('segara_theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  } catch {}
+  return 'light';
+}
 
 export function AppProvider({ children }: { children: ComponentChildren }) {
   const [busy, setBusy] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [theme, setThemeState] = useState<Theme>(initTheme);
   const busyRef = useRef(false);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  const setTheme = useCallback((t: Theme) => {
+    setThemeState(t);
+    try {
+      localStorage.setItem('segara_theme', t);
+    } catch {}
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setThemeState((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('segara_theme', next);
+      } catch {}
+      return next;
+    });
+  }, []);
 
   const toast = useCallback((msg: string, bad?: boolean) => {
     const id = Date.now() + Math.random();
@@ -49,8 +83,7 @@ export function AppProvider({ children }: { children: ComponentChildren }) {
     [toast],
   );
 
-  const value = useMemo(() => ({ busy, toast, act }), [busy, toast, act]);
-
+  const value = useMemo(() => ({ busy, toast, act, theme, toggleTheme, setTheme }), [busy, toast, act, theme, toggleTheme, setTheme]);
   return (
     <Ctx.Provider value={value}>
       {busy && (

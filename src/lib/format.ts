@@ -1,8 +1,12 @@
 import type { BarangTablet } from './types';
 
-/** Format angka gaya Indonesia (koma desimal), maks 3 desimal — sama dengan nf() lama. */
-export const nf = (n: number | string) => (Math.round(Number(n) * 1000) / 1000).toLocaleString('id-ID');
-
+/** Format angka gaya Indonesia (koma desimal), maks 3 desimal. Mengembalikan '0' jika kosong/tidak valid. */
+export const nf = (n: number | string | null | undefined) => {
+  if (n === null || n === undefined || n === '') return '0';
+  const num = Number(n);
+  if (!Number.isFinite(num)) return '0';
+  return (Math.round(num * 1000) / 1000).toLocaleString('id-ID');
+};
 /** Tanggal lokal YYYY-MM-DD untuk input type=date. */
 export const ymd = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
@@ -15,8 +19,10 @@ export const parseNum = (v: string | number | undefined | null) => {
   return Number(String(v).replace(',', '.'));
 };
 
-export const r3 = (n: number) => Math.round(n * 1000) / 1000;
-
+export const r3 = (n: number) => {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 1000) / 1000;
+};
 export const katOf = (b: { kategori?: string }) => b.kategori || 'Lainnya';
 
 /** Urutan kategori: urutan dari pengaturan dulu, lalu sisanya sesuai kemunculan. */

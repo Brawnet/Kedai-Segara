@@ -12,16 +12,18 @@ import {
   Gear,
   HandGrabbing,
   Lock,
+  Moon,
   Package,
   Scales,
   SignOut,
   SquaresFour,
+  Sun,
   Users,
 } from '@phosphor-icons/react';
-import { call, pinSalah } from '../lib/api';
+import { call, pesan, pinSalah } from '../lib/api';
 import { useApp } from '../lib/app';
 import type { AdminData } from '../lib/types';
-import { Button, Dialog, Field, Input, Loading } from '../components/ui';
+import { Button, Dialog, Field, Input, Skeleton, SyncStatusBadge } from '../components/ui';
 import { Logo } from '../components/Logo';
 import { Ctx, type AdminCtx } from './shared';
 import { Dashboard } from './Dashboard';
@@ -64,29 +66,54 @@ const PAGES: Record<Tab, FunctionComponent> = {
 
 const KEY = 'sg_pin';
 
+// Web app Apps Script berjalan di iframe googleusercontent.com. Browser yang memblokir storage
+// pihak ketiga (mis. Safari/iPad) melempar SecurityError saat sessionStorage diakses.
+const sesi = {
+  get: () => {
+    try {
+      return sessionStorage.getItem(KEY) || '';
+    } catch {
+      return '';
+    }
+  },
+  set: (p: string) => {
+    try {
+      if (p) sessionStorage.setItem(KEY, p);
+      else sessionStorage.removeItem(KEY);
+    } catch {}
+  },
+};
+
 export function Admin({ onTablet }: { onTablet: () => void }) {
-  const { act, toast } = useApp();
-  const [pin, setPinState] = useState(() => sessionStorage.getItem(KEY) || '');
+  const { act, toast, theme, toggleTheme, busy } = useApp();
+  const [pin, setPinState] = useState(sesi.get);
   const [d, setD] = useState<AdminData | null>(null);
+  const [loadErr, setLoadErr] = useState('');
   const [tab, setTab] = useState<Tab>('dash');
   const [more, setMore] = useState(false);
 
   const setPin = (p: string) => {
     setPinState(p);
-    if (p) sessionStorage.setItem(KEY, p);
-    else sessionStorage.removeItem(KEY);
+    sesi.set(p);
   };
   const logout = () => {
     setPin('');
     setD(null);
+    setLoadErr('');
   };
   const onErr = (e: unknown) => pinSalah(e) && logout();
 
-  const reload = async () => {
-    const r = await act('adminData', [pin], onErr);
-    if (r) setD(r);
+  const reload = async (): Promise<void> => {
+    setLoadErr('');
+    const r = await act('adminData', [pin], (e) => {
+      onErr(e);
+      setLoadErr(pesan(e));
+    });
+    if (r) {
+      setD(r);
+      setLoadErr('');
+    }
   };
-
   useEffect(() => {
     if (pin && !d) reload();
   }, []);
@@ -97,8 +124,11 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
       const r = await act(fn, args, onErr);
       if (r === undefined) return undefined;
       toast(typeof ok === 'function' ? ok(r as never) : ok);
+      // Jika ganti PIN, muat ulang dengan PIN baru agar tidak 'PIN salah'.
+      const nextPin = fn === 'simpanPengaturan' && args[2] ? String(args[2]) : pin;
+      if (nextPin !== pin) setPin(nextPin);
       // Muat ulang tanpa mengunci tombol (sama seperti versi lama).
-      call('adminData', pin).then(setD, () => undefined);
+      call('adminData', nextPin).then(setD, () => undefined);
       return r;
     };
     return {
@@ -106,7 +136,7 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
       pin,
       setPin,
       logout,
-      reload,
+      reload: () => reload(),
       run,
       A: (fn, args, ok) => run(fn, [pin, ...args] as never, ok as never) as never,
     };
@@ -118,7 +148,41 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
     window.scrollTo(0, 0);
   };
 
-  if (!ctx) return pin ? <Loading label="Memuat data admin…" /> : <Login onTablet={onTablet} onOk={(p, r) => (setPin(p), setD(r))} />;
+  if (!ctx) {
+    if (pin) {
+      if (loadErr) {
+        return (
+          <div class="mx-auto max-w-md py-16 text-center">
+            <h1 class="text-2xl font-extrabold">Tidak bisa memuat data admin</h1>
+            <p class="mt-2 text-muted-fg">{loadErr}</p>
+            <div class="mt-6 flex justify-center gap-2">
+              <Button variant="primary" onClick={() => reload()}>
+                <ArrowClockwise size={20} aria-hidden /> Coba lagi
+              </Button>
+              <Button variant="secondary" onClick={logout}>
+                <SignOut size={20} aria-hidden /> Keluar
+              </Button>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div class="mx-auto max-w-6xl p-4 md:p-6 space-y-6 animate-rise">
+          <div class="flex items-center justify-between border-b border-line pb-4">
+            <Skeleton class="h-8 w-48" />
+            <Skeleton class="h-8 w-24" />
+          </div>
+          <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} class="h-24 w-full" />
+            ))}
+          </div>
+          <Skeleton class="h-64 w-full" />
+        </div>
+      );
+    }
+    return <Login onTablet={onTablet} onOk={(p, r) => (setPin(p), setD(r))} />;
+  }
 
   const Page = PAGES[tab];
   const cur = TABS.find((t) => t.k === tab)!;
@@ -142,6 +206,10 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
             </ul>
           </nav>
           <div class="flex flex-col gap-1 border-t border-line p-3">
+            <Button variant="ghost" onClick={toggleTheme} class="justify-start">
+              {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
+              {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+            </Button>
             <Button variant="ghost" onClick={onTablet} class="justify-start">
               <DeviceTablet size={20} aria-hidden /> Mode tablet
             </Button>
@@ -158,8 +226,17 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
               <Logo sub={cur.label} />
             </div>
             <p class="hidden text-sm font-semibold text-muted-fg lg:block">{cur.label}</p>
-            <div class="ml-auto flex items-center gap-1">
-              <Button variant="ghost" guard onClick={reload} aria-label="Muat ulang data">
+            <div class="ml-auto flex items-center gap-2">
+              <SyncStatusBadge busy={busy} />
+              <Button
+                variant="ghost"
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+                aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+              >
+                {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
+              </Button>
+              <Button variant="ghost" guard onClick={() => reload()} aria-label="Muat ulang data">
                 <ArrowClockwise size={20} aria-hidden />
                 <span class="hidden sm:inline">Muat ulang</span>
               </Button>
@@ -249,7 +326,7 @@ function BottomItem({ label, icon: I, active, onClick, expanded }: { label: stri
 }
 
 function Login({ onOk, onTablet }: { onOk: (pin: string, d: AdminData) => void; onTablet: () => void }) {
-  const { act } = useApp();
+  const { act, theme, toggleTheme } = useApp();
   const [p, setP] = useState('');
   const [err, setErr] = useState('');
   const masuk = async (e: Event) => {
@@ -295,9 +372,17 @@ function Login({ onOk, onTablet }: { onOk: (pin: string, d: AdminData) => void; 
             Masuk
           </Button>
         </form>
-        <div class="mt-4 text-center">
+        <div class="mt-4 flex items-center justify-center gap-2">
           <Button variant="ghost" onClick={onTablet}>
             <DeviceTablet size={20} aria-hidden /> Kembali ke mode tablet
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+            aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+          >
+            {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
           </Button>
         </div>
       </div>

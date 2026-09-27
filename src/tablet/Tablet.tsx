@@ -7,22 +7,27 @@ import {
   CaretRight,
   CheckCircle,
   ClipboardText,
+  Clock,
   DownloadSimple,
   House,
+  Info,
   MagnifyingGlass,
+  Moon,
   ShieldCheck,
   SignOut,
+  Storefront,
+  Sun,
   UploadSimple,
   X,
+  LockKey,
 } from '@phosphor-icons/react';
 import type { ComponentChildren } from 'preact';
 import { call, pesan } from '../lib/api';
 import { useApp } from '../lib/app';
 import { cocok, dekatTutup, inisial, katOf, nf, parseNum, r3, urutKat } from '../lib/format';
 import type { BarangTablet, Karyawan, RekapRow, TabletData } from '../lib/types';
-import { Banner, Button, Empty, Input, Loading, PageTitle, Tag } from '../components/ui';
+import { Banner, Button, Dialog, Empty, Input, PageTitle, Skeleton, SyncStatusBadge, Tag, vibrate } from '../components/ui';
 import { Logo } from '../components/Logo';
-
 type Aksi = 'ambil' | 'masuk';
 type Step =
   | { s: 'home' }
@@ -47,13 +52,22 @@ const IDLE_MS = 120_000;
 const UNDO_MS = 60_000;
 
 export function Tablet({ onAdmin }: { onAdmin: () => void }) {
-  const { act, busy, toast } = useApp();
+  const { act, busy, toast, theme, toggleTheme } = useApp();
   const [d, setD] = useState<TabletData | null>(null);
   const [err, setErr] = useState('');
   const [step, setStep] = useState<Step>({ s: 'home' });
   const [last, setLast] = useState<Last | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [pinPrompt, setPinPrompt] = useState<{ k: Karyawan; onOk: () => void } | null>(null);
   const lastAct = useRef(Date.now());
+
+  const pilihKaryawan = (k: Karyawan, onOk: () => void) => {
+    if (k.punyaPin) {
+      setPinPrompt({ k, onOk });
+    } else {
+      onOk();
+    }
+  };
 
   const go = (s: Step) => {
     setStep(s);
@@ -130,8 +144,24 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
   };
 
   let body: ComponentChildren;
-  if (!d) body = err ? <Gagal msg={err} onRetry={load} /> : <Loading />;
-  else if (step.s === 'home') body = <Home d={d} undo={undo} onPick={(k) => go({ s: 'menu', k })} onRekap={() => go({ s: 'rekapNama' })} />;
+  if (!d)
+    body = err ? (
+      <Gagal msg={err} onRetry={load} />
+    ) : (
+      <div class="flex flex-col gap-6 animate-rise">
+        <div class="flex flex-col gap-2">
+          <Skeleton class="h-8 w-44" />
+          <Skeleton class="h-5 w-72" />
+        </div>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} class="h-28 w-full rounded-card" />
+          ))}
+        </div>
+      </div>
+    );
+  else if (step.s === 'home')
+    body = <Home d={d} undo={undo} now={now} onPick={(k) => pilihKaryawan(k, () => go({ s: 'menu', k }))} onRekap={() => go({ s: 'rekapNama' })} />;
   else if (step.s === 'menu')
     body = (
       <Menu
@@ -178,7 +208,7 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
       <section class="flex flex-col gap-6">
         <BackBar onBack={() => go({ s: 'home' })} label="Kembali" />
         <PageTitle kicker="Rekap sisa Stock Luar" title="Siapa yang merekap?" />
-        <GridKaryawan list={d.karyawan} onPick={mulaiRekap} />
+        <GridKaryawan list={d.karyawan} onPick={(k) => pilihKaryawan(k, () => mulaiRekap(k))} sub="Ketuk untuk input rekap" />
       </section>
     );
   else if (step.s === 'rekap')
@@ -202,6 +232,7 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
             <Logo sub={step.s !== 'home' && 'k' in step ? step.k.nama : 'Tablet dapur'} />
           </button>
           <div class="ml-auto flex shrink-0 items-center gap-2">
+            <SyncStatusBadge busy={busy} />
             {step.s !== 'home' && (
               <span class="hidden sm:block">
                 <Button variant="ghost" onClick={selesai}>
@@ -209,6 +240,14 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
                 </Button>
               </span>
             )}
+            <Button
+              variant="ghost"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+              aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+            >
+              {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
+            </Button>
             <Button variant="secondary" onClick={onAdmin} aria-label="Admin">
               <ShieldCheck size={20} aria-hidden /> <span class="hidden sm:inline">Admin</span>
             </Button>
@@ -218,6 +257,7 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
       <main class="animate-rise mx-auto max-w-6xl px-4 pb-24 pt-6 md:px-6 md:pt-8" key={step.s}>
         {body}
       </main>
+      <PinPromptDialog prompt={pinPrompt} onClose={() => setPinPrompt(null)} />
     </div>
   );
 }
@@ -250,42 +290,128 @@ type Undo = { last: Last; left: number; onUndo: () => void } | null;
 
 function UndoBar({ undo }: { undo: NonNullable<Undo> }) {
   const { last, left, onUndo } = undo;
+  const handleUndo = () => {
+    vibrate(15);
+    onUndo();
+  };
+  const progressPct = Math.min(100, Math.max(0, (left / (UNDO_MS / 1000)) * 100));
   return (
-    <div class="flex flex-wrap items-center gap-3 rounded-card border border-line bg-card p-3 shadow-sm sm:p-4">
-      <CheckCircle size={24} weight="fill" class="shrink-0 text-success" aria-hidden />
-      <p class="min-w-0 flex-1">
-        <strong>{last.karyawan}</strong> ambil{' '}
-        <span class="num font-bold">
-          {nf(last.jumlah)} {last.satuan}
-        </span>{' '}
-        {last.barang}
-      </p>
-      <Button variant="danger-ghost" guard onClick={onUndo} class="border-danger/30">
-        <ArrowCounterClockwise size={20} aria-hidden />
-        Batalkan <span class="num">({left} dtk)</span>
-      </Button>
+    <div class="relative overflow-hidden rounded-card border-2 border-line bg-card p-3 shadow-md sm:p-4 animate-rise">
+      <div class="flex flex-wrap items-center gap-3">
+        <CheckCircle size={24} weight="fill" class="shrink-0 text-success" aria-hidden />
+        <p class="min-w-0 flex-1 text-[15px] sm:text-base">
+          <strong>{last.karyawan}</strong> ambil{' '}
+          <span class="num font-bold text-primary">
+            {nf(last.jumlah)} {last.satuan}
+          </span>{' '}
+          {last.barang}
+        </p>
+        <Button variant="danger-ghost" guard onClick={handleUndo} class="border-danger/30 text-danger hover:bg-danger-soft">
+          <ArrowCounterClockwise size={20} aria-hidden />
+          Batalkan <span class="num font-bold">({left}s)</span>
+        </Button>
+      </div>
+      <div class="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          class="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
+          style={{ width: `${progressPct}%` }}
+          aria-hidden
+        />
+      </div>
     </div>
   );
 }
+const AVATAR_TONES = [
+  'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30',
+  'bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-500/30',
+  'bg-orange-500/15 text-orange-900 dark:text-orange-300 border-orange-500/30',
+  'bg-lime-500/15 text-lime-900 dark:text-lime-300 border-lime-500/30',
+  'bg-sky-500/15 text-sky-800 dark:text-sky-300 border-sky-500/30',
+  'bg-stone-500/15 text-stone-800 dark:text-stone-300 border-stone-500/30',
+];
 
-function Avatar({ nama }: { nama: string }) {
+function getAvatarTone(nama: string) {
+  let hash = 0;
+  for (let i = 0; i < nama.length; i++) hash = (hash << 5) - hash + nama.charCodeAt(i);
+  return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
+}
+
+function Avatar({ nama, class: c = '' }: { nama: string; class?: string }) {
+  const tone = getAvatarTone(nama);
   return (
-    <span class="grid size-14 shrink-0 place-items-center rounded-full bg-primary-soft text-lg font-extrabold text-primary" aria-hidden>
+    <span
+      class={`grid size-14 shrink-0 place-items-center rounded-full border text-lg font-extrabold tracking-tight ${tone} ${c}`}
+      aria-hidden
+    >
       {inisial(nama)}
     </span>
   );
 }
 
-function GridKaryawan({ list, onPick }: { list: Karyawan[]; onPick: (k: Karyawan) => void }) {
+function StaffTile({
+  k,
+  onClick,
+  disabled,
+  sub = 'Ketuk untuk mulai',
+}: {
+  k: Karyawan;
+  onClick: () => void;
+  disabled?: boolean;
+  sub?: string;
+}) {
+  const tone = getAvatarTone(k.nama);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      class="group relative flex min-h-[84px] w-full items-center gap-4 rounded-card border border-line bg-card p-4 text-left shadow-sm transition-all duration-150 hover:border-primary hover:bg-primary-soft/30 hover:shadow-md active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60 cursor-pointer"
+    >
+      <span
+        class={`grid size-14 shrink-0 place-items-center rounded-full border text-lg font-extrabold tracking-tight transition-transform duration-150 group-hover:scale-105 ${tone}`}
+        aria-hidden
+      >
+        {inisial(k.nama)}
+      </span>
+      <div class="min-w-0 flex-1">
+        <span class="block truncate text-lg font-bold text-fg transition-colors group-hover:text-primary">
+          {k.nama}
+        </span>
+        <span class="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-muted-fg">
+          <span class="size-2 rounded-full bg-success" />
+          <span>Staf Dapur • {sub}</span>
+          {k.punyaPin && (
+            <span class="inline-flex items-center gap-1 rounded bg-primary-soft px-1.5 py-0.5 text-[10px] font-bold text-primary">
+              <LockKey size={11} weight="bold" aria-hidden /> PIN
+            </span>
+          )}
+        </span>
+      </div>
+      <span
+        class="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-muted-fg transition-all duration-150 group-hover:bg-primary group-hover:text-white"
+        aria-hidden
+      >
+        <CaretRight size={20} weight="bold" />
+      </span>
+    </button>
+  );
+}
+
+function GridKaryawan({
+  list,
+  onPick,
+  sub,
+}: {
+  list: Karyawan[];
+  onPick: (k: Karyawan) => void;
+  sub?: string;
+}) {
+  const { busy } = useApp();
   if (!list.length) return <Empty>Belum ada karyawan. Tambahkan lewat menu Admin.</Empty>;
   return (
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
       {list.map((k) => (
-        <Tile key={k.id} onClick={() => onPick(k)}>
-          <Avatar nama={k.nama} />
-          <span class="min-w-0 flex-1 truncate text-lg font-bold">{k.nama}</span>
-          <CaretRight size={22} class="shrink-0 text-muted-fg" aria-hidden />
-        </Tile>
+        <StaffTile key={k.id} k={k} onClick={() => onPick(k)} disabled={busy} sub={sub} />
       ))}
     </div>
   );
@@ -298,7 +424,7 @@ function Tile({ onClick, children, class: c = '' }: { onClick: () => void; child
       type="button"
       onClick={onClick}
       disabled={busy}
-      class={`flex min-h-20 w-full items-center gap-4 rounded-card border border-line bg-card p-4 text-left shadow-sm transition-colors duration-150 hover:border-primary hover:bg-primary-soft active:bg-primary-soft disabled:opacity-60 ${c}`}
+      class={`flex min-h-20 w-full items-center gap-4 rounded-card border border-line bg-card p-4 text-left shadow-sm transition-colors duration-150 hover:border-primary hover:bg-primary-soft active:bg-primary-soft disabled:opacity-60 cursor-pointer ${c}`}
     >
       {children}
     </button>
@@ -307,36 +433,222 @@ function Tile({ onClick, children, class: c = '' }: { onClick: () => void; child
 
 /* ================= Beranda ================= */
 
-function Home({ d, undo, onPick, onRekap }: { d: TabletData; undo: Undo; onPick: (k: Karyawan) => void; onRekap: () => void }) {
+function Home({
+  d,
+  undo,
+  onPick,
+  onRekap,
+  now,
+}: {
+  d: TabletData;
+  undo: Undo;
+  onPick: (k: Karyawan) => void;
+  onRekap: () => void;
+  now: number;
+}) {
   const st = d.status;
+  const isDekatTutup = dekatTutup(d.jamTutup);
+
+  const dateObj = new Date(now);
+  const jam = dateObj.getHours();
+
+  let salam = 'Selamat datang';
+  if (jam >= 4 && jam < 11) salam = 'Selamat pagi';
+  else if (jam >= 11 && jam < 15) salam = 'Selamat siang';
+  else if (jam >= 15 && jam < 18) salam = 'Selamat sore';
+  else salam = 'Selamat malam';
+
+  const tglStr = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(dateObj);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const waktuStr = `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+
   return (
     <section class="flex flex-col gap-6">
       {st.lewatHari ? (
         <Banner
           tone="danger"
           action={
-            <Button variant="danger" onClick={onRekap}>
+            <Button variant="danger" size="md" onClick={onRekap}>
+              <ClipboardText size={18} weight="bold" aria-hidden />
               Rekap sekarang
             </Button>
           }
         >
-          Ada pengambilan dari hari sebelumnya yang belum direkap.
+          Ada pengambilan dari hari sebelumnya yang belum direkap. Harap selesaikan rekap sisa dapur.
         </Banner>
-      ) : st.belumRekap > 0 && dekatTutup(d.jamTutup) ? (
+      ) : st.belumRekap > 0 && isDekatTutup ? (
         <Banner
           tone="warning"
           action={
-            <Button variant="primary" onClick={onRekap}>
-              Rekap
+            <Button variant="primary" size="md" onClick={onRekap}>
+              <ClipboardText size={18} weight="bold" aria-hidden />
+              Rekap sekarang
             </Button>
           }
         >
-          Waktunya rekap sisa Stock Luar (tutup {d.jamTutup}).
+          Waktunya rekap sisa Stock Luar dapur (jam tutup {d.jamTutup}).
         </Banner>
       ) : null}
+
       {undo && <UndoBar undo={undo} />}
-      <PageTitle kicker="Mulai" title="Siapa yang pakai tablet?" sub="Ketuk nama Anda untuk ambil, masukkan, atau rekap barang." />
-      <GridKaryawan list={d.karyawan} onPick={onPick} />
+
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
+        {/* Kolom Kiri: Pemilihan Staf */}
+        <div class="flex flex-col gap-4 lg:col-span-7 xl:col-span-8">
+          <div class="rounded-card border border-line bg-card p-5 sm:p-6 shadow-sm">
+            <div class="border-b border-line pb-4">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-[12px] font-bold uppercase tracking-wider text-primary">KEDAI SEGARA • TABLET DAPUR</p>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-bold text-success">
+                  <span class="size-1.5 rounded-full bg-success animate-pulse" aria-hidden />
+                  {d.karyawan.length} Staf Aktif
+                </span>
+              </div>
+              <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
+                {`${salam}, siapa yang pakai tablet?`}
+              </h1>
+              <p class="mt-2 text-sm text-muted-fg">
+                Sentuh nama Anda untuk mulai mencatat pengambilan bahan dari gudang, barang baru datang, atau rekap harian dapur.
+              </p>
+            </div>
+
+            <div class="mt-4">
+              <GridKaryawan list={d.karyawan} onPick={onPick} />
+            </div>
+          </div>
+
+          {/* Tips Info Bar */}
+          <div class="flex items-start gap-3 rounded-card border border-line bg-muted/50 p-3.5 text-sm text-muted-fg">
+            <Info size={20} class="mt-0.5 shrink-0 text-primary" aria-hidden />
+            <div class="min-w-0 flex-1 leading-relaxed">
+              <span class="font-semibold text-fg">Salah catat barang?</span> Setiap transaksi pengambilan dapat dibatalkan langsung dalam waktu 60 detik melalui tombol batalkan yang muncul di layar.
+            </div>
+          </div>
+        </div>
+
+        {/* Kolom Kanan: Status Operasional & Panduan */}
+        <aside class="flex flex-col gap-4 lg:col-span-5 xl:col-span-4">
+          {/* Card Status Operasional */}
+          <div class="rounded-card border border-line bg-card p-4.5 sm:p-5 shadow-sm">
+            <div class="flex items-center justify-between border-b border-line pb-3">
+              <div class="flex items-center gap-2">
+                <span class="grid size-8 place-items-center rounded-lg bg-primary-soft text-primary">
+                  <Clock size={19} weight="bold" aria-hidden />
+                </span>
+                <span class="font-bold text-fg">Status Operasional</span>
+              </div>
+              <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-fg">
+                Tutup {d.jamTutup}
+              </span>
+            </div>
+
+            {/* Jam & Tanggal Digital */}
+            <div class="mt-3.5 rounded-xl bg-muted/50 p-3.5 border border-line/60">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-muted-fg">{tglStr}</div>
+              <div class="num mt-0.5 text-2xl sm:text-3xl font-extrabold tracking-tight text-fg font-mono">
+                {waktuStr} <span class="text-xs font-bold text-muted-fg">WIB</span>
+              </div>
+            </div>
+
+            {/* Quick Metrics */}
+            <div class="mt-3.5 grid grid-cols-2 gap-2.5">
+              <div class="rounded-xl border border-line p-2.5 sm:p-3">
+                <span class="block text-[11px] font-semibold text-muted-fg">Rekap Dapur</span>
+                <div class="mt-1 flex items-center gap-1.5">
+                  {st.lewatHari ? (
+                    <Tag tone="danger">Tertunda</Tag>
+                  ) : st.belumRekap > 0 ? (
+                    <Tag tone="warning">{st.belumRekap} Ambil</Tag>
+                  ) : (
+                    <Tag tone="success">Terekap</Tag>
+                  )}
+                </div>
+                <span class="mt-1 block text-[11px] text-muted-fg">
+                  {st.lewatHari ? 'Perlu rekap kemarin' : st.belumRekap > 0 ? 'Menunggu closing' : 'Semua aman'}
+                </span>
+              </div>
+
+              <div class="rounded-xl border border-line p-2.5 sm:p-3">
+                <span class="block text-[11px] font-semibold text-muted-fg">Bahan di Dapur</span>
+                <div class="num mt-1 text-lg sm:text-xl font-extrabold text-fg">
+                  {st.barangLuar} <span class="text-xs font-normal text-muted-fg">jenis</span>
+                </div>
+                <span class="mt-1 block text-[11px] text-muted-fg">Stock luar aktif</span>
+              </div>
+            </div>
+
+            {/* Tombol Pintas Rekap Dapur */}
+            <div class="mt-3.5 pt-3 border-t border-line">
+              <Button
+                variant={st.lewatHari ? 'danger' : 'secondary'}
+                size="md"
+                class="w-full justify-center"
+                onClick={onRekap}
+              >
+                <ClipboardText size={18} weight="bold" aria-hidden />
+                {st.lewatHari ? 'Rekap Kemarin Sekarang' : 'Rekap Sisa Dapur'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Card Alur Kerja Tablet */}
+          <div class="rounded-card border border-line bg-card p-4.5 sm:p-5 shadow-sm">
+            <div class="flex items-center gap-2 border-b border-line pb-3">
+              <span class="grid size-8 place-items-center rounded-lg bg-muted text-fg">
+                <Storefront size={19} weight="bold" aria-hidden />
+              </span>
+              <div>
+                <h3 class="text-sm font-bold text-fg">Alur Kerja Tablet</h3>
+                <p class="text-[11px] text-muted-fg">3 tindakan operasional dapur</p>
+              </div>
+            </div>
+
+            <ol class="mt-3 space-y-2.5">
+              <li class="flex items-start gap-2.5">
+                <span class="grid size-7 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-bold text-primary">
+                  <UploadSimple size={15} weight="bold" aria-hidden />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <strong class="block text-xs sm:text-sm font-bold text-fg">1. Ambil dari Gudang</strong>
+                  <p class="text-[11px] sm:text-xs text-muted-fg leading-snug">
+                    Catat saat mengambil stok dari gudang untuk stok meja dapur.
+                  </p>
+                </div>
+              </li>
+
+              <li class="flex items-start gap-2.5">
+                <span class="grid size-7 shrink-0 place-items-center rounded-full bg-success-soft text-xs font-bold text-success">
+                  <DownloadSimple size={15} weight="bold" aria-hidden />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <strong class="block text-xs sm:text-sm font-bold text-fg">2. Masukkan ke Gudang</strong>
+                  <p class="text-[11px] sm:text-xs text-muted-fg leading-snug">
+                    Catat kiriman bahan baru yang datang langsung dari supplier.
+                  </p>
+                </div>
+              </li>
+
+              <li class="flex items-start gap-2.5">
+                <span class="grid size-7 shrink-0 place-items-center rounded-full bg-warning-soft text-xs font-bold text-warning">
+                  <ClipboardText size={15} weight="bold" aria-hidden />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <strong class="block text-xs sm:text-sm font-bold text-fg">3. Rekap Sisa Closing</strong>
+                  <p class="text-[11px] sm:text-xs text-muted-fg leading-snug">
+                    Hitung fisik sisa bahan di meja kerja sebelum outlet tutup.
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </aside>
+      </div>
     </section>
   );
 }
@@ -436,6 +748,50 @@ function PilihBarang({
         </label>
       </div>
 
+      {!showKat && (
+        <div class="flex flex-col gap-2 -mt-2">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 text-sm no-scrollbar">
+            <button
+              type="button"
+              onClick={() => onChange({ kat: null })}
+              class={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors duration-150 cursor-pointer ${
+                !st.kat
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
+              }`}
+            >
+              Semua ({d.barang.length})
+            </button>
+            {kats.map((c) => {
+              const count = d.barang.filter((b) => katOf(b) === c).length;
+              const active = st.kat === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => onChange({ kat: c })}
+                  class={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors duration-150 cursor-pointer ${
+                    active
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
+                  }`}
+                >
+                  <span>{c}</span>
+                  <span class={`rounded-full px-1.5 py-0.2 text-[11px] font-bold ${active ? 'bg-white/20 text-white' : 'bg-muted text-muted-fg'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {q && (
+            <p class="text-xs font-semibold text-muted-fg px-1" aria-live="polite">
+              Ditemukan {list.length} barang untuk “{q}”
+            </p>
+          )}
+        </div>
+      )}
+
       {showKat ? (
         kats.length ? (
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -489,7 +845,7 @@ function Jumlah({
   onBack: () => void;
   onDone: (j: number, tx?: { id: string }) => void;
 }) {
-  const { act } = useApp();
+  const { act, busy } = useApp();
   const [val, setVal] = useState('');
   const [sup, setSup] = useState('');
   const masuk = st.aksi === 'masuk';
@@ -497,14 +853,22 @@ function Jumlah({
   const j = parseNum(val || '0');
   const ok = j > 0;
 
-  const press = (k: (typeof KEYS)[number]) =>
+  const press = (k: (typeof KEYS)[number]) => {
+    vibrate(10);
     setVal((v) => {
       if (k === 'del') return v.slice(0, -1);
       if (k === ',') return v.includes(',') ? v : (v || '0') + ',';
       if (v === '0') v = '';
       return v.length < 8 ? v + k : v;
     });
+  };
 
+  const tambahCepat = (delta: number) => {
+    vibrate(10);
+    const curr = parseNum(val || '0');
+    const next = Math.max(0, r3(curr + delta));
+    setVal(next === 0 ? '' : String(next).replace('.', ','));
+  };
   // Keyboard fisik juga bisa dipakai (kecuali saat mengetik supplier).
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -512,16 +876,16 @@ function Jumlah({
       if (/^[0-9]$/.test(e.key)) press(e.key as (typeof KEYS)[number]);
       else if (e.key === ',' || e.key === '.') press(',');
       else if (e.key === 'Backspace') press('del');
-      else if (e.key === 'Enter' && ok) kirim();
+      else if (e.key === 'Enter' && ok && !busy) kirim();
       else return;
       e.preventDefault();
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  });
+  }, [ok, busy, j, sup, masuk, st, b]);
 
   const kirim = async () => {
-    if (!ok) return;
+    if (!ok || busy) return;
     const n = r3(j);
     if (masuk) {
       if (await act('masukKaryawan', [st.k.id, b.id, n, sup.trim()])) onDone(n);
@@ -550,6 +914,30 @@ function Jumlah({
               <span class="text-xl font-bold text-muted-fg">{b.satuan}</span>
             </p>
           </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-semibold text-muted-fg">Tambah cepat:</span>
+            {[1, 2, 5, 10, 20].map((step) => (
+              <button
+                key={step}
+                type="button"
+                onClick={() => tambahCepat(step)}
+                class="min-h-10 min-w-12 rounded-ctl border border-line bg-card px-2.5 py-1 text-sm font-bold text-fg hover:border-primary hover:bg-primary-soft active:bg-primary-soft transition-colors select-none cursor-pointer"
+              >
+                +{step}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                vibrate(10);
+                setVal('');
+              }}
+              disabled={!val}
+              class="min-h-10 rounded-ctl border border-line bg-card px-3 py-1 text-xs font-bold text-muted-fg hover:text-danger hover:border-danger hover:bg-danger-soft transition-colors select-none disabled:opacity-40 cursor-pointer"
+            >
+              Reset
+            </button>
+          </div>
           {masuk && (
             <label class="flex flex-col gap-1.5">
               <span class="text-sm font-semibold">Dari supplier (opsional)</span>
@@ -572,7 +960,7 @@ function Jumlah({
               </button>
             ))}
           </div>
-          <Button variant={masuk ? 'success' : 'primary'} size="lg" guard disabled={!ok} onClick={kirim} class="min-h-16 flex-col gap-0 text-lg">
+          <Button variant={masuk ? 'success' : 'primary'} size="lg" guard disabled={!ok || busy} onClick={kirim} class="min-h-16 flex-col gap-0 text-lg">
             <span>
               {masuk ? 'Masukkan' : 'Ambil'} {ok && <span class="num">{nf(j)} {b.satuan}</span>}
             </span>
@@ -799,5 +1187,145 @@ function RekapOk({ st, onHome }: { st: Extract<Step, { s: 'rekapOk' }>; onHome: 
         </Button>
       </div>
     </section>
+  );
+}
+
+/* ================= Dialog PIN Karyawan ================= */
+
+function PinPromptDialog({
+  prompt,
+  onClose,
+}: {
+  prompt: { k: Karyawan; onOk: () => void } | null;
+  onClose: () => void;
+}) {
+  const { act } = useApp();
+  const [pin, setPin] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setPin('');
+    setErr('');
+    setBusy(false);
+  }, [prompt]);
+
+  if (!prompt) return null;
+  const k = prompt.k;
+
+  const verifikasi = async (val: string) => {
+    if (!val || busy) return;
+    setBusy(true);
+    setErr('');
+    try {
+      const ok = await act('verifikasiPinKaryawan', [k.id, val]);
+      if (ok) {
+        const onOk = prompt.onOk;
+        onClose();
+        onOk();
+      } else {
+        vibrate([40, 60, 40]);
+        setErr('PIN salah, coba lagi');
+        setPin('');
+      }
+    } catch (e: unknown) {
+      vibrate([40, 60, 40]);
+      setErr(pesan(e) || 'PIN salah');
+      setPin('');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const tekan = (key: string) => {
+    if (busy) return;
+    vibrate(10);
+    if (key === 'del') {
+      setPin((p) => p.slice(0, -1));
+      if (err) setErr('');
+    } else if (key === 'c') {
+      setPin('');
+      if (err) setErr('');
+    } else if (/^\d$/.test(key)) {
+      if (pin.length < 6) {
+        const next = pin + key;
+        setPin(next);
+        if (err) setErr('');
+      }
+    }
+  };
+
+  return (
+    <Dialog
+      open={!!prompt}
+      onClose={onClose}
+      title="Verifikasi PIN Staf"
+      footer={
+        <>
+          <Button onClick={onClose} disabled={busy}>
+            Batal
+          </Button>
+          <Button
+            variant="primary"
+            guard
+            loading={busy}
+            disabled={pin.length < 4 || busy}
+            onClick={() => verifikasi(pin)}
+          >
+            Masuk
+          </Button>
+        </>
+      }
+    >
+      <div class="flex flex-col items-center gap-4 text-center">
+        <div class="flex items-center gap-3 rounded-card border border-line bg-muted px-4 py-2.5 w-full">
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary">
+            {inisial(k.nama)}
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <div class="font-bold text-fg truncate">{k.nama}</div>
+            <div class="text-xs text-muted-fg">Masukkan 4–6 angka PIN tablet</div>
+          </div>
+          <LockKey size={20} class="text-primary shrink-0" aria-hidden />
+        </div>
+
+        {/* Display PIN Dots */}
+        <div class="flex items-center justify-center gap-2.5 py-1">
+          {[0, 1, 2, 3, 4, 5].map((idx) => {
+            const filled = idx < pin.length;
+            return (
+              <span
+                key={idx}
+                class={`size-3.5 rounded-full border transition-all duration-150 ${
+                  filled ? 'border-primary bg-primary scale-110' : 'border-line-strong bg-muted'
+                }`}
+              />
+            );
+          })}
+        </div>
+
+        {err && <p class="text-sm font-semibold text-danger animate-pulse">{err}</p>}
+
+        {/* Numpad */}
+        <div class="grid grid-cols-3 gap-2 w-full max-w-[280px]" role="group" aria-label="Keypad PIN">
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'c', '0', 'del'].map((key) => {
+            const isDel = key === 'del';
+            const isC = key === 'c';
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => tekan(key)}
+                disabled={busy}
+                class="flex min-h-12 items-center justify-center rounded-ctl border border-line bg-card text-lg font-bold text-fg shadow-sm transition-colors hover:border-primary hover:bg-primary-soft active:bg-primary-soft disabled:opacity-50 cursor-pointer"
+                aria-label={isDel ? 'Hapus satu angka' : isC ? 'Hapus semua' : `Angka ${key}`}
+              >
+                {isDel ? <Backspace size={20} aria-hidden /> : isC ? 'C' : key}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </Dialog>
   );
 }

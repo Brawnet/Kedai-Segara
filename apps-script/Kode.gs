@@ -5,7 +5,7 @@
  */
 var SHEETS = {
   Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
-  Karyawan: ['id', 'nama', 'aktif'],
+  Karyawan: ['id', 'nama', 'aktif', 'pin'],
   Transaksi: ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
   Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
   RekapBaris: ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan'],
@@ -14,7 +14,11 @@ var SHEETS = {
 };
 var TZ = Session.getScriptTimeZone();
 var SS_ = null;
-var SKEMA_V = '2'; // naikkan jika kolom di SHEETS berubah
+// Spreadsheet database Kedai Segara. Dipakai jika script dibuat terpisah (standalone,
+// dari script.google.com) atau Script Property SS_ID belum diisi.
+// Ganti ID ini jika memakai spreadsheet lain (ambil dari URL: /spreadsheets/d/<ID>/edit).
+var DEFAULT_SS_ID = '';
+var SKEMA_V = '3'; // naikkan jika kolom di SHEETS berubah
 
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
@@ -23,18 +27,20 @@ function doGet(e) {
   var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
   var html = HtmlService.createHtmlOutputFromFile('index').getContent().replace('__SEGARA_MODE__', mode);
   return HtmlService.createHtmlOutput(html)
-    .setTitle('Stok Gudang')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setTitle('Stok Segara')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 /* ---------- Setup (jalankan sekali dari editor) ---------- */
 function setup() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) throw new Error('Buka Apps Script dari Google Sheet (Ekstensi → Apps Script), lalu jalankan setup.');
+  // Script yang dibuat dari Sheet (Ekstensi → Apps Script) memakai sheet itu;
+  // script standalone memakai DEFAULT_SS_ID.
+  var ss = SpreadsheetApp.getActiveSpreadsheet() || (DEFAULT_SS_ID ? SpreadsheetApp.openById(DEFAULT_SS_ID) : null);
+  if (!ss) throw new Error('Isi DEFAULT_SS_ID di Kode.gs, atau buka Apps Script dari Google Sheet (Ekstensi → Apps Script).');
   var p = PropertiesService.getScriptProperties();
   p.setProperty('SS_ID', ss.getId());
-  if (!p.getProperty('ADMIN_PIN')) p.setProperty('ADMIN_PIN', '12345');
+  if (!p.getProperty('ADMIN_PIN')) p.setProperty('ADMIN_PIN', hashPin_('12345', adminSalt_()));
   SS_ = ss;
   Object.keys(SHEETS).forEach(function (n) {
     var s = ss.getSheetByName(n) || ss.insertSheet(n);
@@ -51,7 +57,7 @@ function setup() {
   migrasi_(ss);
   if (getSetting_('jam_tutup') === '') setSetting_('jam_tutup', '21:00');
   if (!rows_('Karyawan').length) ['Budi', 'Sari', 'Andi'].forEach(function (n) {
-    append_('Karyawan', { id: uid_(), nama: n, aktif: true });
+    append_('Karyawan', { id: uid_(), nama: n, aktif: true, pin: '' });
   });
   if (!rows_('Barang').length) [
     ['Minyak goreng', 'liter', 'Bahan', 20, 'LUAR', 5],
@@ -67,7 +73,7 @@ function setup() {
 /* ---------- Helpers ---------- */
 function ss_() {
   if (SS_) return SS_;
-  var id = PropertiesService.getScriptProperties().getProperty('SS_ID');
+  var id = PropertiesService.getScriptProperties().getProperty('SS_ID') || DEFAULT_SS_ID;
   if (!id) throw new Error('Sistem belum di-setup. Jalankan fungsi setup di editor Apps Script.');
   SS_ = SpreadsheetApp.openById(id);
   if (PropertiesService.getScriptProperties().getProperty('SKEMA') !== SKEMA_V) migrasi_(SS_);
@@ -83,15 +89,30 @@ function rows_(n) {
     return o;
   }).filter(function (o) { return String(o[h[0]]) !== ''; });
 }
-function append_(n, o) { sheet_(n).appendRow(SHEETS[n].map(function (k) { return o[k] === undefined ? '' : o[k]; })); }
+// Semua teks ditulis dengan awalan ' agar Sheets menyimpannya apa adanya: tidak dijadikan
+// rumus (=, +, -, @), angka (PIN "0123" → 123, ID "00123…"), tanggal ("1/2") atau jam ("21:00").
+// Awalan ' tidak ikut tersimpan sebagai isi sel.
+function safeCell_(v) {
+  if (typeof v === 'string' && v !== '') return "'" + v;
+  return v;
+}
+function append_(n, o) { sheet_(n).appendRow(SHEETS[n].map(function (k) { return safeCell_(o[k] === undefined ? '' : o[k]); })); }
 function update_(n, o) {
   var h = SHEETS[n];
-  sheet_(n).getRange(o._row, 1, 1, h.length).setValues([h.map(function (k) { return o[k] === undefined ? '' : o[k]; })]);
+  sheet_(n).getRange(o._row, 1, 1, h.length).setValues([h.map(function (k) { return safeCell_(o[k] === undefined ? '' : o[k]); })]);
 }
 function find_(n, id) { return rows_(n).filter(function (o) { return String(o.id) === String(id); })[0]; }
 function clean_(o) { var c = {}; Object.keys(o).forEach(function (k) { if (k !== '_row') c[k] = o[k]; }); return c; }
-function uid_() { return Utilities.getUuid().replace(/-/g, '').slice(0, 10); }
-function num_(x) { var n = Number(String(x).replace(',', '.')); return isNaN(n) ? 0 : n; }
+// Diawali huruf agar ID tidak pernah terlihat seperti angka (mis. "0123456789" atau "12e4567890").
+function uid_() { return 'x' + Utilities.getUuid().replace(/-/g, '').slice(0, 9); }
+function num_(x) { var n = Number(String(x).replace(',', '.')); return Number.isFinite(n) ? n : 0; }
+// Angka dari input; error jika kosong/bukan angka (num_ diam-diam mengubahnya jadi 0).
+function numWajib_(x, label) {
+  var s = String(x === null || x === undefined ? '' : x).trim().replace(',', '.');
+  var n = s === '' ? NaN : Number(s);
+  if (!Number.isFinite(n)) throw new Error(label + ' tidak valid: ' + x);
+  return n;
+}
 function r_(x) { return Math.round(x * 1000) / 1000; }
 function truthy_(x) { return x === true || String(x).toUpperCase() === 'TRUE'; }
 function fmt_(ms) { return Utilities.formatDate(new Date(ms), TZ, 'dd/MM/yyyy HH:mm'); }
@@ -100,20 +121,111 @@ function lock_(fn) {
   l.waitLock(20000);
   try { return fn(); } finally { l.releaseLock(); }
 }
+// Pengaturan dibaca sebagai teks tampilan: sel jam lama ("21:00" yang sudah diubah Sheets menjadi
+// nilai waktu 30/12/1899) tidak ikut bergeser zona waktu historis.
+function settings_() {
+  var v = sheet_('Pengaturan').getDataRange().getDisplayValues();
+  v.shift();
+  return v.map(function (r, i) { return { _row: i + 2, kunci: String(r[0]), nilai: String(r[1]) }; })
+    .filter(function (o) { return o.kunci !== ''; });
+}
 function getSetting_(k) {
-  var r = rows_('Pengaturan').filter(function (o) { return o.kunci === k; })[0];
-  return r ? String(r.nilai) : '';
+  var r = settings_().filter(function (o) { return o.kunci === k; })[0];
+  return r ? r.nilai : '';
 }
 function setSetting_(k, v) {
-  var r = rows_('Pengaturan').filter(function (o) { return o.kunci === k; })[0];
-  if (r) { r.nilai = v; update_('Pengaturan', r); } else append_('Pengaturan', { kunci: k, nilai: v });
+  var r = settings_().filter(function (o) { return o.kunci === k; })[0];
+  if (r) { r.nilai = String(v); update_('Pengaturan', r); } else append_('Pengaturan', { kunci: k, nilai: String(v) });
+}
+// "21:00", "21.00.00" (locale id), "9:00:00 PM" → "21:00". '' jika tidak dikenali.
+function jam_(s) {
+  var m = /(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([AaPp][Mm])?/.exec(String(s || ''));
+  if (!m) return '';
+  var h = Number(m[1]), mi = Number(m[2]), ap = (m[3] || '').toUpperCase();
+  if (ap === 'PM' && h < 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  if (h > 23 || mi > 59) return '';
+  return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi;
+}
+function jamTutup_() { return jam_(getSetting_('jam_tutup')); }
+// PIN karyawan sebagai teks. Sel lama bisa berupa angka (Sheets membuang nol di depan).
+function pinK_(k) { return k.pin === null || k.pin === undefined ? '' : String(k.pin).trim(); }
+function cache_() {
+  try {
+    return typeof CacheService !== 'undefined' ? CacheService.getScriptCache() : null;
+  } catch (e) {
+    return null;
+  }
+}
+function rateLimitGuard_(key, cd) {
+  var c = cache_();
+  if (!c) return;
+  if (c.get('rl_lock_' + key)) throw new Error('Terlalu banyak percobaan gagal. Silakan tunggu ' + (cd || 60) + ' detik.');
+}
+function rateLimitCatatGagal_(key, cd) {
+  var c = cache_();
+  if (!c) return;
+  var fk = 'rl_fail_' + key, lk = 'rl_lock_' + key;
+  var count = Number(c.get(fk) || 0) + 1;
+  var sec = cd || 60;
+  if (count >= 5) {
+    c.put(lk, 'locked', sec);
+    c.remove(fk);
+  } else {
+    c.put(fk, String(count), sec);
+  }
+}
+function rateLimitReset_(key) {
+  var c = cache_();
+  if (!c) return;
+  c.remove('rl_fail_' + key);
+  c.remove('rl_lock_' + key);
+}
+function hashPin_(rawPin, salt) {
+  if (!rawPin || String(rawPin).trim() === '') return '';
+  var raw = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    String(rawPin).trim() + ':' + String(salt),
+    Utilities.Charset.UTF_8
+  );
+  return Utilities.base64Encode(raw);
+}
+function adminSalt_() {
+  var p = PropertiesService.getScriptProperties();
+  var id = (p && p.getProperty('SS_ID')) || DEFAULT_SS_ID || 'segara';
+  return 'segara_admin_' + id;
+}
+function karyawanSalt_(karyawanId) {
+  var p = PropertiesService.getScriptProperties();
+  var id = (p && p.getProperty('SS_ID')) || DEFAULT_SS_ID || 'segara';
+  return 'segara_karyawan_' + karyawanId + '_' + id;
 }
 function pin_() {
   var p = PropertiesService.getScriptProperties().getProperty('ADMIN_PIN');
   if (!p) throw new Error('Sistem belum di-setup. Jalankan fungsi setup di editor Apps Script.');
   return p;
 }
-function auth_(pin) { if (String(pin).trim() !== pin_()) throw new Error('PIN salah'); }
+function cekAdminPin_(inputPin) {
+  var p = pin_();
+  var input = String(inputPin || '').trim();
+  if (!input) return false;
+  var hashed = hashPin_(input, adminSalt_());
+  if (p === hashed) return true;
+  // Kompatibilitas mundur: jika data di Script Properties masih berupa plaintext (sebelum migrasi hash)
+  if (p === input) {
+    PropertiesService.getScriptProperties().setProperty('ADMIN_PIN', hashed);
+    return true;
+  }
+  return false;
+}
+function auth_(pin) {
+  rateLimitGuard_('admin_auth', 60);
+  if (!cekAdminPin_(pin)) {
+    rateLimitCatatGagal_('admin_auth', 60);
+    throw new Error('PIN salah');
+  }
+  rateLimitReset_('admin_auth');
+}
 function pub_(b) {
   return { id: String(b.id), nama: String(b.nama), satuan: String(b.satuan), kategori: String(b.kategori || ''),
     stok_dalam: num_(b.stok_dalam), stok_luar: num_(b.stok_luar), ambang_min: num_(b.ambang_min),
@@ -151,12 +263,12 @@ function masukKaryawan(karyawanId, barangId, jumlah, supplier) {
   return lock_(function () {
     var b = find_('Barang', barangId), k = find_('Karyawan', karyawanId);
     if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
-    if (!k) throw new Error('Karyawan tidak ditemukan');
+    if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
     update_('Barang', b);
     var ts = Date.now();
     append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-      karyawan_id: String(k.id), karyawan: k.nama, supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'karyawan',
+      karyawan_id: String(k.id), karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'karyawan',
       kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
     return true;
   });
@@ -164,10 +276,12 @@ function masukKaryawan(karyawanId, barangId, jumlah, supplier) {
 function getTablet() {
   return {
     barang: rows_('Barang').map(pub_).filter(function (b) { return b.aktif; }).map(tab_),
-    karyawan: rows_('Karyawan').filter(function (k) { return truthy_(k.aktif); }).map(function (k) { return { id: String(k.id), nama: String(k.nama) }; }),
+    karyawan: rows_('Karyawan').filter(function (k) { return truthy_(k.aktif); }).map(function (k) {
+      return { id: String(k.id), nama: String(k.nama), punyaPin: pinK_(k) !== '' };
+    }),
     status: status_(),
     urutan: urutanKategori_(),
-    jamTutup: getSetting_('jam_tutup')
+    jamTutup: jamTutup_()
   };
 }
 
@@ -177,7 +291,7 @@ function ambil_(karyawanId, barangId, jumlah, ts, oleh) {
   return lock_(function () {
     var b = find_('Barang', barangId), k = find_('Karyawan', karyawanId);
     if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
-    if (!k) throw new Error('Karyawan tidak ditemukan');
+    if (!k || (oleh === 'karyawan' && !truthy_(k.aktif))) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     if (jumlah > num_(b.stok_dalam) + 1e-9) throw new Error(oleh === 'admin' ? 'Stok gudang tidak cukup. Sisa: ' + num_(b.stok_dalam) + ' ' + b.satuan : 'Jumlah melebihi stok gudang yang tercatat. Hubungi admin.');
     var alur = b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     b.stok_dalam = r_(num_(b.stok_dalam) - jumlah);
@@ -194,16 +308,17 @@ function ambil(karyawanId, barangId, jumlah) { return ambil_(karyawanId, barangI
 
 function batalAmbil(txId, pin) {
   return lock_(function () {
-    var p = pin_();
-    if (String(txId) === String(p)) {
+    var admin = pin && cekAdminPin_(pin);
+    if (!admin && cekAdminPin_(txId)) {
       var swap = txId; txId = pin; pin = swap;
+      admin = true;
     }
     var t = find_('Transaksi', txId);
     if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-    var admin = pin && String(pin) === p;
     if (!admin && Date.now() - num_(t.ts) > 65000) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
     if (num_(t.ts) <= lastRekapTs_()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
     var b = find_('Barang', t.barang_id);
+    if (!b) throw new Error('Barang tidak ditemukan');
     b.stok_dalam = r_(num_(b.stok_dalam) + num_(t.jumlah));
     if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
     update_('Barang', b);
@@ -230,11 +345,12 @@ function rekapDraf() { var c = Date.now(); return { cutoff: c, baris: hitungReka
 
 function simpanRekap(cutoff, karyawanId, input) {
   cutoff = num_(cutoff);
+  if (cutoff > Date.now() + 60000) throw new Error('Waktu rekap tidak boleh di masa depan');
   return lock_(function () {
     var last = lastRekapTs_();
     if (cutoff <= last) throw new Error('Sudah ada rekap yang lebih baru. Buka ulang menu rekap.');
     var k = find_('Karyawan', karyawanId);
-    if (!k) throw new Error('Karyawan tidak ditemukan');
+    if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     var draf = hitungRekap_(cutoff, last), barang = rows_('Barang'), by = {};
     (input || []).forEach(function (i) { by[String(i.barang_id)] = i; });
     draf.forEach(function (r) {
@@ -248,8 +364,10 @@ function simpanRekap(cutoff, karyawanId, input) {
     draf.forEach(function (r) {
       var i = by[r.barang_id], s = r_(num_(i.sisa));
       var b = barang.filter(function (x) { return String(x.id) === r.barang_id; })[0];
-      b.stok_luar = r_(s + r.setelah);
-      update_('Barang', b);
+      if (b) {
+        b.stok_luar = r_(s + r.setelah);
+        update_('Barang', b);
+      }
       append_('RekapBaris', { rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil,
         sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
     });
@@ -269,14 +387,16 @@ function adminData(pin) {
   });
   return {
     barang: rows_('Barang').map(pub_),
-    karyawan: rows_('Karyawan').map(function (k) { return { id: String(k.id), nama: String(k.nama), aktif: truthy_(k.aktif) }; }),
+    karyawan: rows_('Karyawan').map(function (k) {
+      return { id: String(k.id), nama: String(k.nama), aktif: truthy_(k.aktif), punyaPin: pinK_(k) !== '' };
+    }),
     transaksi: rows_('Transaksi').sort(desc).slice(0, 400).map(clean_),
     rekap: rekap,
     opname: rows_('Opname').sort(desc).slice(0, 100).map(clean_),
     status: status_(),
     lastRekap: lastRekapTs_(),
     urutan: urutanKategori_(),
-    jamTutup: getSetting_('jam_tutup'),
+    jamTutup: jamTutup_(),
     url: ss_().getUrl()
   };
 }
@@ -285,6 +405,8 @@ function simpanBarang(pin, o) {
   auth_(pin);
   return lock_(function () {
     if (!String(o.nama || '').trim() || !String(o.satuan || '').trim()) throw new Error('Nama dan satuan wajib diisi');
+    var min = r_(num_(o.ambang_min));
+    if (min < 0) throw new Error('Ambang minimum tidak boleh negatif');
     var alur = o.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     var kd = String(o.kode || '').trim();
     if (kd && rows_('Barang').some(function (x) { return String(x.kode) === kd && String(x.id) !== String(o.id || ''); })) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
@@ -297,30 +419,96 @@ function simpanBarang(pin, o) {
       b.nama = o.nama.trim(); b.satuan = o.satuan.trim(); b.kategori = (o.kategori || '').trim();
       if (o.kode !== undefined) b.kode = kd;
       if (o.catatan !== undefined) b.catatan = String(o.catatan || '').trim();
-      b.alur = alur; b.ambang_min = num_(o.ambang_min); b.aktif = aktif;
+      b.alur = alur; b.ambang_min = min; b.aktif = aktif;
       update_('Barang', b);
     } else {
       var awal = r_(num_(o.stok_awal));
+      if (awal < 0) throw new Error('Stok awal tidak boleh negatif');
       var id = uid_(), ts = Date.now();
       append_('Barang', { id: id, nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: (o.kategori || '').trim(),
-        stok_dalam: awal, stok_luar: 0, ambang_min: num_(o.ambang_min), alur: alur, aktif: true,
+        stok_dalam: awal, stok_luar: 0, ambang_min: min, alur: alur, aktif: true,
         kode: kd, catatan: String(o.catatan || '').trim() });
       if (awal > 0) append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: id, barang: o.nama.trim(),
-        jumlah: awal, status: 'AKTIF', dicatat_oleh: 'admin', catatan: 'Stok awal', kategori: (o.kategori || '').trim(), satuan: o.satuan.trim() });
+        jumlah: awal, alur: 'DALAM', status: 'AKTIF', dicatat_oleh: 'admin', catatan: 'Stok awal', kategori: (o.kategori || '').trim(), satuan: o.satuan.trim() });
+    }
+    return true;
+  });
+}
+function hapusBarang(pin, id) {
+  auth_(pin);
+  return lock_(function () {
+    var b = find_('Barang', id);
+    if (!b) throw new Error('Barang tidak ditemukan');
+    if (num_(b.stok_dalam) > 0 || num_(b.stok_luar) > 0) {
+      throw new Error('Barang masih memiliki stok (gudang: ' + num_(b.stok_dalam) + ', luar: ' + num_(b.stok_luar) + '). Nolkan stok terlebih dahulu sebelum menghapus/mengarsipkan.');
+    }
+    var sid = String(id);
+    var punyaRiwayat = rows_('Transaksi').some(function (t) { return String(t.barang_id) === sid; }) ||
+                       rows_('RekapBaris').some(function (r) { return String(r.barang_id) === sid; }) ||
+                       rows_('Opname').some(function (o) { return String(o.barang_id) === sid; });
+    if (punyaRiwayat) {
+      b.aktif = false;
+      update_('Barang', b);
+      return {
+        status: 'archived',
+        nama: b.nama,
+        message: 'Barang memiliki riwayat transaksi sehingga otomatis diarsipkan (disembunyikan dari tablet dapur & menu harian) agar riwayat laporan tidak hilang.'
+      };
+    }
+    sheet_('Barang').deleteRow(b._row);
+    return {
+      status: 'deleted',
+      nama: b.nama,
+      message: 'Barang berhasil dihapus permanen karena belum memiliki riwayat transaksi.'
+    };
+  });
+}
+
+
+function simpanKaryawan(pin, o) {
+  auth_(pin);
+  var nm = String(o.nama || '').trim();
+  if (!nm) throw new Error('Nama wajib diisi');
+  return lock_(function () {
+    if (rows_('Karyawan').some(function (x) { return String(x.nama).toLowerCase() === nm.toLowerCase() && String(x.id) !== String(o.id || ''); }))
+      throw new Error('Karyawan dengan nama ' + nm + ' sudah ada');
+    var pVal = (o.pin === undefined || o.pin === null) ? undefined : String(o.pin).trim();
+    if (pVal !== undefined && pVal !== '' && !/^\d{4,6}$/.test(pVal)) throw new Error('PIN karyawan harus 4–6 angka');
+    if (o.id) {
+      var k = find_('Karyawan', o.id);
+      if (!k) throw new Error('Karyawan tidak ditemukan');
+      k.nama = nm; k.aktif = o.aktif !== false;
+      if (pVal !== undefined) k.pin = pVal ? hashPin_(pVal, karyawanSalt_(k.id)) : '';
+      update_('Karyawan', k);
+    } else {
+      var newId = uid_();
+      append_('Karyawan', { id: newId, nama: nm, aktif: true, pin: pVal ? hashPin_(pVal, karyawanSalt_(newId)) : '' });
     }
     return true;
   });
 }
 
-function simpanKaryawan(pin, o) {
-  auth_(pin);
-  if (!String(o.nama || '').trim()) throw new Error('Nama wajib diisi');
-  if (o.id) {
-    var k = find_('Karyawan', o.id);
-    if (!k) throw new Error('Karyawan tidak ditemukan');
-    k.nama = o.nama.trim(); k.aktif = o.aktif !== false;
+function verifikasiPinKaryawan(karyawanId, pin) {
+  var k = find_('Karyawan', karyawanId);
+  if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+  var stored = pinK_(k);
+  if (!stored) return true;
+  rateLimitGuard_('karyawan_' + karyawanId, 60);
+  var input = String(pin || '').trim();
+  var hashed = hashPin_(input, karyawanSalt_(karyawanId));
+  // Sel lama berisi angka (Sheets membuang nol di depan: "0123" → 123): cocokkan nilai angkanya,
+  // hanya untuk input 4–6 digit. Teks biasa harus sama persis.
+  var legacyNum = typeof k.pin === 'number' && /^\d{4,6}$/.test(input) && Number(input) === k.pin;
+  var cocok = (stored === hashed) || (stored === input) || legacyNum;
+  if (!cocok) {
+    rateLimitCatatGagal_('karyawan_' + karyawanId, 60);
+    throw new Error('PIN karyawan salah');
+  }
+  if (stored !== hashed) {
+    k.pin = hashed;
     update_('Karyawan', k);
-  } else append_('Karyawan', { id: uid_(), nama: o.nama.trim(), aktif: true });
+  }
+  rateLimitReset_('karyawan_' + karyawanId);
   return true;
 }
 
@@ -335,7 +523,7 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan) {
     update_('Barang', b);
     var ts = Date.now();
     append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-      supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
     return true;
   });
 }
@@ -353,11 +541,11 @@ function simpanOpname(pin, items) {
   return lock_(function () {
     var barang = rows_('Barang'), ts = Date.now(), n = 0;
     (items || []).forEach(function (i) {
-      if (i.fisik === '' || i.fisik === null) return;
-      var f = r_(num_(i.fisik));
-      if (f < 0) throw new Error('Stok fisik tidak boleh negatif');
+      if (i.fisik === '' || i.fisik === null || i.fisik === undefined) return;
       var b = barang.filter(function (x) { return String(x.id) === String(i.barang_id); })[0];
       if (!b) return;
+      var f = r_(numWajib_(i.fisik, 'Stok fisik ' + b.nama));
+      if (f < 0) throw new Error('Stok fisik tidak boleh negatif');
       var sis = num_(b.stok_dalam), sel = r_(f - sis);
       append_('Opname', { id: uid_(), ts: ts, waktu: fmt_(ts), barang_id: String(b.id), barang: b.nama, sistem: sis, fisik: f, selisih: sel });
       if (sel !== 0) append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'OPNAME', barang_id: String(b.id), barang: b.nama,
@@ -379,12 +567,14 @@ function editRekapTerakhir(pin, input) {
     var barang = rows_('Barang'), plan = [];
     (input || []).forEach(function (i) {
       var x = bs.filter(function (b) { return String(b.barang_id) === String(i.barang_id); })[0];
-      if (!x || i.sisa === '' || i.sisa === null) return;
-      var s = r_(num_(i.sisa)), maks = r_(num_(x.saldo_awal) + num_(x.diambil));
+      if (!x || i.sisa === '' || i.sisa === null || i.sisa === undefined) return;
+      var s = r_(numWajib_(i.sisa, 'Sisa ' + x.barang));
+      var maks = num_(x.saldo_awal) + num_(x.diambil);
       if (s < 0 || s > maks + 1e-9) throw new Error('Sisa ' + x.barang + ' harus 0 sampai ' + maks);
       var delta = r_(s - num_(x.sisa));
       if (!delta) return;
       var b = barang.filter(function (y) { return String(y.id) === String(x.barang_id); })[0];
+      if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
       var nl = r_(num_(b.stok_luar) + delta);
       if (nl < 0) throw new Error('Saldo luar ' + x.barang + ' akan negatif');
       plan.push({ x: x, b: b, s: s, maks: maks, nl: nl });
@@ -400,12 +590,18 @@ function editRekapTerakhir(pin, input) {
 
 function simpanPengaturan(pin, jamTutup, pinBaru) {
   auth_(pin);
-  if (jamTutup) setSetting_('jam_tutup', jamTutup);
-  if (pinBaru) {
-    if (!/^\d{4,8}$/.test(pinBaru)) throw new Error('PIN harus 4–8 angka');
-    PropertiesService.getScriptProperties().setProperty('ADMIN_PIN', pinBaru);
-  }
-  return true;
+  return lock_(function () {
+    if (jamTutup) {
+      var j = jam_(jamTutup);
+      if (!j) throw new Error('Jam tutup tidak valid: ' + jamTutup);
+      setSetting_('jam_tutup', j);
+    }
+    if (pinBaru) {
+      if (!/^\d{4,8}$/.test(pinBaru)) throw new Error('PIN harus 4–8 angka');
+      PropertiesService.getScriptProperties().setProperty('ADMIN_PIN', hashPin_(pinBaru, adminSalt_()));
+    }
+    return true;
+  });
 }
 
 function laporan(pin, dari, sampai) {
@@ -443,8 +639,8 @@ function laporanKeSheet(pin, dari, sampai) {
   var ss = ss_(), s = ss.getSheetByName('Laporan') || ss.insertSheet('Laporan');
   s.clear();
   var head = ['Barang', 'Satuan', 'Masuk', 'Terpakai (rekap)', 'Langsung habis', 'Total terpakai', 'Selisih opname'];
-  var data = [['Laporan ' + dari + ' s/d ' + sampai, '', '', '', '', '', ''], head].concat(rows.map(function (r) {
-    return [r.nama, r.satuan, r.masuk, r.terpakai_rekap, r.langsung_habis, r.total_terpakai, r.opname];
+  var data = [[safeCell_('Laporan ' + dari + ' s/d ' + sampai), '', '', '', '', '', ''], head].concat(rows.map(function (r) {
+    return [safeCell_(r.nama), safeCell_(r.satuan), r.masuk, r.terpakai_rekap, r.langsung_habis, r.total_terpakai, r.opname];
   }));
   s.getRange(1, 1, data.length, head.length).setValues(data);
   s.getRange(1, 1, 2, head.length).setFontWeight('bold');
@@ -605,7 +801,7 @@ function imporDataSegara() {
         if (ada[r[0]]) { lewati++; return; }
         var o = { id: uid_(), nama: r[1], satuan: r[2], kategori: g[0], stok_dalam: 0, stok_luar: 0, ambang_min: 0,
           alur: 'LUAR', aktif: true, kode: r[0], catatan: r[3] || '' };
-        baru.push(SHEETS.Barang.map(function (k) { return o[k] === undefined ? '' : o[k]; }));
+        baru.push(SHEETS.Barang.map(function (k) { return safeCell_(o[k] === undefined ? '' : o[k]); }));
       });
     });
     var s = sheet_('Barang');

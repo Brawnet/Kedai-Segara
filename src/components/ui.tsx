@@ -106,7 +106,7 @@ export function PageTitle({ kicker, title, sub, actions }: { kicker?: string; ti
 }
 
 const BANNER = {
-  info: ['bg-primary-soft border-primary/20 text-fg', Info, 'text-primary'],
+  info: ['bg-muted/70 border-line text-fg', Info, 'text-muted-fg'],
   warning: ['bg-warning-soft border-warning/30 text-fg', Warning, 'text-warning'],
   danger: ['bg-danger-soft border-danger/30 text-fg', WarningOctagon, 'text-danger'],
 } as const;
@@ -114,10 +114,16 @@ const BANNER = {
 export function Banner({ tone = 'info', children, action }: { tone?: keyof typeof BANNER; children: ComponentChildren; action?: ComponentChildren }) {
   const [cls, Icon, ic] = BANNER[tone];
   return (
-    <div class={cx('flex flex-wrap items-center gap-3 rounded-card border p-3 sm:p-4', cls)} role={tone === 'info' ? 'status' : 'alert'}>
-      <Icon size={22} weight="fill" class={cx('shrink-0', ic)} aria-hidden />
-      <div class="min-w-0 flex-1 font-medium">{children}</div>
-      {action}
+    <div
+      class={cx('flex flex-col gap-3 rounded-card border p-3 sm:flex-row sm:items-center sm:p-4', cls)}
+      role={tone === 'info' ? 'status' : 'alert'}
+    >
+      <div class="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+        <Icon size={22} weight="fill" class={cx('mt-0.5 shrink-0 sm:mt-0', ic)} aria-hidden />
+        <div class="min-w-0 flex-1 font-medium">{children}</div>
+      </div>
+      {/* Di ponsel tombol aksi selebar kartu agar teks tidak terjepit. */}
+      {action && <div class="flex shrink-0 flex-col sm:block">{action}</div>}
     </div>
   );
 }
@@ -144,6 +150,70 @@ export const Loading = ({ label = 'Memuat…' }: { label?: string }) => (
   </div>
 );
 
+/** Haptic feedback untuk layar sentuh / tablet mobile (diabaikan jika browser tidak mendukung). */
+export function vibrate(ms: number | number[] = 10) {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(ms);
+    } catch {}
+  }
+}
+
+/** Visual stock progress bar (fuel gauge) dengan indikator ambang batas. */
+export function StockGauge({
+  current,
+  min,
+  class: c,
+  unit,
+}: {
+  current: number;
+  min: number;
+  class?: string;
+  unit?: string;
+}) {
+  const safeMin = Math.max(0, min);
+  const targetMax = safeMin > 0 ? safeMin * 2 : Math.max(1, current * 1.5);
+  const pct = Math.min(100, Math.max(0, Math.round((current / targetMax) * 100)));
+  const isLow = safeMin > 0 && current < safeMin;
+  const isOptimal = safeMin > 0 && current >= safeMin * 1.5;
+  const barColor = isLow ? 'bg-danger' : isOptimal ? 'bg-success' : 'bg-warning';
+  const label = isLow ? 'Menipis' : isOptimal ? 'Aman' : 'Cukup';
+
+  return (
+    <div class={cx('flex flex-col gap-1 min-w-[70px]', c)} title={`Stok: ${current}${unit ? ` ${unit}` : ''} (Min: ${min}) · Status: ${label}`}>
+      <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted border border-line">
+        <div
+          class={cx('h-full transition-all duration-300 rounded-full', barColor)}
+          style={{ width: `${Math.max(4, pct)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/** Shimmer / pulse skeleton placeholder untuk zero-CLS loading. */
+export function Skeleton({ class: c }: { class?: string }) {
+  return <div class={cx('animate-pulse rounded-ctl bg-muted/80', c)} aria-hidden />;
+}
+
+/** Status sinkronisasi ke Google Apps Script backend. */
+export function SyncStatusBadge({ busy, class: c }: { busy: boolean; class?: string }) {
+  return (
+    <div
+      class={cx(
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold select-none border transition-colors duration-150',
+        busy ? 'bg-warning-soft border-warning/30 text-warning' : 'bg-success-soft border-success/30 text-success',
+        c,
+      )}
+      role="status"
+      title={busy ? 'Sedang mengirim data ke Google Sheets…' : 'Tersambung ke Google Sheets'}
+    >
+      <span class={cx('size-2 rounded-full', busy ? 'bg-warning animate-ping' : 'bg-success')} aria-hidden />
+      <span>{busy ? 'Menyimpan…' : 'Tersinkron'}</span>
+    </div>
+  );
+}
+
 /* ---------- Dialog (native <dialog>: fokus terkunci, Esc menutup) ---------- */
 export function Dialog({
   open,
@@ -165,7 +235,10 @@ export function Dialog({
     const d = ref.current;
     if (!d) return;
     if (open && !d.open) d.showModal();
-    if (!open && d.open) d.close();
+    else if (!open && d.open) d.close();
+    return () => {
+      if (d && d.open) d.close();
+    };
   }, [open]);
   return (
     <dialog
@@ -180,7 +253,7 @@ export function Dialog({
     >
       {open && (
         <div class="flex max-h-[92dvh] flex-col">
-          <div class="flex items-center gap-2 border-b border-line px-5 py-3">
+          <div class="flex items-center gap-2 border-b border-line px-5 py-3.5 sm:px-6 sm:py-4">
             <h2 id="dlg-title" class="mr-auto text-lg font-bold">
               {title}
             </h2>
@@ -188,8 +261,14 @@ export function Dialog({
               <X size={20} aria-hidden />
             </button>
           </div>
-          <div class="overflow-y-auto px-5 py-4">{children}</div>
-          {footer && <div class="safe-bottom flex flex-wrap justify-end gap-2 border-t border-line px-5 py-3">{footer}</div>}
+          <div class={cx('overflow-y-auto px-5 py-4 sm:px-6 sm:py-5', !footer && 'pb-[max(1.25rem,calc(1.25rem+env(safe-area-inset-bottom,0px)))] sm:pb-6')}>
+            {children}
+          </div>
+          {footer && (
+            <div class="flex flex-wrap items-center justify-end gap-2.5 border-t border-line px-5 pt-3.5 pb-[max(1.25rem,calc(1.25rem+env(safe-area-inset-bottom,0px)))] sm:px-6 sm:pt-4 sm:pb-5">
+              {footer}
+            </div>
+          )}
         </div>
       )}
     </dialog>

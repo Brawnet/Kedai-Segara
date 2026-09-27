@@ -1,98 +1,128 @@
-# Panduan Pemasangan & Penggunaan Sistem Stok Segara
+# Panduan Pemasangan & Penggunaan Stok Segara
 
-Sistem ini berjalan di atas **Google Apps Script** dengan database **Google Sheets**. Tidak memerlukan hosting berbayar atau server Node.js.
+Aplikasi berjalan di **Google Apps Script** (https://script.google.com) dengan database
+**Google Sheets**. Tanpa hosting berbayar. Tampilan menyesuaikan ponsel, tablet, dan laptop.
 
----
+Spreadsheet database yang dipakai:
+https://docs.google.com/spreadsheets/d//edit
 
-## Langkah 1: Buat Google Sheet
-1. Buka [Google Sheets](https://sheets.new) di browser Anda.
-2. Beri nama spreadsheet, misalnya: **Stok Gudang Segara**.
-
----
-
-## Langkah 2: Masukkan Kode ke Apps Script
-1. Di Google Sheet tersebut, klik menu **Ekstensi (Extensions)** → **Apps Script**.
-2. Di panel kiri:
-   - Buka file `Code.gs`, hapus semua isinya, lalu salin seluruh isi file **`Kode.gs`** ke sana.
-   - Klik tombol **+** (Add a file) di samping "Files" → pilih **HTML**. Beri nama **`index`** (sehingga menjadi `index.html`).
-   - Salin seluruh isi file **`index.html`** ke file tersebut.
-3. Klik tombol **Save** (ikon disket) atau tekan `Ctrl + S`.
+ID-nya (``) sudah diisi di `apps-script/Kode.gs`
+pada baris `var DEFAULT_SS_ID = ...`. Ganti di sana jika memakai spreadsheet lain.
 
 ---
 
-## Langkah 3: Inisialisasi Database
-1. Di bilah menu atas Apps Script, cari dropdown pilihan fungsi (biasanya tertulis `doGet`).
-2. Ganti pilihan fungsi menjadi **`setup`**.
-3. Klik tombol **Jalankan (Run)**.
-4. Google akan meminta izin akses (**Authorization Required**):
-   - Klik **Review Permissions**.
-   - Pilih akun Google Anda.
-   - Klik **Advanced (Lanjutan)** → klik **Go to Untitled project (unsafe)** / Buka project.
-   - Klik **Allow (Izinkan)**.
-5. Tunggu hingga eksekusi selesai (`setup` akan membuat tabel-tabel sheet otomatis).
+## Langkah 0: Buat file hasil build (sekali, di komputer)
+
+Aplikasi web ditulis di `src/` lalu digabung menjadi satu file `apps-script/index.html`.
+
+```bash
+npm install
+npm run build
+```
+
+Setelah ini folder `apps-script/` berisi 3 file yang dibutuhkan Apps Script:
+`Kode.gs`, `index.html`, dan `appsscript.json`.
 
 ---
 
-## Langkah 4: Impor Data Barang Kedai Segara
-1. Di dropdown fungsi yang sama, pilih fungsi **`imporDataSegara`**.
-2. Klik tombol **Jalankan (Run)**.
-3. Fungsi ini akan otomatis memasukkan seluruh daftar menu dan bahan baku Segara (Freezer Protein, Bumbu, Drink, Dairy, Bahan Dasar, Supplies, dll.) ke sheet `Barang`.
+## Cara A: Salin-tempel lewat browser (paling mudah)
+
+### A1. Buka Apps Script dari spreadsheet
+1. Buka spreadsheet di atas.
+2. Menu **Ekstensi (Extensions) → Apps Script**. Project baru terbuka dan otomatis terhubung ke sheet ini.
+
+   *(Bisa juga membuat project baru di https://script.google.com → **New project**.
+   Karena `DEFAULT_SS_ID` sudah diisi, script tetap memakai spreadsheet Segara.)*
+
+### A2. Masukkan kode
+1. File `Code.gs`: hapus semua isinya, tempel seluruh isi **`apps-script/Kode.gs`**.
+2. Klik **+** di samping "Files" → **HTML** → beri nama **`index`** (tanpa `.html`).
+   Hapus isinya, tempel seluruh isi **`apps-script/index.html`** (hasil `npm run build`, ±320 KB).
+3. Klik ikon gerigi **Project Settings** → centang **Show "appsscript.json" manifest file in editor**.
+   Kembali ke Editor, buka `appsscript.json`, ganti isinya dengan **`apps-script/appsscript.json`**
+   (zona waktu `Asia/Jakarta`, web app bisa dibuka tanpa login).
+4. Tekan `Ctrl + S`.
+
+### A3. Jalankan setup (sekali)
+1. Di dropdown fungsi (di sebelah tombol Run/Jalankan), pilih **`setup`** → **Run**.
+2. Saat muncul **Authorization required**: **Review permissions** → pilih akun →
+   **Advanced / Lanjutan** → **Go to … (unsafe)** → **Allow**.
+3. `setup` membuat sheet yang belum ada (Karyawan, Transaksi, Rekap, dll.), melengkapi kolom,
+   dan mengisi PIN admin default **`12345`**. Data yang sudah ada di sheet **Barang** tidak diubah.
+
+Opsional: pilih **`imporDataSegara`** → **Run** untuk menambahkan daftar barang Kedai Segara.
+Aman dijalankan ulang; barang yang kodenya sudah ada dilewati.
+
+### A4. Deploy menjadi Web App
+1. Kanan atas: **Deploy → New deployment**.
+2. Ikon gerigi **Select type** → **Web app**.
+3. Isi:
+   - **Description**: `Stok Segara`
+   - **Execute as**: **Me** (email Anda)
+   - **Who has access**: **Anyone** (tablet dapur tidak perlu login Google)
+4. **Deploy** → salin **Web app URL** (berakhiran `/exec`).
+
+### A5. Update setelah ada perubahan kode
+Tempel ulang file yang berubah, lalu **Deploy → Manage deployments → ✏️ Edit →
+Version: New version → Deploy**. URL tetap sama.
+(Jangan pakai "New deployment" lagi, karena itu membuat URL baru.)
 
 ---
 
-## Langkah 5: Deploy Menjadi Web App
-1. Di pojok kanan atas Apps Script, klik tombol biru **Terapkan (Deploy)** → **Penerapan baru (New deployment)**.
-2. Klik ikon gerigi (Select type) di samping kiri → pilih **Aplikasi web (Web app)**.
-3. Isi konfigurasi berikut:
-   - **Deskripsi**: `Stok Segara v1`
-   - **Jalankan sebagai (Execute as)**: `Saya (email Anda)`
-   - **Yang memiliki akses (Who has access)**: `Siapa saja (Anyone)` *(agar tablet operasional bisa membuka tanpa perlu login Google)*
-4. Klik **Terapkan (Deploy)**.
-5. Salin **URL Aplikasi Web** yang diberikan.
+## Cara B: Dari komputer dengan clasp (otomatis)
+
+1. Aktifkan Apps Script API: https://script.google.com/home/usersettings → **On**.
+2. Login: `npx clasp login`
+3. Buat project dulu lewat **Cara A1**, lalu ambil **Script ID** di Project Settings.
+4. Salin `.clasp.json.example` menjadi `.clasp.json`, isi `scriptId`.
+5. Kirim kode: `npm run push` (build + `clasp push`).
+6. Jalankan `setup` sekali di editor (Cara A3) dan buat deployment pertama (Cara A4).
+7. Isi `deploymentId` di `.clasp.json` (lihat `npx clasp deployments`).
+8. Selanjutnya cukup: `npm run deploy` — URL web app tidak berubah.
 
 ---
 
-## Langkah 6: Cara Pakai
+## Cara Pakai
 
-### Mode Tablet (Karyawan / Dapur)
-* Buka URL Web App di browser tablet atau smartphone dapur.
-* Karyawan dapat langsung memilih namanya untuk:
-  - Mencatat pengambilan barang dari gudang ke dapur.
-  - Mencatat barang masuk dari supplier.
-  - Melakukan closing sisa dapur di malam hari.
+### Mode Tablet (karyawan / dapur)
+Buka Web app URL di tablet atau HP dapur. Karyawan pilih namanya, lalu:
+- **Ambil dari gudang**: barang dibawa ke dapur (bisa dibatalkan dalam 60 detik).
+- **Masukkan ke gudang**: barang baru datang dari supplier.
+- **Rekap sisa dapur**: closing malam, isi sisa barang di area kerja.
 
-### Mode Admin (Owner / Manager)
-* Buka URL Web App dengan menambahkan parameter di belakangnya:
-  ```
-  https://script.google.com/macros/s/.../exec?mode=admin
-  ```
-  *(Atau buka URL biasa lalu klik tab **Admin** di pojok kanan atas)*.
-* Masukkan **PIN default: `12345`**.
-* Di menu Admin, Anda dapat:
-  - Mengubah PIN admin dan jam tutup operasional.
-  - Mengisi stok awal fisik via menu **Opname**.
-  - Melihat peringatan stok menipis.
-  - Mengunduh rekap pemakaian ke sheet **Laporan**.
+Tip: di HP/tablet, buka URL lalu **Tambahkan ke Layar Utama** agar terbuka seperti aplikasi.
+
+### Mode Admin (owner / manager) — cocok dibuka di laptop atau HP
+Buka `https://script.google.com/macros/s/…/exec?mode=admin`
+atau ketuk tombol **Admin** di pojok kanan atas. PIN default **`12345`** — **segera ganti**
+di menu **Pengaturan**.
+
+Di laptop menu ada di sidebar kiri; di HP menu ada di bar bawah (menu lain di **Lainnya**).
+Admin bisa: lihat stok, stok masuk, opname, riwayat, rekap, kelola barang & karyawan,
+ambil manual, laporan (bisa disalin ke sheet **Laporan**), dan pengaturan PIN / jam tutup.
 
 ---
 
-## Hak Akses & Keamanan Sistem
+## Hak Akses & Keamanan
 
-Aplikasi ini memiliki 3 lapis perlindungan akses:
+| Lapis | Penjelasan |
+| :--- | :--- |
+| **URL Web App** | *Anyone*: siapa pun yang punya link bisa membuka mode tablet tanpa login. Jangan sebarkan link di luar karyawan. Pilih *Anyone within organization* jika memakai Google Workspace. |
+| **Tablet vs Admin** | Mode tablet **tidak** menampilkan angka stok gudang, laporan, maupun data master. Semua fungsi admin di server wajib PIN. |
+| **Spreadsheet** | Hanya bisa dibuka pemilik (atau yang sengaja diberi akses). Web app membaca/menulis atas nama pemilik (*Execute as: Me*). |
 
-### 1. Lapis Jaringan (Tautan / URL Web App)
-* **Pilihan `Who has access: Anyone` saat deploy:**
-  * Siapa pun yang memiliki link URL dapat membuka tampilan tablet tanpa perlu login akun Google.
-  * Sangat cocok untuk tablet/HP operasional dapur agar staf tidak terkendala login akun.
-* **Pilihan `Anyone within organization` (khusus Google Workspace bisnis):**
-  * Hanya pengguna dengan email domain perusahaan (`@perusahaan.com`) yang dapat membuka link.
+Catatan keamanan PIN:
+- **Enkripsi Hash SHA-256**: PIN Admin dan PIN Karyawan tidak lagi disimpan dalam bentuk teks biasa, melainkan di-hash menggunakan algoritma SHA-256 dan salt unik berbasis database spreadsheet.
+- **Anti Brute-Force (Rate Limiting)**: Jika terjadi 5 kali kesalahan PIN berturut-turut, sistem otomatis mengunci percobaan selama 60 detik via Google Apps Script Cache.
+- **Zero-Knowledge di Klien**: Data karyawan di browser tablet maupun admin tidak pernah menerima teks asli PIN staf, melainkan hanya status aktif PIN (`punyaPin: true/false`).
+---
 
-### 2. Lapis Aplikasi (Pembagian Peran Tablet vs Admin)
-| Peran | Syarat Masuk | Hak Akses & Batasan |
-| :--- | :--- | :--- |
-| **Karyawan / Tablet** | Cukup buka link URL | • Bisa catat barang keluar (ambil ke dapur), barang masuk, dan rekap sisa malam.<br>• Bisa membatalkan transaksi pengambilan sendiri dalam waktu **maksimal 60 detik**.<br>• **Aman:** Karyawan **TIDAK BISA** melihat sisa angka stok gudang (`Stock Dalam`). Hanya nama dan satuan barang yang ditampilkan.<br>• Tidak bisa melihat laporan, opname, maupun data master. |
-| **Admin / Owner** | Wajib input **PIN Admin** (Default: `12345`) | • Akses penuh seluruh stok gudang dan dapur.<br>• Tambah/edit/arsip barang dan karyawan.<br>• Melakukan stock opname (penyesuaian fisik vs sistem).<br>• Melihat riwayat lengkap dan laporan pemakaian.<br>• Mengubah PIN admin dan jam tutup toko. |
+## Masalah umum
 
-### 3. Lapis Database (Spreadsheet Google)
-* File Google Sheets yang menjadi database hanya dapat dibuka langsung di Google Drive oleh **pemilik akun Google** (atau email yang sengaja Anda bagikan akses editnya).
-* Pengguna di tablet web app sama sekali tidak memiliki akses langsung ke file spreadsheet. Semua operasi baca/tulis dijalankan oleh server Apps Script atas nama akun Anda (*Execute as: Me*).
+| Pesan | Solusi |
+| :--- | :--- |
+| `Sistem belum di-setup` | Jalankan fungsi `setup` di editor (Cara A3). |
+| `Exception: You do not have permission…` / `openById` | Akun yang men-deploy harus punya akses edit ke spreadsheet. |
+| Halaman "Buka lewat URL Web App" | File `index.html` dibuka langsung. Buka lewat URL `/exec`. |
+| Perubahan tidak muncul | Buat **New version** di Manage deployments (Cara A5), lalu muat ulang halaman. |
+| Link `/dev` minta login | Pakai link `/exec` dari deployment, bukan link "Test deployments". |

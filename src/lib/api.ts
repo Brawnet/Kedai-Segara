@@ -25,6 +25,9 @@ async function devMock(): Promise<Impl> {
 }
 
 /** Panggil fungsi di Kode.gs lewat google.script.run, dibungkus Promise. */
+const TIMEOUT_MS = 30_000;
+
+/** Panggil fungsi di Kode.gs lewat google.script.run, dibungkus Promise. */
 export function call<K extends Fn>(fn: K, ...args: Parameters<Api[K]>): Promise<ReturnType<Api[K]>> {
   const run = window.google?.script?.run;
   if (!run) {
@@ -49,10 +52,37 @@ export function call<K extends Fn>(fn: K, ...args: Parameters<Api[K]>): Promise<
     return Promise.reject(new Error('Buka aplikasi lewat URL Web App Apps Script.'));
   }
   return new Promise((res, rej) => {
-    const r = run
-      .withSuccessHandler((v) => res(v as ReturnType<Api[K]>))
-      .withFailureHandler((e) => rej(e instanceof Error ? e : new Error(String((e as { message?: string })?.message ?? e))));
-    r[fn](...args);
+    let done = false;
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      rej(new Error('Koneksi timeout (30 detik). Periksa internet Anda lalu coba lagi.'));
+    }, TIMEOUT_MS);
+
+    try {
+      const r = run
+        .withSuccessHandler((v) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          res(v as ReturnType<Api[K]>);
+        })
+        .withFailureHandler((e) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          rej(e instanceof Error ? e : new Error(String((e as { message?: string })?.message ?? e)));
+        });
+      if (typeof r[fn] !== 'function') {
+        clearTimeout(timer);
+        rej(new Error(`Fungsi "${String(fn)}" tidak ditemukan di server Apps Script.`));
+        return;
+      }
+      r[fn](...args);
+    } catch (err) {
+      clearTimeout(timer);
+      rej(err instanceof Error ? err : new Error(String(err)));
+    }
   });
 }
 
