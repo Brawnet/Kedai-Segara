@@ -18,7 +18,13 @@ type Impl = { [K in keyof Api]: (...a: Parameters<Api[K]>) => ReturnType<Api[K]>
 const r_ = (x: number) => Math.round(x * 1000) / 1000;
 const num = (x: unknown) => {
   const n = Number(String(x).replace(',', '.'));
-  return isNaN(n) ? 0 : n;
+  return Number.isFinite(n) ? n : 0;
+};
+const numWajib = (x: unknown, label: string) => {
+  const s = String(x === null || x === undefined ? '' : x).trim().replace(',', '.');
+  const n = s === '' ? NaN : Number(s);
+  if (!Number.isFinite(n)) throw new Error(label + ' tidak valid: ' + x);
+  return n;
 };
 let seq = 0;
 const uid = () => 'm' + (++seq).toString(36) + Math.random().toString(36).slice(2, 7);
@@ -50,14 +56,60 @@ export function createMock(): Impl {
       }),
     ),
   );
-  const karyawan: KaryawanAdmin[] = ['Budi Santoso', 'Sari', 'Andi Wijaya', 'Rina'].map((nama) => ({ id: uid(), nama, aktif: true }));
+  const fails: Record<string, { count: number; lockUntil: number }> = {};
+  const rateLimitGuard = (key: string) => {
+    const f = fails[key];
+    if (f && f.lockUntil > Date.now()) {
+      const wait = Math.ceil((f.lockUntil - Date.now()) / 1000);
+      throw new Error(`Terlalu banyak percobaan gagal. Silakan tunggu ${wait} detik.`);
+    }
+  };
+  const rateLimitFail = (key: string) => {
+    if (!fails[key]) fails[key] = { count: 0, lockUntil: 0 };
+    fails[key].count++;
+    if (fails[key].count >= 5) {
+      fails[key].lockUntil = Date.now() + 60_000;
+      fails[key].count = 0;
+    }
+  };
+  const rateLimitReset = (key: string) => {
+    delete fails[key];
+  };
+
+  const mockHash = (val: string, salt: string) => {
+    let h = 0x811c9dc5;
+    const s = `${val}:${salt}`;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return `hash_${(h >>> 0).toString(16)}`;
+  };
+
+  const karyawan: KaryawanAdmin[] = ['Budi Santoso', 'Sari', 'Andi Wijaya', 'Rina'].map((nama, i) => {
+    const id = uid();
+    return {
+      id,
+      nama,
+      aktif: true,
+      pin: i === 0 ? mockHash('1234', `salt_${id}`) : '',
+      punyaPin: i === 0,
+    };
+  });
   const transaksi: Transaksi[] = [];
   const rekap: Omit<Rekap, 'baris'>[] = [];
   const rekapBaris: RekapBaris[] = [];
   const opname: Opname[] = [];
 
   const auth = (pin: string) => {
-    if (String(pin).trim() !== PIN) throw new Error('PIN salah');
+    rateLimitGuard('admin');
+    const input = String(pin).trim();
+    const valid = input === PIN || mockHash(input, 'admin_salt') === PIN;
+    if (!valid) {
+      rateLimitFail('admin');
+      throw new Error('PIN salah');
+    }
+    rateLimitReset('admin');
   };
   const find = (id: string) => barang.find((b) => b.id === id);
   const findK = (id: string) => karyawan.find((k) => k.id === id);
@@ -90,7 +142,7 @@ export function createMock(): Impl {
     if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
     const b = find(bid), k = findK(kid);
     if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
-    if (!k) throw new Error('Karyawan tidak ditemukan');
+    if (!k || (oleh === 'karyawan' && !k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     if (j > b.stok_dalam + 1e-9)
       throw new Error(oleh === 'admin' ? `Stok gudang tidak cukup. Sisa: ${b.stok_dalam} ${b.satuan}` : 'Jumlah melebihi stok gudang yang tercatat. Hubungi admin.');
     b.stok_dalam = r_(b.stok_dalam - j);
@@ -126,7 +178,7 @@ export function createMock(): Impl {
   return {
     getTablet: () => ({
       barang: barang.filter((b) => b.aktif).map(tab),
-      karyawan: karyawan.filter((k) => k.aktif).map(({ id, nama }) => ({ id, nama })),
+      karyawan: karyawan.filter((k) => k.aktif).map(({ id, nama, pin, punyaPin }) => ({ id, nama, punyaPin: punyaPin ?? !!(pin && pin.trim()) })),
       status: status(),
       urutan,
       jamTutup,
@@ -136,9 +188,10 @@ export function createMock(): Impl {
       j = r_(num(j));
       if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
       const b = find(bid), k = findK(kid);
-      if (!b || !k) throw new Error('Barang tidak ditemukan');
+      if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
+      if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + j);
-      tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, supplier, dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
+      tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: '', supplier, dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
       return true;
     },
     batalAmbil: (txId, pin) => {
@@ -147,7 +200,8 @@ export function createMock(): Impl {
       const admin = pin && pin === PIN;
       if (!admin && Date.now() - t.ts > 65000) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
       if (t.ts <= lastRekapTs()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
-      const b = find(t.barang_id)!;
+      const b = find(t.barang_id);
+      if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + t.jumlah);
       if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
@@ -158,10 +212,12 @@ export function createMock(): Impl {
       return { cutoff: c, baris: hitung(c) };
     },
     simpanRekap: (cutoff, kid, input) => {
+      cutoff = num(cutoff);
+      if (cutoff > Date.now() + 60000) throw new Error('Waktu rekap tidak boleh di masa depan');
       const last = lastRekapTs();
       if (cutoff <= last) throw new Error('Sudah ada rekap yang lebih baru. Buka ulang menu rekap.');
       const k = findK(kid);
-      if (!k) throw new Error('Karyawan tidak ditemukan');
+      if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
       const draf = hitung(cutoff, last);
       const by = Object.fromEntries(input.map((i) => [i.barang_id, i]));
       draf.forEach((r) => {
@@ -185,7 +241,7 @@ export function createMock(): Impl {
       return JSON.parse(
         JSON.stringify({
           barang,
-          karyawan,
+          karyawan: karyawan.map(({ id, nama, aktif, punyaPin, pin }) => ({ id, nama, aktif, punyaPin: punyaPin ?? !!(pin && pin.trim()) })),
           transaksi: [...transaksi].sort(setelahDesc).slice(0, 400),
           rekap: [...rekap].sort(setelahDesc).slice(0, 30).map((r) => ({ ...r, baris: rekapBaris.filter((x) => x.rekap_id === r.id) })),
           opname: [...opname].sort(setelahDesc).slice(0, 100),
@@ -200,26 +256,88 @@ export function createMock(): Impl {
     simpanBarang: (pin, o) => {
       auth(pin);
       if (!o.nama.trim() || !o.satuan.trim()) throw new Error('Nama dan satuan wajib diisi');
+      const min = r_(num(o.ambang_min));
+      if (min < 0) throw new Error('Ambang minimum tidak boleh negatif');
       const kd = o.kode.trim();
       if (kd && barang.some((x) => x.kode === kd && x.id !== (o.id || ''))) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
       if (o.id) {
         const b = find(o.id);
         if (!b) throw new Error('Barang tidak ditemukan');
         if (!o.aktif && b.aktif && (b.stok_dalam > 0 || b.stok_luar > 0)) throw new Error('Barang hanya bisa diarsipkan jika stok dalam dan luar = 0');
-        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur: o.alur, ambang_min: num(o.ambang_min), aktif: o.aktif });
+        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur: o.alur, ambang_min: min, aktif: o.aktif });
       } else {
         const awal = r_(num(o.stok_awal));
-        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur: o.alur, ambang_min: num(o.ambang_min), aktif: true, stok_dalam: awal, stok_luar: 0 };
+        if (awal < 0) throw new Error('Stok awal tidak boleh negatif');
+        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur: o.alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0 };
         barang.push(b);
-        if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
+        if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, alur: '', catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
       }
       return true;
     },
+    hapusBarang: (pin, id) => {
+      auth(pin);
+      const bIdx = barang.findIndex((x) => x.id === id);
+      if (bIdx === -1) throw new Error('Barang tidak ditemukan');
+      const b = barang[bIdx]!;
+      if (b.stok_dalam > 0 || b.stok_luar > 0) {
+        throw new Error(
+          `Barang masih memiliki stok (gudang: ${b.stok_dalam}, luar: ${b.stok_luar}). Nolkan stok terlebih dahulu sebelum menghapus/mengarsipkan.`,
+        );
+      }
+      const punyaRiwayat =
+        transaksi.some((t) => t.barang_id === id) ||
+        rekapBaris.some((r) => r.barang_id === id) ||
+        opname.some((o) => o.barang_id === id);
+      if (punyaRiwayat) {
+        b.aktif = false;
+        return {
+          status: 'archived',
+          nama: b.nama,
+          message: 'Barang memiliki riwayat transaksi sehingga otomatis diarsipkan agar riwayat laporan tidak hilang.',
+        };
+      }
+      barang.splice(bIdx, 1);
+      return {
+        status: 'deleted',
+        nama: b.nama,
+        message: 'Barang berhasil dihapus permanen karena belum memiliki riwayat transaksi.',
+      };
+    },
     simpanKaryawan: (pin, o) => {
       auth(pin);
-      if (!o.nama.trim()) throw new Error('Nama wajib diisi');
-      if (o.id) Object.assign(findK(o.id)!, { nama: o.nama.trim(), aktif: o.aktif !== false });
-      else karyawan.push({ id: uid(), nama: o.nama.trim(), aktif: true });
+      const nm = o.nama.trim();
+      if (!nm) throw new Error('Nama wajib diisi');
+      if (karyawan.some((x) => x.nama.toLowerCase() === nm.toLowerCase() && x.id !== (o.id || '')))
+        throw new Error('Karyawan dengan nama ' + nm + ' sudah ada');
+      const pVal = o.pin === undefined || o.pin === null ? undefined : String(o.pin).trim();
+      if (pVal !== undefined && pVal !== '' && !/^\d{4,6}$/.test(pVal)) throw new Error('PIN karyawan harus 4–6 angka');
+      if (o.id) {
+        const k = findK(o.id);
+        if (!k) throw new Error('Karyawan tidak ditemukan');
+        Object.assign(k, {
+          nama: nm,
+          aktif: o.aktif !== false,
+          ...(pVal !== undefined ? { pin: pVal ? mockHash(pVal, `salt_${k.id}`) : '', punyaPin: !!pVal } : {}),
+        });
+      } else {
+        const newId = uid();
+        karyawan.push({ id: newId, nama: nm, aktif: true, pin: pVal ? mockHash(pVal, `salt_${newId}`) : '', punyaPin: !!pVal });
+      }
+      return true;
+    },
+    verifikasiPinKaryawan: (kid, p) => {
+      const k = findK(kid);
+      if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+      const target = String(k.pin || '').trim();
+      if (!target) return true;
+      rateLimitGuard(`karyawan_${kid}`);
+      const input = String(p).trim();
+      const valid = target === input || target === mockHash(input, `salt_${kid}`);
+      if (!valid) {
+        rateLimitFail(`karyawan_${kid}`);
+        throw new Error('PIN karyawan salah');
+      }
+      rateLimitReset(`karyawan_${kid}`);
       return true;
     },
     stokMasuk: (pin, bid, j, supplier, catatan) => {
@@ -229,7 +347,7 @@ export function createMock(): Impl {
       const b = find(bid);
       if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + n);
-      tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, supplier, catatan, kategori: b.kategori, satuan: b.satuan });
+      tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: '', supplier, catatan, kategori: b.kategori, satuan: b.satuan });
       return true;
     },
     ambilAdmin: (pin, kid, bid, j, ts) => {
@@ -244,11 +362,11 @@ export function createMock(): Impl {
       const ts = Date.now();
       let n = 0;
       items.forEach((i) => {
-        if (i.fisik === '') return;
-        const f = r_(num(i.fisik));
-        if (f < 0) throw new Error('Stok fisik tidak boleh negatif');
+        if (i.fisik === '' || i.fisik === null || i.fisik === undefined) return;
         const b = find(i.barang_id);
         if (!b) return;
+        const f = r_(numWajib(i.fisik, 'Stok fisik ' + b.nama));
+        if (f < 0) throw new Error('Stok fisik tidak boleh negatif');
         const sel = r_(f - b.stok_dalam);
         opname.push({ id: uid(), ts, waktu: fmt(ts), barang_id: b.id, barang: b.nama, sistem: b.stok_dalam, fisik: f, selisih: sel });
         if (sel) tx({ ts, jenis: 'OPNAME', barang_id: b.id, barang: b.nama, jumlah: sel, catatan: `Sistem ${b.stok_dalam} → fisik ${f}`, kategori: b.kategori, satuan: b.satuan });
@@ -264,14 +382,14 @@ export function createMock(): Impl {
       let n = 0;
       input.forEach((i) => {
         const x = rekapBaris.find((b) => b.rekap_id === rk.id && b.barang_id === i.barang_id);
-        if (!x || i.sisa === '') return;
-        const s = r_(num(i.sisa)), maks = r_(x.saldo_awal + x.diambil);
+        if (!x || i.sisa === '' || i.sisa === null || i.sisa === undefined) return;
+        const s = r_(numWajib(i.sisa, 'Sisa ' + x.barang)), maks = r_(x.saldo_awal + x.diambil);
         if (s < 0 || s > maks + 1e-9) throw new Error(`Sisa ${x.barang} harus 0 sampai ${maks}`);
         const delta = r_(s - x.sisa);
         if (!delta) return;
-        const b = find(x.barang_id)!;
+        const b = find(x.barang_id);
+        if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
         b.stok_luar = r_(b.stok_luar + delta);
-        x.sisa = s;
         x.terpakai = r_(maks - s);
         n++;
       });
@@ -280,10 +398,18 @@ export function createMock(): Impl {
     },
     simpanPengaturan: (pin, jam, baru) => {
       auth(pin);
-      if (jam) jamTutup = jam;
+      if (jam) {
+        const m = /(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([AaPp][Mm])?/.exec(String(jam || ''));
+        if (!m) throw new Error('Jam tutup tidak valid: ' + jam);
+        let h = Number(m[1]), mi = Number(m[2]), ap = (m[3] || '').toUpperCase();
+        if (ap === 'PM' && h < 12) h += 12;
+        if (ap === 'AM' && h === 12) h = 0;
+        if (h > 23 || mi > 59) throw new Error('Jam tutup tidak valid: ' + jam);
+        jamTutup = (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi;
+      }
       if (baru) {
         if (!/^\d{4,8}$/.test(baru)) throw new Error('PIN harus 4–8 angka');
-        PIN = baru;
+        PIN = mockHash(baru, 'admin_salt');
       }
       return true;
     },
@@ -311,7 +437,7 @@ export function createMock(): Impl {
         .map((r) => ({ nama: r.nama, satuan: r.satuan, masuk: r_(r.masuk), terpakai_rekap: r_(r.rk), langsung_habis: r_(r.lh), total_terpakai: r_(r.rk + r.lh), opname: r_(r.op) }))
         .sort((a, b) => (a.nama < b.nama ? -1 : 1));
     },
-    laporanKeSheet: (pin) => {
+    laporanKeSheet: (pin, _dari, _sampai) => {
       auth(pin);
       return 'https://docs.google.com/spreadsheets/';
     },

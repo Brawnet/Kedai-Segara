@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#1D4ED8" />
+    <meta name="theme-color" content="#2B5338" />
     <title>Stok Segara</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231D4ED8'/%3E%3Cpath d='M8 13h16v11H8zM7 9h18l-1 4H8z' fill='white'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232B5338'/%3E%3Cpath d='M8 18c0 4 3.5 6 8 6s8-2 8-6H8zm2-3c1.5-2 1.5-3 1.5-4 0-.8-.3-1.5-.7-2 1.8.8 2.7 2 2.7 3.5 0 1.2-.5 2.2-1.5 3.5h-2zm5 0c1.5-2 1.5-3 1.5-4 0-.8-.3-1.5-.7-2 1.8.8 2.7 2 2.7 3.5 0 1.2-.5 2.2-1.5 3.5h-2zm5 0c1.5-2 1.5-3 1.5-4 0-.8-.3-1.5-.7-2 1.8.8 2.7 2 2.7 3.5 0 1.2-.5 2.2-1.5 3.5h-2z' fill='white'/%3E%3C/svg%3E"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,6 +18,12 @@
     <!-- Diganti oleh doGet() di Kode.gs menjadi "tablet" atau "admin". -->
     <script>
       window.SEGARA_MODE = '__SEGARA_MODE__';
+      try {
+        var t = localStorage.getItem('segara_theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
     </script>
   </head>
   <body>

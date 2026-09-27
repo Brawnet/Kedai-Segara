@@ -68,6 +68,8 @@ export function ManualPage() {
     if (!(parseNum(f.j) > 0)) er.j = 'Jumlah harus lebih dari 0';
     const ts = new Date(f.w).getTime();
     if (!f.w || isNaN(ts)) er.w = 'Isi waktu pengambilan';
+    else if (ts > Date.now() + 60000) er.w = 'Waktu tidak boleh di masa depan';
+    else if (d.lastRekap && ts <= d.lastRekap) er.w = `Waktu harus setelah rekap terakhir (${d.status.lastRekap || 'terbaru'})`;
     setErr(er);
     if (Object.keys(er).length) return;
     if (await A('ambilAdmin', [f.k, f.b, parseNum(f.j), ts], 'Pengambilan dicatat')) setF({ ...f, j: '' });

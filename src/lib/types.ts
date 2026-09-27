@@ -24,9 +24,11 @@ export interface Barang extends BarangTablet {
 export interface Karyawan {
   id: string;
   nama: string;
+  punyaPin?: boolean;
 }
 export interface KaryawanAdmin extends Karyawan {
   aktif: boolean;
+  pin?: string;
 }
 
 export interface Status {
@@ -167,7 +169,9 @@ export interface Api {
 
   adminData(pin: string): AdminData;
   simpanBarang(pin: string, o: BarangInput): boolean;
-  simpanKaryawan(pin: string, o: { id?: string; nama: string; aktif?: boolean }): boolean;
+  hapusBarang(pin: string, id: string): { status: 'deleted' | 'archived'; nama: string; message: string };
+  simpanKaryawan(pin: string, o: { id?: string; nama: string; aktif?: boolean; pin?: string }): boolean;
+  verifikasiPinKaryawan(karyawanId: string, pin: string): boolean;
   stokMasuk(pin: string, barangId: string, jumlah: number | string, supplier: string, catatan: string): boolean;
   ambilAdmin(pin: string, karyawanId: string, barangId: string, jumlah: number | string, ts: number): AmbilResult;
   simpanOpname(pin: string, items: { barang_id: string; fisik: string }[]): number;

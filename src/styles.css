@@ -1,24 +1,26 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Token dari design-system/segara/MASTER.md */
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --color-primary: #1d4ed8;
-  --color-primary-hover: #1e40af;
-  --color-primary-soft: #eff6ff;
+  --color-primary: #2b5338;
+  --color-primary-hover: #22432d;
+  --color-primary-soft: #ebf3ed;
   --color-fg: #0f172a;
   --color-muted-fg: #475569;
-  --color-bg: #f8fafc;
+  --color-bg: #ffffff;
   --color-card: #ffffff;
-  --color-muted: #f1f5f9;
+  --color-muted: #f8fafc;
   --color-line: #e2e8f0;
   --color-line-strong: #64748b;
-  --color-success: #047857;
-  --color-success-hover: #065f46;
-  --color-success-soft: #ecfdf5;
+  --color-success: #1e6b42;
+  --color-success-hover: #165433;
+  --color-success-soft: #ebf6ee;
   --color-warning: #b45309;
-  --color-warning-soft: #fffbeb;
+  --color-warning-soft: #fef3c7;
   --color-danger: #b91c1c;
   --color-danger-hover: #991b1b;
   --color-danger-soft: #fef2f2;
@@ -26,6 +28,27 @@
   --radius-ctl: 10px;
   --radius-card: 14px;
   --radius-sheet: 20px;
+}
+
+.dark {
+  --color-primary: #2e7d4d;
+  --color-primary-hover: #38945d;
+  --color-primary-soft: #14291c;
+  --color-fg: #f8fafc;
+  --color-muted-fg: #94a3b8;
+  --color-bg: #09090b;
+  --color-card: #121215;
+  --color-muted: #1c1c21;
+  --color-line: #27272f;
+  --color-line-strong: #3f3f4c;
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-success-soft: #142e1d;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #2e1d08;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-danger-soft: #2d1212;
 }
 
 @layer base {
@@ -66,7 +89,7 @@
 }
 
 @utility safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(0.75rem, calc(0.75rem + env(safe-area-inset-bottom, 0px)));
 }
 
 @media (prefers-reduced-motion: reduce) {
