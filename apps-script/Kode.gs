@@ -17,10 +17,12 @@ var SS_ = null;
 var SKEMA_V = '2'; // naikkan jika kolom di SHEETS berubah
 
 /* ---------- Web app ---------- */
+// index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
+// karena kode JS hasil build bisa mengandung "<?" — mode disisipkan lewat placeholder.
 function doGet(e) {
-  var t = HtmlService.createTemplateFromFile('index.html');
-  t.mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
-  return t.evaluate()
+  var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
+  var html = HtmlService.createHtmlOutputFromFile('index').getContent().replace('__SEGARA_MODE__', mode);
+  return HtmlService.createHtmlOutput(html)
     .setTitle('Stok Gudang')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);

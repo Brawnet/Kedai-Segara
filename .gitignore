@@ -1,2 +1,12 @@
 # Planning & scratch
 .planning/
+.kiro/
+
+# Node / build
+node_modules/
+dist/
+# Hasil build Vite (dibuat oleh `npm run build`)
+apps-script/index.html
+
+# clasp login token (jangan di-commit)
+.clasprc.json

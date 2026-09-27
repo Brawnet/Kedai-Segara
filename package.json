@@ -1,0 +1,30 @@
+{
+  "name": "segara-stok",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "push": "npm run build && clasp push --force",
+    "deploy": "node scripts/deploy.mjs"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "2.1.10",
+    "preact": "10.29.8",
+    "react": "npm:@preact/compat@18.3.2",
+    "react-dom": "npm:@preact/compat@18.3.2"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@google/clasp": "3.4.1",
+    "@preact/preset-vite": "2.10.6",
+    "@tailwindcss/vite": "4.3.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.1",
+    "vite-plugin-singlefile": "2.3.3"
+  }
+}
