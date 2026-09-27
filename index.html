@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f3f2f2;
+            --sf: #fff;
+            --tx: #201e1d;
+            --mu: #5d5956;
+            --ac: #ec3013;
+            --ac6: #d42a10;
+            --ac7: #a8200b;
+            --ac1: #fde6e1;
+            --ac2: #f9c9bf;
+            --dv: #201e1d;
+            --ln: #d6d3d1
+        }
+
+        * {
+            box-sizing: border-box;
+            border-radius: 0
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--tx);
+            font: 16px/1.5 Archivo, system-ui, sans-serif;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        body.busy {
+            cursor: progress
+        }
+
+        body.busy main {
+            opacity: .6;
+            pointer-events: none
+        }
+
+        a {
+            color: var(--ac7)
+        }
+
+        a:hover {
+            color: var(--ac6)
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+            color: inherit
+        }
+
+        button {
+            cursor: pointer;
+            border: 2px solid var(--dv);
+            background: var(--sf);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            min-height: 48px
+        }
+
+        button:hover {
+            background: var(--ac1)
+        }
+
+        button:active {
+            background: var(--ac2)
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--ac);
+            outline-offset: 2px
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            background: var(--sf)
+        }
+
+        .p {
+            background: var(--ac);
+            border-color: var(--ac);
+            color: #fff
+        }
+
+        .p:hover {
+            background: var(--ac6)
+        }
+
+        .p:active {
+            background: var(--ac7)
+        }
+
+        .p:disabled {
+            background: var(--ac)
+        }
+
+        input,
+        select {
+            border: 2px solid var(--dv);
+            background: var(--sf);
+            padding: 10px 12px;
+            width: 100%;
+            min-height: 48px
+        }
+
+        .bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border-bottom: 2px solid var(--dv);
+            padding: 0 20px;
+            background: var(--sf)
+        }
+
+        .brand {
+            font-weight: 800;
+            font-size: 20px;
+            margin-right: auto;
+            padding: 12px 0
+        }
+
+        .tab {
+            border: 0;
+            background: none;
+            padding: 12px;
+            border-bottom: 3px solid transparent;
+            min-height: auto
+        }
+
+        .tab:hover {
+            background: var(--ac1)
+        }
+
+        .tab.on {
+            border-bottom-color: var(--ac)
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 20px 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px
+        }
+
+        h1 {
+            font-size: 36px;
+            margin: 0;
+            line-height: 1.1;
+            text-wrap: balance
+        }
+
+        h2 {
+            font-size: 22px;
+            margin: 0
+        }
+
+        .kick {
+            font-size: 12px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--ac7);
+            margin-bottom: 4px
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr))
+        }
+
+        .big {
+            min-height: 92px;
+            font-size: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 4px
+        }
+
+        .big small {
+            font-weight: 400;
+            font-size: 14px;
+            color: var(--mu)
+        }
+
+        .p.big small {
+            color: #fff
+        }
+
+        .alert {
+            border: 2px solid var(--ac);
+            background: var(--ac1);
+            color: var(--ac7);
+            padding: 12px 16px;
+            font-weight: 600;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .alert.hot {
+            background: var(--ac);
+            color: #fff
+        }
+
+        .alert.hot button {
+            border-color: #fff
+        }
+
+        .note {
+            border: 2px solid var(--dv);
+            background: var(--sf);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .tw {
+            overflow-x: auto;
+            border-top: 2px solid var(--dv)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--sf)
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            border-bottom: 2px solid var(--dv);
+            padding: 10px 8px;
+            white-space: nowrap
+        }
+
+        td {
+            border-bottom: 1px solid var(--ln);
+            padding: 10px 8px;
+            vertical-align: top
+        }
+
+        td button {
+            min-height: 36px;
+            padding: 6px 10px;
+            font-size: 14px
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            background: var(--ac1);
+            color: var(--ac7);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            vertical-align: middle
+        }
+
+        .tag.n {
+            background: #e7e5e4;
+            color: var(--tx)
+        }
+
+        .pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 380px
+        }
+
+        .pad button {
+            font-size: 28px;
+            padding: 16px 20px;
+            min-height: 72px
+        }
+
+        .display {
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1.1;
+            border-bottom: 2px solid var(--dv);
+            padding: 8px 0;
+            max-width: 380px
+        }
+
+        .hr {
+            border: 0;
+            border-top: 2px solid var(--dv);
+            margin: 4px 0;
+            width: 100%
+        }
+
+        .sub {
+            display: flex;
+            gap: 0;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--dv)
+        }
+
+        .form {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            align-items: end
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .low {
+            color: var(--ac7);
+            font-weight: 700
+        }
+
+        .mu {
+            color: var(--mu);
+            font-size: 14px
+        }
+
+        #toast {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            z-index: 10;
+            max-width: calc(100vw - 40px)
+        }
+
+        .toast {
+            background: var(--tx);
+            color: #fff;
+            padding: 12px 16px;
+            font-weight: 600;
+            border-left: 6px solid var(--tx)
+        }
+
+        .toast.bad {
+            border-left-color: var(--ac)
+        }
+
+        .big.kat {
+            min-height: 120px;
+            border-left: 8px solid var(--ac)
+        }
+
+        .kh {
+            background: var(--ac1);
+            color: var(--ac7)
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div id="toast"></div>
+    <script>
+        var MODE = '<?= mode ?>';
+        var S = {
+            mode: MODE === 'admin' ? 'admin' : 'tablet', t: { step: 'home' }, a: { tab: 'dash' }, d: null, ad: null,
+            pin: sessionStorage.getItem('sg_pin') || '', last: null, busy: false, lastAct: Date.now()
+        };
+
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        function nf(n) { return (Math.round(Number(n) * 1000) / 1000).toLocaleString('id-ID'); }
+        function el(id) { return document.getElementById(id); }
+        function call(fn) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            return new Promise(function (res, rej) {
+                var r = google.script.run.withSuccessHandler(res).withFailureHandler(function (e) { rej(e && e.message ? e : new Error(String(e))); });
+                r[fn].apply(r, args);
+            });
+        }
+        function msg(e) { return String(e.message || e).replace(/^(Error|Exception):\s*/i, ''); }
+        function toast(m, bad) {
+            el('toast').innerHTML = '<div class="toast' + (bad ? ' bad' : '') + '">' + esc(m) + '</div>';
+            clearTimeout(toast.t); toast.t = setTimeout(function () { el('toast').innerHTML = ''; }, 4500);
+        }
+        function act(fn, args, after) {
+            if (S.busy) return Promise.resolve();
+            S.busy = true; document.body.classList.add('busy');
+            return call.apply(null, [fn].concat(args)).then(function (r) { return after ? after(r) : r; })
+                .catch(function (e) {
+                    toast(msg(e), 1);
+                    if (/PIN salah/.test(msg(e))) { S.pin = ''; S.ad = null; sessionStorage.removeItem('sg_pin'); render(); }
+                })
+                .then(function (r) { S.busy = false; document.body.classList.remove('busy'); return r; });
+        }
+
+        function render() {
+            el('app').innerHTML =
+                '<header class="bar"><span class="brand">Stok Gudang</span>' +
+                '<button class="tab' + (S.mode === 'tablet' ? ' on' : '') + '" onclick="setMode(\'tablet\')">Tablet</button>' +
+                '<button class="tab' + (S.mode === 'admin' ? ' on' : '') + '" onclick="setMode(\'admin\')">Admin</button></header>' +
+                '<main>' + (S.mode === 'tablet' ? viewT() : viewA()) + '</main>';
+        }
+        function setMode(m) {
+            S.mode = m;
+            if (m === 'tablet') { S.t = { step: 'home' }; render(); loadT(); }
+            else { render(); if (S.pin && !S.ad) loadA(); }
+        }
+
+        /* ================= TABLET ================= */
+        function loadT() {
+            return call('getTablet').then(function (d) { S.d = d; if (S.mode === 'tablet') render(); })
+                .catch(function (e) { toast(msg(e), 1); });
+        }
+        function goT(step, extra) { S.t = Object.assign({ step: step }, extra || {}); render(); window.scrollTo(0, 0); }
+        function viewT() {
+            var d = S.d, t = S.t;
+            if (!d) return '<p>Memuat…</p>';
+            if (t.step === 'menu') return tMenu(t);
+            if (t.step === 'barang') return tBarang(d, t);
+            if (t.step === 'jumlah') return tJumlah(t);
+            if (t.step === 'sukses') return tSukses(t);
+            if (t.step === 'rekapNama') return tRekapNama(d);
+            if (t.step === 'rekap') return tRekap(t);
+            if (t.step === 'rekapOk') return tRekapOk(t);
+            return tHome(d);
+        }
+        function nearClose(jam) {
+            if (!jam) return false;
+            var p = jam.split(':').map(Number), c = new Date(); c.setHours(p[0], p[1] || 0, 0, 0);
+            return Date.now() >= c.getTime() - 30 * 60000;
+        }
+        function undoBtn() {
+            var l = S.last;
+            if (!l || Date.now() - l.ts > 60000) return '';
+            return '<button onclick="batalT()">Batalkan (<span data-cd="' + l.ts + '">' + (60 - Math.floor((Date.now() - l.ts) / 1000)) + '</span> dtk)</button>';
+        }
+        function tHome(d) {
+            var st = d.status, h = '';
+            if (st.lewatHari) h += '<div class="alert hot"><span style="margin-right:auto">Ada pengambilan dari hari sebelumnya yang belum direkap.</span><button onclick="goT(\'rekapNama\')">Rekap sekarang</button></div>';
+            else if (st.belumRekap && nearClose(d.jamTutup)) h += '<div class="alert"><span style="margin-right:auto">Waktunya rekap sisa Stock Luar (tutup ' + esc(d.jamTutup) + ').</span><button onclick="goT(\'rekapNama\')">Rekap</button></div>';
+            var u = undoBtn();
+            if (u) h += '<div class="note" style="flex-direction:row;align-items:center;flex-wrap:wrap"><span style="margin-right:auto">' + esc(S.last.karyawan) + ' ambil ' + nf(S.last.jumlah) + ' ' + esc(S.last.satuan) + ' ' + esc(S.last.barang) + '</span>' + u + '</div>';
+            h += '<div><div class="kick">Ambil barang</div><h1>Siapa yang ambil?</h1></div>';
+            h += '<div class="grid">' + d.karyawan.map(function (k) { return '<button class="big" onclick="pickK(\'' + esc(k.id) + '\')">' + esc(k.nama) + '</button>'; }).join('') + '</div>';
+            if (!d.karyawan.length) h += '<p class="mu">Belum ada karyawan. Tambahkan di menu Admin.</p>';
+            return h;
+        }
+        function pickK(id) { var k = S.d.karyawan.filter(function (x) { return x.id === id; })[0]; goT('menu', { k: k }); }
+        function tMenu(t) {
+            var st = S.d.status;
+            return '<div class="row"><button onclick="goT(\'home\')">← Ganti nama</button></div>' +
+                '<div><div class="kick">' + esc(t.k.nama) + '</div><h1>Mau apa?</h1></div>' +
+                '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">' +
+                '<button class="big" style="min-height:160px" onclick="goB(\'ambil\')">Ambil barang dari gudang<small>Catat barang yang dibawa ke dapur</small></button>' +
+                '<button class="big" style="min-height:160px" onclick="goB(\'masuk\')">Masukkan barang ke gudang<small>Catat barang yang baru datang</small></button>' +
+                '<button class="big' + (st.lewatHari ? ' p' : '') + '" style="min-height:160px" onclick="mulaiRekap(\'' + esc(t.k.id) + '\')">Rekap sisa dapur<small>Closing malam' + (st.belumRekap ? ' · ' + st.belumRekap + ' pengambilan belum direkap' : '') + '</small></button>' +
+                '</div>';
+        }
+        function goB(m) { goT('barang', { k: S.t.k, mode: m || S.t.mode, q: '', kat: m ? -1 : (S.t.kat >= 0 ? S.t.kat : -1) }); }
+        function kats() { return urutKat(S.d.barang, S.d.urutan); }
+        function katOf(b) { return b.kategori || 'Lainnya'; }
+        function pilihKat(i) { S.t.kat = i; S.t.q = ''; render(); window.scrollTo(0, 0); }
+        function tBarang(d, t) {
+            var k = t.kat >= 0 ? kats()[t.kat] : null, masuk = t.mode === 'masuk';
+            var back = k ? '<button onclick="pilihKat(-1)">← Semua kategori</button>' : '<button onclick="goT(\'menu\',{k:S.t.k})">← Menu</button>';
+            return '<div class="row">' + back + '</div>' +
+                '<div><div class="kick">' + esc(t.k.nama) + ' · ' + (masuk ? 'Masukkan ke gudang' : 'Ambil dari gudang') + '</div><h1>' +
+                (k ? esc(k) : (masuk ? 'Barang apa yang datang?' : 'Ambil barang apa?')) + '</h1>' +
+                (k ? '' : '<p class="mu" style="margin:6px 0 0">Pilih kategori dulu, atau langsung cari nama/kode barang.</p>') + '</div>' +
+                '<input id="q" placeholder="' + (k ? 'Cari di kategori ini…' : 'Cari barang di semua kategori…') + '" value="' + esc(t.q) + '" oninput="S.t.q=this.value;el(\'list\').innerHTML=listB()">' +
+                '<div class="grid" id="list">' + listB() + '</div>';
+        }
+        function listB() {
+            var t = S.t, q = (t.q || '').toLowerCase().trim(), ks = kats(), k = t.kat >= 0 ? ks[t.kat] : null;
+            if (!k && !q) return ks.map(function (c, i) {
+                var n = S.d.barang.filter(function (b) { return katOf(b) === c; }).length;
+                return '<button class="big kat" onclick="pilihKat(' + i + ')"><span>' + esc(c) + '</span><small>' + n + ' barang</small></button>';
+            }).join('') || '<p class="mu">Belum ada barang. Tambahkan di menu Admin.</p>';
+            var l = S.d.barang.filter(function (b) {
+                return (!k || katOf(b) === k) && (!q || b.nama.toLowerCase().indexOf(q) >= 0 || String(b.kode || '').toLowerCase().indexOf(q) === 0);
+            });
+            return l.map(function (b) {
+                return '<button class="big" onclick="pickB(\'' + esc(b.id) + '\')"><span>' + esc(b.nama) + '</span><small>' + esc(b.satuan) +
+                    (b.kode ? ' · ' + esc(b.kode) : '') + (k ? '' : ' · ' + esc(katOf(b))) + (t.mode !== 'masuk' && b.alur === 'LANGSUNG_HABIS' ? ' · langsung habis' : '') + '</small></button>';
+            }).join('') || '<p class="mu">Tidak ada barang.</p>';
+        }
+        function pickB(id) { goT('jumlah', { k: S.t.k, mode: S.t.mode, kat: S.t.kat, b: S.d.barang.filter(function (x) { return x.id === id; })[0], val: '', sup: '' }); }
+        function tJumlah(t) {
+            var b = t.b, v = parseFloat(t.val) || 0, ok = v > 0, masuk = t.mode === 'masuk';
+            return '<div class="row"><button onclick="goB()">← Pilih barang lain</button></div>' +
+                '<div><div class="kick">' + esc(t.k.nama) + ' · ' + (masuk ? 'Masukkan ke gudang' : 'Ambil dari gudang') + '</div><h1>' + esc(b.nama) + '</h1></div>' +
+                '<div class="display num">' + esc((t.val || '0').replace('.', ',')) + ' <span style="font-size:24px;font-weight:600">' + esc(b.satuan) + '</span></div>' +
+                (masuk ? '<label style="max-width:380px">Dari supplier (opsional)<input value="' + esc(t.sup) + '" oninput="S.t.sup=this.value"></label>' : '') +
+                '<div class="pad">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '⌫'].map(function (k) { return '<button onclick="key(\'' + k + '\')">' + k + '</button>'; }).join('') + '</div>' +
+                '<button class="p big" style="max-width:380px"' + (ok ? '' : ' disabled') + ' onclick="konfirmasi()">' + (masuk ? 'Masukkan ' : 'Ambil ') + (ok ? nf(v) + ' ' + esc(b.satuan) : '') +
+                '<small>' + (masuk ? 'Ditambahkan ke stok gudang' : b.alur === 'LUAR' ? 'Dibawa ke dapur, direkap saat closing' : 'Langsung tercatat terpakai') + '</small></button>';
+        }
+        function key(k) {
+            var v = S.t.val;
+            if (k === '⌫') v = v.slice(0, -1);
+            else if (k === ',') { if (v.indexOf('.') < 0) v = (v || '0') + '.'; }
+            else { if (v === '0') v = ''; if (v.length < 8) v += k; }
+            S.t.val = v; render();
+        }
+        function upB(b) { S.d.barang = S.d.barang.map(function (x) { return x.id === b.id ? b : x; }); }
+        function konfirmasi() {
+            var t = S.t, j = parseFloat(t.val);
+            if (t.mode === 'masuk') return act('masukKaryawan', [t.k.id, t.b.id, j, t.sup], function () {
+                goT('sukses', { k: t.k, mode: 'masuk', b: t.b, j: j, kat: t.kat });
+            });
+            act('ambil', [t.k.id, t.b.id, j], function (r) {
+                upB(r.barang);
+                S.last = { id: r.tx.id, ts: Date.now(), karyawan: t.k.nama, barang: t.b.nama, jumlah: j, satuan: t.b.satuan };
+                goT('sukses', { k: t.k, mode: 'ambil', b: r.barang, j: j, kat: t.kat });
+                clearTimeout(S.autoHome);
+                S.autoHome = setTimeout(function () { if (S.t.step === 'sukses') { goT('home'); loadT(); } }, 15000);
+            });
+        }
+        function tSukses(t) {
+            var m = t.mode === 'masuk';
+            return '<div><div class="kick">Tercatat</div><h1>' + esc(t.k.nama) + (m ? ' memasukkan ' : ' ambil ') + nf(t.j) + ' ' + esc(t.b.satuan) + ' ' + esc(t.b.nama) + (m ? ' ke gudang' : '') + '</h1></div>' +
+                '<div class="row"><button class="p" onclick="goB()">' + (m ? 'Masukkan barang lain' : 'Ambil barang lain') + '</button><button onclick="goT(\'menu\',{k:S.t.k})">Menu</button><button onclick="goT(\'home\');loadT()">Selesai</button>' + (m ? '' : undoBtn()) + '</div>';
+        }
+        function batalT() {
+            act('batalAmbil', [S.last.id, ''], function () { S.last = null; toast('Pengambilan dibatalkan'); goT('home'); return loadT(); });
+        }
+        function tRekapNama(d) {
+            return '<div class="row"><button onclick="goT(\'home\')">← Kembali</button></div>' +
+                '<div><div class="kick">Rekap sisa Stock Luar</div><h1>Siapa yang merekap?</h1></div>' +
+                '<div class="grid">' + d.karyawan.map(function (k) { return '<button class="big" onclick="mulaiRekap(\'' + esc(k.id) + '\')">' + esc(k.nama) + '</button>'; }).join('') + '</div>';
+        }
+        function mulaiRekap(id) {
+            var k = S.d.karyawan.filter(function (x) { return x.id === id; })[0];
+            act('rekapDraf', [], function (r) { goT('rekap', { k: k, cutoff: r.cutoff, rows: r.baris, vals: {}, notes: {} }); });
+        }
+        function tpc(i) {
+            var r = S.t.rows[i], v = S.t.vals[i];
+            if (v === undefined || v === '') return '—';
+            var s = parseFloat(v);
+            if (isNaN(s) || s < 0 || s > r.maks) return '<span class="low">maks ' + nf(r.maks) + '</span>';
+            return nf(r.maks - s) + ' ' + esc(r.satuan);
+        }
+        function valid(i) { var r = S.t.rows[i], s = parseFloat(S.t.vals[i]); return S.t.vals[i] !== undefined && S.t.vals[i] !== '' && !isNaN(s) && s >= 0 && s <= r.maks; }
+        function rok() { return S.t.rows.every(function (_, i) { return valid(i); }); }
+        function rsum() { return S.t.rows.filter(function (_, i) { return valid(i); }).length + ' dari ' + S.t.rows.length + ' barang terisi'; }
+        function tRekap(t) {
+            var back = '<div class="row"><button onclick="goT(\'home\')">← Batal</button></div>';
+            if (!t.rows.length) return back + '<div><div class="kick">Rekap</div><h1>Tidak ada barang di luar</h1></div><p class="mu">Tidak ada yang perlu direkap.</p>';
+            return back + '<div><div class="kick">' + esc(t.k.nama) + ' · Rekap</div><h1>Hitung sisa di area kerja</h1>' +
+                '<p class="mu" style="margin:6px 0 0">Isi jumlah yang masih tersisa di luar. Tekan “Habis” kalau tidak ada sisa.</p></div>' +
+                '<div class="tw"><table><thead><tr><th>Barang</th><th>Di luar</th><th style="min-width:240px">Sisa</th><th>Terpakai</th></tr></thead><tbody>' +
+                t.rows.map(function (r, i) {
+                    return '<tr><td><strong>' + esc(r.nama) + '</strong><div class="mu">awal ' + nf(r.saldo_awal) + ' + diambil ' + nf(r.diambil) + '</div></td>' +
+                        '<td class="num">' + nf(r.maks) + ' ' + esc(r.satuan) + '</td>' +
+                        '<td><div class="row" style="flex-wrap:nowrap;gap:8px"><input id="s' + i + '" type="number" inputmode="decimal" min="0" max="' + r.maks + '" step="any" value="' + esc(t.vals[i] == null ? '' : t.vals[i]) + '" oninput="setSisa(' + i + ',this.value)"><button style="min-height:48px" onclick="setSisa(' + i + ',\'0\',1)">Habis</button></div>' +
+                        '<input placeholder="Catatan (opsional)" style="margin-top:6px;font-size:14px;min-height:40px;padding:6px 10px" value="' + esc(t.notes[i] || '') + '" oninput="S.t.notes[' + i + ']=this.value"></td>' +
+                        '<td class="num" id="tp' + i + '">' + tpc(i) + '</td></tr>';
+                }).join('') + '</tbody></table></div>' +
+                '<div class="row"><span id="rsum" style="margin-right:auto">' + rsum() + '</span><button class="p" id="rsave" onclick="simpanRekap()"' + (rok() ? '' : ' disabled') + '>Simpan rekap</button></div>';
+        }
+        function setSisa(i, v, fill) {
+            S.t.vals[i] = v;
+            if (fill) el('s' + i).value = v;
+            el('tp' + i).innerHTML = tpc(i); el('rsum').textContent = rsum(); el('rsave').disabled = !rok();
+        }
+        function simpanRekap() {
+            var t = S.t;
+            var rows = t.rows.map(function (r, i) { return { barang_id: r.barang_id, sisa: parseFloat(t.vals[i]), catatan: t.notes[i] || '' }; });
+            act('simpanRekap', [t.cutoff, t.k.id, rows], function () {
+                goT('rekapOk', { k: t.k, rows: t.rows, vals: t.vals }); return loadT();
+            });
+        }
+        function tRekapOk(t) {
+            return '<div><div class="kick">Rekap tersimpan · ' + esc(t.k.nama) + '</div><h1>Pemakaian hari ini</h1></div>' +
+                '<div class="tw"><table><thead><tr><th>Barang</th><th>Terpakai</th><th>Sisa di luar</th></tr></thead><tbody>' +
+                t.rows.map(function (r, i) { var s = parseFloat(t.vals[i]); return '<tr><td>' + esc(r.nama) + '</td><td class="num"><strong>' + nf(r.maks - s) + ' ' + esc(r.satuan) + '</strong></td><td class="num">' + nf(s) + ' ' + esc(r.satuan) + '</td></tr>'; }).join('') +
+                '</tbody></table></div><div class="row"><button class="p" onclick="goT(\'home\')">Kembali ke beranda</button></div>';
+        }
+
+        /* ================= ADMIN ================= */
+        var TABS = [['dash', 'Dashboard'], ['barang', 'Barang'], ['karyawan', 'Karyawan'], ['masuk', 'Stok masuk'], ['manual', 'Ambil manual'], ['opname', 'Opname'], ['rekap', 'Rekap'], ['riwayat', 'Riwayat'], ['laporan', 'Laporan'], ['set', 'Pengaturan']];
+        function viewA() {
+            if (!S.ad) return aLogin();
+            var V = { dash: aDash, barang: aBarang, karyawan: aKary, masuk: aMasuk, manual: aManual, opname: aOpname, rekap: aRekap, riwayat: aRiwayat, laporan: aLaporan, set: aSet };
+            return '<nav class="sub">' + TABS.map(function (t) { return '<button class="tab' + (S.a.tab === t[0] ? ' on' : '') + '" onclick="aTab(\'' + t[0] + '\')">' + t[1] + '</button>'; }).join('') +
+                '<button class="tab" style="margin-left:auto" onclick="loadA()">Muat ulang</button><button class="tab" onclick="logout()">Keluar</button></nav>' + V[S.a.tab](S.ad);
+        }
+        function aLogin() {
+            return '<div style="max-width:360px;display:flex;flex-direction:column;gap:12px"><div><div class="kick">Admin</div><h1>Masuk</h1></div>' +
+                '<label>PIN admin<input id="pin" type="password" inputmode="numeric" autocomplete="off" onkeydown="if(event.key===\'Enter\')login()"></label>' +
+                '<button class="p" onclick="login()">Masuk</button></div>';
+        }
+        function login() {
+            var p = el('pin').value;
+            act('adminData', [p], function (r) { S.pin = p; sessionStorage.setItem('sg_pin', p); S.ad = r; render(); });
+        }
+        function logout() { S.pin = ''; S.ad = null; sessionStorage.removeItem('sg_pin'); render(); }
+        function loadA() { return act('adminData', [S.pin], function (r) { S.ad = r; render(); }); }
+        function aTab(k) { S.a = { tab: k }; render(); window.scrollTo(0, 0); }
+        function A(fn, args, okMsg, done) {
+            return act(fn, [S.pin].concat(args), function (res) {
+                toast(typeof okMsg === 'function' ? okMsg(res) : okMsg);
+                if (done) done(res);
+                return call('adminData', S.pin).then(function (r) { S.ad = r; render(); });
+            });
+        }
+        function v(id) { var e = el(id); return e ? e.value : ''; }
+        function head(k, t) { return '<div><div class="kick">' + k + '</div><h1>' + t + '</h1></div>'; }
+        function opts(list, sel, label) { return list.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === sel ? ' selected' : '') + '>' + esc(label(x)) + '</option>'; }).join(''); }
+        function aktifB(d) { return d.barang.filter(function (b) { return b.aktif; }); }
+        function urutKat(list, urutan) {
+            var s = [], k = function (b) { return b.kategori || 'Lainnya'; };
+            (urutan || []).concat(list.map(k)).forEach(function (c) {
+                if (c && s.indexOf(c) < 0 && list.some(function (b) { return k(b) === c; })) s.push(c);
+            });
+            return s;
+        }
+        function grupKat(list, urutan) {
+            return urutKat(list, urutan).map(function (c) { return { k: c, l: list.filter(function (b) { return (b.kategori || 'Lainnya') === c; }) }; });
+        }
+        function optsKat(list, urutan) {
+            return grupKat(list, urutan).map(function (g) {
+                return '<optgroup label="' + esc(g.k) + '">' + opts(g.l, '', function (b) { return b.nama + ' (' + b.satuan + ')' + (b.kode ? ' · ' + b.kode : ''); }) + '</optgroup>';
+            }).join('');
+        }
+
+        function aDash(d) {
+            var st = d.status, bs = aktifB(d);
+            var low = bs.filter(function (b) { return b.stok_dalam + b.stok_luar < b.ambang_min; });
+            var h = '';
+            if (st.lewatHari) h += '<div class="alert hot">Rekap tertunda: ' + st.belumRekap + ' pengambilan belum direkap, ada yang dari hari sebelumnya.</div>';
+            else if (st.belumRekap) h += '<div class="alert">' + st.belumRekap + ' pengambilan belum direkap.</div>';
+            h += head('Ringkasan', 'Stok saat ini');
+            if (low.length) h += '<div class="note"><div><strong class="low">Stok menipis (' + low.length + ')</strong></div><div>' + low.map(function (b) { return esc(b.nama) + ' <span class="mu">' + nf(b.stok_dalam + b.stok_luar) + '/' + nf(b.ambang_min) + ' ' + esc(b.satuan) + '</span>'; }).join(' · ') + '</div></div>';
+            h += '<div class="tw"><table><thead><tr><th>Barang</th><th>Dalam</th><th>Luar</th><th>Total</th><th>Min</th><th>Alur</th></tr></thead><tbody>' +
+                grupKat(bs, d.urutan).map(function (g) {
+                    return '<tr><th colspan="6" class="kh">' + esc(g.k) + ' · ' + g.l.length + ' barang</th></tr>' + g.l.map(function (b) {
+                        var tot = b.stok_dalam + b.stok_luar, l = tot < b.ambang_min;
+                        return '<tr><td><strong>' + esc(b.nama) + '</strong>' + (l ? ' <span class="tag">menipis</span>' : '') + '</td><td class="num">' + nf(b.stok_dalam) + '</td><td class="num">' + (b.alur === 'LUAR' || b.stok_luar ? nf(b.stok_luar) : '—') + '</td><td class="num' + (l ? ' low' : '') + '">' + nf(tot) + ' ' + esc(b.satuan) + '</td><td class="num">' + nf(b.ambang_min) + '</td><td>' + (b.alur === 'LUAR' ? 'Lewat luar' : 'Langsung habis') + '</td></tr>';
+                    }).join('');
+                }).join('') + '</tbody></table></div>' +
+                '<p class="mu" style="margin:0">Rekap terakhir: ' + esc(st.lastRekap || 'belum ada') + ' · Data tersimpan di <a href="' + esc(d.url) + '" target="_blank">Google Sheet</a>.</p>';
+            return h;
+        }
+
+        function aBarang(d) {
+            var e = S.a.edit || {};
+            return head('Master', 'Barang') +
+                '<div class="note"><h2>' + (e.id ? 'Edit: ' + esc(e.nama) : 'Tambah barang') + '</h2><div class="form">' +
+                '<label>Nama<input id="f_nama" value="' + esc(e.nama || '') + '"></label>' +
+                '<label>Kode<input id="f_kode" value="' + esc(e.kode || '') + '" placeholder="mis. AS"></label>' +
+                '<label>Satuan<input id="f_satuan" value="' + esc(e.satuan || '') + '" placeholder="kg, liter, pcs"></label>' +
+                '<label>Kategori<input id="f_kat" value="' + esc(e.kategori || '') + '" placeholder="Pilih atau ketik kategori" list="dl_kat"><datalist id="dl_kat">' + urutKat(d.barang, d.urutan).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('') + '</datalist></label>' +
+                '<label>Alur<select id="f_alur"><option value="LUAR"' + (e.alur !== 'LANGSUNG_HABIS' ? ' selected' : '') + '>Lewat Stock Luar (direkap)</option><option value="LANGSUNG_HABIS"' + (e.alur === 'LANGSUNG_HABIS' ? ' selected' : '') + '>Langsung habis</option></select></label>' +
+                '<label>Ambang minimum<input id="f_min" type="number" step="any" min="0" value="' + esc(e.ambang_min == null ? '' : e.ambang_min) + '"></label>' +
+                '<label>Catatan<input id="f_cat" value="' + esc(e.catatan || '') + '" placeholder="mis. 1 Pack isi 10 pcs"></label>' +
+                (e.id ? '<label>Status<select id="f_aktif"><option value="1"' + (e.aktif ? ' selected' : '') + '>Aktif</option><option value="0"' + (!e.aktif ? ' selected' : '') + '>Diarsipkan</option></select></label>'
+                    : '<label>Stok awal gudang<input id="f_awal" type="number" step="any" min="0" value="0"></label>') +
+                '</div><div class="row"><button class="p" onclick="saveB()">Simpan</button>' + (e.id ? '<button onclick="S.a.edit=null;render()">Batal</button>' : '') + '</div></div>' +
+                '<div class="tw"><table><thead><tr><th>Barang</th><th>Kategori</th><th>Satuan</th><th>Alur</th><th>Min</th><th>Status</th><th></th></tr></thead><tbody>' +
+                grupKat(d.barang, d.urutan).map(function (g) {
+                    return '<tr><th colspan="7" class="kh">' + esc(g.k) + ' · ' + g.l.length + ' barang</th></tr>' + g.l.map(function (b) {
+                        return '<tr><td><strong>' + esc(b.nama) + '</strong>' + (b.kode ? ' <span class="tag n">' + esc(b.kode) + '</span>' : '') + (b.catatan ? '<div class="mu">' + esc(b.catatan) + '</div>' : '') + '</td><td>' + esc(b.kategori) + '</td><td>' + esc(b.satuan) + '</td><td>' + (b.alur === 'LUAR' ? 'Lewat luar' : 'Langsung habis') + '</td><td class="num">' + nf(b.ambang_min) + '</td><td>' + (b.aktif ? 'Aktif' : '<span class="tag n">arsip</span>') + '</td><td><button onclick="editB(\'' + esc(b.id) + '\')">Edit</button></td></tr>';
+                    }).join('');
+                }).join('') + '</tbody></table></div>';
+        }
+        function editB(id) { S.a.edit = S.ad.barang.filter(function (b) { return b.id === id; })[0]; render(); window.scrollTo(0, 0); }
+        function saveB() {
+            var e = S.a.edit;
+            var o = { id: e ? e.id : '', nama: v('f_nama'), satuan: v('f_satuan'), kategori: v('f_kat'), kode: v('f_kode'), catatan: v('f_cat'), alur: v('f_alur'), ambang_min: v('f_min'), aktif: e ? v('f_aktif') === '1' : true, stok_awal: v('f_awal') };
+            A('simpanBarang', [o], 'Barang disimpan', function () { S.a.edit = null; });
+        }
+
+        function aKary(d) {
+            return head('Master', 'Karyawan') +
+                '<div class="note"><div class="form"><label>Nama karyawan baru<input id="k_nama"></label><button class="p" onclick="A(\'simpanKaryawan\',[{nama:v(\'k_nama\')}],\'Karyawan ditambahkan\')">Tambah</button></div></div>' +
+                '<div class="tw"><table><thead><tr><th>Nama</th><th>Status</th><th></th></tr></thead><tbody>' +
+                d.karyawan.map(function (k) {
+                    return '<tr><td><strong>' + esc(k.nama) + '</strong></td><td>' + (k.aktif ? 'Aktif' : '<span class="tag n">nonaktif</span>') + '</td><td><div class="row" style="gap:8px">' +
+                        '<button onclick="renK(\'' + esc(k.id) + '\')">Ubah nama</button><button onclick="togK(\'' + esc(k.id) + '\')">' + (k.aktif ? 'Nonaktifkan' : 'Aktifkan') + '</button></div></td></tr>';
+                }).join('') + '</tbody></table></div><p class="mu" style="margin:0">Karyawan nonaktif hilang dari tablet, riwayatnya tetap tersimpan.</p>';
+        }
+        function findK(id) { return S.ad.karyawan.filter(function (k) { return k.id === id; })[0]; }
+        function togK(id) { var k = findK(id); A('simpanKaryawan', [{ id: k.id, nama: k.nama, aktif: !k.aktif }], 'Status diperbarui'); }
+        function renK(id) { var k = findK(id), n = prompt('Nama baru', k.nama); if (n) A('simpanKaryawan', [{ id: k.id, nama: n, aktif: k.aktif }], 'Nama diperbarui'); }
+
+        function aMasuk(d) {
+            var tx = d.transaksi.filter(function (t) { return t.jenis === 'MASUK'; }).slice(0, 20);
+            return head('Restock', 'Stok masuk') +
+                '<div class="note"><div class="form">' +
+                '<label>Barang<select id="m_b">' + optsKat(aktifB(d), d.urutan) + '</select></label>' +
+                '<label>Jumlah datang<input id="m_j" type="number" step="any" min="0"></label>' +
+                '<label>Supplier (opsional)<input id="m_s"></label><label>Catatan<input id="m_c"></label></div>' +
+                '<div class="row"><button class="p" onclick="A(\'stokMasuk\',[v(\'m_b\'),v(\'m_j\'),v(\'m_s\'),v(\'m_c\')],\'Stok masuk dicatat\')">Simpan</button></div></div>' +
+                '<h2>Terakhir masuk</h2>' + txTable(tx, false);
+        }
+
+        function aManual(d) {
+            var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            return head('Koreksi', 'Ambil manual') +
+                '<p class="mu" style="margin:0">Untuk mencatat pengambilan yang ditulis di kertas saat internet mati. Waktu harus setelah rekap terakhir.</p>' +
+                '<div class="note"><div class="form">' +
+                '<label>Karyawan<select id="x_k">' + opts(d.karyawan.filter(function (k) { return k.aktif; }), '', function (k) { return k.nama; }) + '</select></label>' +
+                '<label>Barang<select id="x_b">' + optsKat(aktifB(d), d.urutan) + '</select></label>' +
+                '<label>Jumlah<input id="x_j" type="number" step="any" min="0"></label>' +
+                '<label>Waktu<input id="x_w" type="datetime-local" value="' + now + '"></label></div>' +
+                '<div class="row"><button class="p" onclick="A(\'ambilAdmin\',[v(\'x_k\'),v(\'x_b\'),v(\'x_j\'),new Date(v(\'x_w\')).getTime()],\'Pengambilan dicatat\')">Simpan</button></div></div>';
+        }
+
+        function aOpname(d) {
+            var bs = aktifB(d);
+            return head('Hitung fisik', 'Stock opname') +
+                '<p class="mu" style="margin:0">Isi hasil hitung fisik di gudang (Stock Dalam). Kosongkan barang yang tidak dihitung.</p>' +
+                '<div class="tw"><table><thead><tr><th>Barang</th><th>Sistem</th><th style="width:200px">Fisik</th><th>Selisih</th></tr></thead><tbody>' +
+                grupKat(bs, d.urutan).map(function (g) {
+                    return '<tr><th colspan="4" class="kh">' + esc(g.k) + '</th></tr>' + g.l.map(function (b) {
+                        var i = bs.indexOf(b);
+                        return '<tr><td><strong>' + esc(b.nama) + '</strong></td><td class="num">' + nf(b.stok_dalam) + ' ' + esc(b.satuan) + '</td><td><input id="of' + i + '" type="number" step="any" min="0" oninput="opIn(' + i + ',this.value)"></td><td class="num" id="op' + i + '">—</td></tr>';
+                    }).join('');
+                }).join('') + '</tbody></table></div>' +
+                '<div class="row"><button class="p" onclick="saveOp()">Simpan & sesuaikan stok</button></div>' +
+                '<h2>Riwayat opname</h2><div class="tw"><table><thead><tr><th>Waktu</th><th>Barang</th><th>Sistem</th><th>Fisik</th><th>Selisih</th></tr></thead><tbody>' +
+                (d.opname.map(function (o) { return '<tr><td class="num">' + esc(o.waktu) + '</td><td>' + esc(o.barang) + '</td><td class="num">' + nf(o.sistem) + '</td><td class="num">' + nf(o.fisik) + '</td><td class="num' + (Number(o.selisih) ? ' low' : '') + '">' + (o.selisih > 0 ? '+' : '') + nf(o.selisih) + '</td></tr>'; }).join('') || '<tr><td colspan="5" class="mu">Belum ada opname.</td></tr>') +
+                '</tbody></table></div>';
+        }
+        function opIn(i, val) {
+            var b = aktifB(S.ad)[i], c = el('op' + i);
+            if (val === '') { c.textContent = '—'; c.className = 'num'; return; }
+            var s = Math.round((parseFloat(val) - b.stok_dalam) * 1000) / 1000;
+            c.textContent = (s > 0 ? '+' : '') + nf(s); c.className = 'num' + (s ? ' low' : '');
+        }
+        function saveOp() {
+            var items = aktifB(S.ad).map(function (b, i) { return { barang_id: b.id, fisik: v('of' + i) }; }).filter(function (x) { return x.fisik !== ''; });
+            if (!items.length) return toast('Isi minimal satu barang', 1);
+            if (confirm('Sesuaikan stok ' + items.length + ' barang ke angka fisik?')) A('simpanOpname', [items], function (n) { return n + ' barang disesuaikan'; });
+        }
+
+        function days(a, b) { var x = new Date(a), y = new Date(b); x.setHours(0, 0, 0, 0); y.setHours(0, 0, 0, 0); return Math.round((x - y) / 864e5); }
+        function aRekap(d) {
+            var r = d.rekap[0];
+            var h = head('Stock Luar', 'Rekap');
+            if (!r) return h + '<p class="mu">Belum ada rekap.</p>';
+            h += '<div class="note"><div class="row"><h2 style="margin-right:auto">Rekap terakhir · ' + esc(r.waktu) + ' · ' + esc(r.karyawan) + '</h2>' + (r.diedit_admin ? '<span class="tag n">diedit admin</span>' : '') + '</div>' +
+                '<div class="tw"><table><thead><tr><th>Barang</th><th>Awal</th><th>Diambil</th><th style="width:180px">Sisa</th><th>Terpakai</th><th>Catatan</th></tr></thead><tbody>' +
+                r.baris.map(function (x, i) {
+                    return '<tr><td><strong>' + esc(x.barang) + '</strong></td><td class="num">' + nf(x.saldo_awal) + '</td><td class="num">' + nf(x.diambil) + '</td><td><input id="er' + i + '" type="number" step="any" min="0" max="' + (Number(x.saldo_awal) + Number(x.diambil)) + '" value="' + esc(x.sisa) + '"></td><td class="num">' + nf(x.terpakai) + '</td><td class="mu">' + esc(x.catatan) + '</td></tr>';
+                }).join('') + '</tbody></table></div>' +
+                '<div class="row"><button class="p" onclick="saveER()">Simpan koreksi</button><span class="mu">Selisih sisa langsung diterapkan ke saldo luar saat ini.</span></div></div>';
+            h += '<h2>Riwayat rekap</h2><div class="tw"><table><thead><tr><th>Waktu</th><th>Perekap</th><th>Terpakai</th><th></th></tr></thead><tbody>' +
+                d.rekap.map(function (x, i) {
+                    var p = d.rekap[i + 1], n = p ? days(x.ts, p.ts) : 0;
+                    return '<tr><td class="num">' + esc(x.waktu) + '</td><td>' + esc(x.karyawan) + '</td><td>' + (x.baris.map(function (b) { return esc(b.barang) + ' <strong>' + nf(b.terpakai) + '</strong>'; }).join(' · ') || '—') + '</td><td>' +
+                        (n > 1 ? '<span class="tag">gabungan ' + n + ' hari</span> ' : '') + (x.diedit_admin ? '<span class="tag n">diedit</span>' : '') + '</td></tr>';
+                }).join('') + '</tbody></table></div>';
+            return h;
+        }
+        function saveER() {
+            var r = S.ad.rekap[0];
+            var items = r.baris.map(function (x, i) { return { barang_id: x.barang_id, sisa: v('er' + i) }; });
+            A('editRekapTerakhir', [items], function (n) { return n ? n + ' baris dikoreksi' : 'Tidak ada perubahan'; });
+        }
+
+        function txTable(list, withAct) {
+            var last = S.ad.lastRekap;
+            var jl = { AMBIL: 'Ambil', MASUK: 'Masuk', OPNAME: 'Opname' };
+            return '<div class="tw"><table><thead><tr><th>Waktu</th><th>Jenis</th><th>Barang</th><th>Jumlah</th><th>Oleh</th><th>Keterangan</th>' + (withAct ? '<th></th>' : '') + '</tr></thead><tbody>' +
+                (list.map(function (t) {
+                    var can = withAct && t.jenis === 'AMBIL' && t.status === 'AKTIF' && Number(t.ts) > last;
+                    var ket = [t.jenis === 'AMBIL' ? (t.alur === 'LUAR' ? 'lewat luar' : 'langsung habis') : '', t.supplier, t.catatan, t.dicatat_oleh === 'admin' && t.jenis === 'AMBIL' ? 'input admin' : ''].filter(Boolean).join(' · ');
+                    return '<tr' + (t.status === 'BATAL' ? ' style="color:var(--mu);text-decoration:line-through"' : '') + '><td class="num">' + esc(t.waktu) + '</td><td>' + (jl[t.jenis] || esc(t.jenis)) + (t.status === 'BATAL' ? ' <span class="tag n">batal</span>' : '') + '</td><td>' + esc(t.barang) + (t.kategori ? '<div class="mu">' + esc(t.kategori) + '</div>' : '') + '</td><td class="num">' + (t.jenis === 'OPNAME' && t.jumlah > 0 ? '+' : '') + nf(t.jumlah) + (t.satuan ? ' ' + esc(t.satuan) : '') + '</td><td>' + esc(t.karyawan || 'Admin') + '</td><td class="mu">' + esc(ket) + '</td>' +
+                        (withAct ? '<td>' + (can ? '<button onclick="voidTx(\'' + esc(t.id) + '\')">Batalkan</button>' : '') + '</td>' : '') + '</tr>';
+                }).join('') || '<tr><td colspan="7" class="mu">Tidak ada transaksi.</td></tr>') + '</tbody></table></div>';
+        }
+        function aRiwayat(d) {
+            var f = S.a.f || (S.a.f = { j: '', k: '', c: '', b: '' });
+            var kb = {}; d.barang.forEach(function (b) { kb[String(b.id)] = b; });
+            var katT = function (t) { return t.kategori || (kb[String(t.barang_id)] || {}).kategori || 'Lainnya'; };
+            var bs = d.barang.filter(function (b) { return !f.c || katOf(b) === f.c; }).sort(function (a, b) { return a.nama < b.nama ? -1 : 1; });
+            var list = d.transaksi.filter(function (t) {
+                return (!f.j || t.jenis === f.j) && (!f.k || String(t.karyawan_id) === f.k) && (!f.c || katT(t) === f.c) && (!f.b || String(t.barang_id) === f.b);
+            }).map(function (t) { var b = kb[String(t.barang_id)] || {}; return Object.assign({}, t, { kategori: katT(t), satuan: t.satuan || b.satuan || '' }); });
+            var ok = list.filter(function (t) { return t.status !== 'BATAL'; });
+            var n = function (j) { return ok.filter(function (t) { return t.jenis === j; }).length; };
+            return head('Jejak audit', 'Riwayat transaksi') +
+                '<div class="form">' +
+                '<label>Jenis<select onchange="S.a.f.j=this.value;render()"><option value="">Semua</option>' + [['AMBIL', 'Ambil'], ['MASUK', 'Masuk / tambah'], ['OPNAME', 'Opname']].map(function (j) { return '<option value="' + j[0] + '"' + (f.j === j[0] ? ' selected' : '') + '>' + j[1] + '</option>'; }).join('') + '</select></label>' +
+                '<label>Karyawan<select onchange="S.a.f.k=this.value;render()"><option value="">Semua</option>' + opts(d.karyawan, f.k, function (k) { return k.nama; }) + '</select></label>' +
+                '<label>Kategori<select onchange="S.a.f.c=this.value;S.a.f.b=\'\';render()"><option value="">Semua</option>' + urutKat(d.barang, d.urutan).map(function (k) { return '<option value="' + esc(k) + '"' + (f.c === k ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') + '</select></label>' +
+                '<label>Barang<select onchange="S.a.f.b=this.value;render()"><option value="">Semua</option>' + opts(bs, f.b, function (b) { return b.nama; }) + '</select></label></div>' +
+                '<p class="mu" style="margin:0"><strong>' + list.length + '</strong> transaksi · ' + n('AMBIL') + ' ambil · ' + n('MASUK') + ' masuk · ' + n('OPNAME') + ' opname</p>' +
+                txTable(list, true) + '<p class="mu" style="margin:0">Menampilkan 400 transaksi terbaru. Riwayat lengkap ada di sheet Transaksi.</p>';
+        }
+        function voidTx(id) { if (confirm('Batalkan pengambilan ini? Stok dikembalikan ke gudang.')) A('batalAmbil', [id], 'Transaksi dibatalkan'); }
+
+        function ymd(dt) { return new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+        function aLaporan(d) {
+            var n = new Date(), L = S.a.lap;
+            var dari = S.a.dari || ymd(new Date(n.getFullYear(), n.getMonth(), 1)), sampai = S.a.sampai || ymd(n);
+            return head('Pemakaian', 'Laporan') +
+                '<div class="form"><label>Dari<input id="l_d" type="date" value="' + dari + '"></label><label>Sampai<input id="l_s" type="date" value="' + sampai + '"></label>' +
+                '<button class="p" onclick="lap()">Tampilkan</button>' + (L ? '<button onclick="lapSheet()">Salin ke sheet “Laporan”</button>' : '') + '</div>' +
+                (L ? '<div class="tw"><table><thead><tr><th>Barang</th><th>Masuk</th><th>Terpakai (rekap)</th><th>Langsung habis</th><th>Total terpakai</th><th>Selisih opname</th></tr></thead><tbody>' +
+                    (L.map(function (r) { var s = ' ' + esc(r.satuan); return '<tr><td><strong>' + esc(r.nama) + '</strong></td><td class="num">' + nf(r.masuk) + s + '</td><td class="num">' + nf(r.terpakai_rekap) + s + '</td><td class="num">' + nf(r.langsung_habis) + s + '</td><td class="num"><strong>' + nf(r.total_terpakai) + s + '</strong></td><td class="num' + (r.opname ? ' low' : '') + '">' + (r.opname > 0 ? '+' : '') + nf(r.opname) + '</td></tr>'; }).join('') || '<tr><td colspan="6" class="mu">Tidak ada data di periode ini.</td></tr>') +
+                    '</tbody></table></div><p class="mu" style="margin:0">Terpakai (rekap) dihitung berdasarkan waktu rekap disimpan.</p>' : '');
+        }
+        function lap() {
+            S.a.dari = v('l_d'); S.a.sampai = v('l_s');
+            act('laporan', [S.pin, S.a.dari, S.a.sampai], function (r) { S.a.lap = r; render(); });
+        }
+        function lapSheet() {
+            act('laporanKeSheet', [S.pin, S.a.dari, S.a.sampai], function (url) { window.open(url, '_blank'); toast('Laporan disalin ke sheet “Laporan”'); });
+        }
+
+        function aSet(d) {
+            return head('Sistem', 'Pengaturan') +
+                '<div class="note"><div class="form">' +
+                '<label>Jam tutup (pengingat rekap 30 menit sebelumnya)<input id="s_j" type="time" value="' + esc(d.jamTutup) + '"></label>' +
+                '<label>PIN admin baru (4–8 angka, kosongkan jika tetap)<input id="s_p" type="password" inputmode="numeric"></label></div>' +
+                '<div class="row"><button class="p" onclick="saveSet()">Simpan</button></div></div>' +
+                '<div class="note"><strong>Data</strong><span>Semua data tersimpan di <a href="' + esc(d.url) + '" target="_blank">Google Sheet ini</a>. Jangan ubah kolom <code>id</code> dan judul kolom. Gunakan Riwayat versi (File → Riwayat versi) untuk memulihkan data.</span></div>' +
+                '<div class="note"><strong>Link</strong><span>Tablet: URL web app ini. Admin langsung: tambahkan <code>?mode=admin</code> di akhir URL.</span></div>';
+        }
+        function saveSet() {
+            var p = v('s_p');
+            A('simpanPengaturan', [v('s_j'), p], 'Pengaturan disimpan', function () { if (p) { S.pin = p; sessionStorage.setItem('sg_pin', p); } });
+        }
+
+        /* ================= INIT ================= */
+        setInterval(function () {
+            document.querySelectorAll('[data-cd]').forEach(function (e) {
+                var s = 60 - Math.floor((Date.now() - Number(e.dataset.cd)) / 1000);
+                if (s <= 0) { S.last = null; render(); } else e.textContent = s;
+            });
+            if (S.mode === 'tablet' && ['menu', 'barang', 'jumlah', 'rekapNama'].indexOf(S.t.step) >= 0 && Date.now() - S.lastAct > 120000) goT('home');
+        }, 1000);
+        setInterval(function () { if (S.mode === 'tablet' && S.t.step === 'home' && !S.busy) loadT(); }, 30000);
+        document.addEventListener('pointerdown', function () { S.lastAct = Date.now(); });
+        document.addEventListener('keydown', function () { S.lastAct = Date.now(); });
+
+        if (typeof google === 'undefined' || !google.script) {
+            el('app').innerHTML = '<main><div class="kick">Stok Gudang</div><h1>Buka lewat URL Web App</h1><p>File ini berjalan di Google Apps Script. Ikuti PANDUAN.md untuk memasangnya.</p></main>';
+        } else setMode(S.mode);
+    </script>
+</body>
+
+</html>
