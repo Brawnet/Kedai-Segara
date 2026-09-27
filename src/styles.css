@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+
+/* Token dari design-system/segara/MASTER.md */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1e40af;
+  --color-primary-soft: #eff6ff;
+  --color-fg: #0f172a;
+  --color-muted-fg: #475569;
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-line: #e2e8f0;
+  --color-line-strong: #64748b;
+  --color-success: #047857;
+  --color-success-hover: #065f46;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #b91c1c;
+  --color-danger-hover: #991b1b;
+  --color-danger-soft: #fef2f2;
+
+  --radius-ctl: 10px;
+  --radius-card: 14px;
+  --radius-sheet: 20px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg font-sans text-fg antialiased;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  button,
+  [role='button'],
+  select,
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* cegah zoom otomatis di iOS */
+  }
+  dialog::backdrop {
+    background: rgb(15 23 42 / 0.55);
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@utility animate-rise {
+  animation: rise 180ms ease-out;
+}
+@utility animate-progress {
+  animation: progress 1.1s ease-in-out infinite;
+}

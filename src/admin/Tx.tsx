@@ -1,0 +1,118 @@
+import { useState } from 'preact/hooks';
+import { ArrowCounterClockwise } from '@phosphor-icons/react';
+import { nf } from '../lib/format';
+import type { Barang, Transaksi } from '../lib/types';
+import { Button, Confirm, Select, Tag } from '../components/ui';
+import { grupKat } from '../lib/format';
+import { DataTable, useAdmin, type Col } from './shared';
+
+const JENIS: Record<string, [string, 'primary' | 'success' | 'warning']> = {
+  AMBIL: ['Ambil', 'primary'],
+  MASUK: ['Masuk', 'success'],
+  OPNAME: ['Opname', 'warning'],
+};
+
+/** Daftar transaksi; `withAct` menampilkan tombol batal untuk pengambilan yang belum direkap. */
+export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean }) {
+  const { d, run, pin } = useAdmin();
+  const [batal, setBatal] = useState<Transaksi | null>(null);
+
+  const ket = (t: Transaksi) =>
+    [
+      t.jenis === 'AMBIL' ? (t.alur === 'LUAR' ? 'lewat luar' : 'langsung habis') : '',
+      t.supplier,
+      t.catatan,
+      t.dicatat_oleh === 'admin' && t.jenis === 'AMBIL' ? 'input admin' : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+
+  const cols: Col<Transaksi>[] = [
+    {
+      label: 'Barang',
+      cell: (t) => (
+        <div class={t.status === 'BATAL' ? 'text-muted-fg line-through' : ''}>
+          <span class="font-semibold">{t.barang}</span>
+          {t.kategori && <p class="text-sm font-normal text-muted-fg no-underline">{t.kategori}</p>}
+        </div>
+      ),
+    },
+    {
+      label: 'Jenis',
+      cell: (t) => (
+        <span class="inline-flex flex-wrap justify-end gap-1">
+          <Tag tone={JENIS[t.jenis]?.[1] ?? 'primary'}>{JENIS[t.jenis]?.[0] ?? t.jenis}</Tag>
+          {t.status === 'BATAL' && <Tag tone="danger">Batal</Tag>}
+        </span>
+      ),
+    },
+    {
+      label: 'Jumlah',
+      align: 'right',
+      cell: (t) => (
+        <strong class={t.status === 'BATAL' ? 'text-muted-fg line-through' : ''}>
+          {t.jenis === 'OPNAME' && t.jumlah > 0 ? '+' : ''}
+          {nf(t.jumlah)} {t.satuan}
+        </strong>
+      ),
+    },
+    { label: 'Waktu', cell: (t) => <span class="num whitespace-nowrap text-sm">{t.waktu}</span> },
+    { label: 'Oleh', cell: (t) => t.karyawan || 'Admin' },
+    { label: 'Keterangan', cell: (t) => <span class="text-sm text-muted-fg">{ket(t) || '—'}</span> },
+  ];
+  if (withAct)
+    cols.push({
+      label: ' ',
+      bare: true,
+      align: 'right',
+      cell: (t) =>
+        t.jenis === 'AMBIL' && t.status === 'AKTIF' && Number(t.ts) > d.lastRekap ? (
+          <Button size="sm" variant="danger-ghost" onClick={() => setBatal(t)} class="max-md:w-full">
+            <ArrowCounterClockwise size={18} aria-hidden /> Batalkan
+          </Button>
+        ) : null,
+    });
+
+  return (
+    <>
+      <DataTable cols={cols} rows={list} rowKey={(t) => t.id} empty="Tidak ada transaksi." />
+      <Confirm
+        open={!!batal}
+        title="Batalkan pengambilan?"
+        okLabel="Ya, batalkan"
+        tone="danger"
+        onCancel={() => setBatal(null)}
+        onOk={async () => {
+          // Admin mengirim PIN sehingga batas 60 detik tidak berlaku (tetap harus sebelum rekap).
+          if (batal) await run('batalAmbil', [batal.id, pin], 'Transaksi dibatalkan');
+          setBatal(null);
+        }}
+      >
+        {batal && (
+          <>
+            {batal.karyawan} ambil <strong class="num text-fg">{nf(batal.jumlah)} {batal.satuan}</strong> {batal.barang} ({batal.waktu}). Stok dikembalikan ke gudang.
+          </>
+        )}
+      </Confirm>
+    </>
+  );
+}
+
+/** Select barang dikelompokkan per kategori. */
+export function BarangSelect({ id, value, onChange, list, invalid }: { id: string; value: string; onChange: (v: string) => void; list: Barang[]; invalid?: boolean }) {
+  const { d } = useAdmin();
+  return (
+    <Select id={id} value={value} onChange={(e) => onChange(e.currentTarget.value)} aria-invalid={invalid}>
+      <option value="">Pilih barang…</option>
+      {grupKat(list, d.urutan).map((g) => (
+        <optgroup key={g.k} label={g.k}>
+          {g.l.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.nama} ({b.satuan}){b.kode ? ` · ${b.kode}` : ''}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </Select>
+  );
+}
