@@ -84,7 +84,7 @@ console.log(JSON.stringify(result));
     data = json.loads(res.stdout)
 
     SHEETS_DEF = {
-        'Barang': ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'opname_rekap'],
+        'Barang': ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
         'Karyawan': ['id', 'nama', 'aktif', 'pin'],
         'Transaksi': ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
         'Rekap': ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],

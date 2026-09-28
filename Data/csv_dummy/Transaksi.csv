@@ -1,65 +1,65 @@
 id,ts,waktu,jenis,barang_id,barang,jumlah,karyawan_id,karyawan,alur,supplier,status,dicatat_oleh,catatan,kategori,satuan
-m2iyslm4,1790608311755,28/09/2026 22:11,AMBIL,m1q1h2a,Ayam Suwir,5,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m2j8rxa8,1790608311755,28/09/2026 22:11,AMBIL,m2ymdky,Topping Kwetiau,7,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m2ky762z,1790608311755,28/09/2026 22:11,AMBIL,m3ojt68,Ayam Jamur,9,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m2lfn83q,1790608311755,28/09/2026 22:11,AMBIL,m4bo71q,Dada Gurih Manis,11,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1y8vrs9,1790571600000,28/09/2026 12:00,AMBIL,m1q1h2a,Ayam Suwir,15,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1zbgk22,1790571600000,28/09/2026 12:00,AMBIL,m2ymdky,Topping Kwetiau,20,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m209nrmk,1790571600000,28/09/2026 12:00,AMBIL,m3ojt68,Ayam Jamur,25,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m21vq14r,1790571600000,28/09/2026 12:00,AMBIL,m4bo71q,Dada Gurih Manis,30,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m223tuc6,1790571600000,28/09/2026 12:00,AMBIL,m5o80zg,Cumi,15,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m23e4brg,1790571600000,28/09/2026 12:00,AMBIL,m6bxcak,Lidah,20,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m248g1nt,1790571600000,28/09/2026 12:00,AMBIL,m7n4lou,Teri Pete,25,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m255pq9r,1790571600000,28/09/2026 12:00,AMBIL,m8bd8ds,Sambal Bawang,30,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m26n18sz,1790571600000,28/09/2026 12:00,AMBIL,m9ka5wa,Sambal Kuning,15,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m27r8p2u,1790571600000,28/09/2026 12:00,AMBIL,ma2rn1e,Bumbu Segara,20,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m285jcql,1790571600000,28/09/2026 12:00,AMBIL,mbkzgv3,Bumbu Kwetiau,25,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m29l9x7t,1790571600000,28/09/2026 12:00,AMBIL,mcbd3eq,Mineral,30,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
-m2axkxpf,1790571600000,28/09/2026 12:00,AMBIL,md9qr7l,Air Tahu,15,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
-m2bkabn9,1790571600000,28/09/2026 12:00,AMBIL,me7wzce,Soda Polaris,20,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
-m2ckx58o,1790571600000,28/09/2026 12:00,AMBIL,mfwnv66,Kopi,25,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
-m2dgdoou,1790571600000,28/09/2026 12:00,AMBIL,mgi1yel,Diamond Milk,30,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
-m2e6aj9h,1790571600000,28/09/2026 12:00,AMBIL,mhbbnvy,Susu Evaporasi,15,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
-m2f4xa9u,1790571600000,28/09/2026 12:00,AMBIL,miwyf2z,Keju,20,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
-m2gondau,1790571600000,28/09/2026 12:00,AMBIL,mjrgjxs,Plastik Sampah S,25,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
-m2hha3md,1790571600000,28/09/2026 12:00,AMBIL,mkpyjnk,Thermal Paper,30,mnej4gh,Budi Santoso,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
-m1dytbc5,1790485200000,27/09/2026 12:00,AMBIL,m1q1h2a,Ayam Suwir,12,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1ezf6tl,1790485200000,27/09/2026 12:00,AMBIL,m2ymdky,Topping Kwetiau,16,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1fuhei2,1790485200000,27/09/2026 12:00,AMBIL,m3ojt68,Ayam Jamur,20,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1gbg09v,1790485200000,27/09/2026 12:00,AMBIL,m4bo71q,Dada Gurih Manis,24,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1hob8o5,1790485200000,27/09/2026 12:00,AMBIL,m5o80zg,Cumi,28,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1ic82b2,1790485200000,27/09/2026 12:00,AMBIL,m6bxcak,Lidah,14,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1jnommb,1790485200000,27/09/2026 12:00,AMBIL,m7n4lou,Teri Pete,18,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-m1kh8znw,1790485200000,27/09/2026 12:00,AMBIL,m8bd8ds,Sambal Bawang,22,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m1lm1688,1790485200000,27/09/2026 12:00,AMBIL,m9ka5wa,Sambal Kuning,26,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m1mki8he,1790485200000,27/09/2026 12:00,AMBIL,ma2rn1e,Bumbu Segara,12,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m1ncllv8,1790485200000,27/09/2026 12:00,AMBIL,mbkzgv3,Bumbu Kwetiau,16,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m1obid1s,1790485200000,27/09/2026 12:00,AMBIL,mcbd3eq,Mineral,20,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
-m1puwt0d,1790485200000,27/09/2026 12:00,AMBIL,md9qr7l,Air Tahu,24,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
-m1qhlqjr,1790485200000,27/09/2026 12:00,AMBIL,me7wzce,Soda Polaris,28,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
-m1rlke9o,1790485200000,27/09/2026 12:00,AMBIL,mfwnv66,Kopi,14,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
-m1soawcy,1790485200000,27/09/2026 12:00,AMBIL,mgi1yel,Diamond Milk,18,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
-m1tthiya,1790485200000,27/09/2026 12:00,AMBIL,mhbbnvy,Susu Evaporasi,22,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
-m1uyhtpt,1790485200000,27/09/2026 12:00,AMBIL,miwyf2z,Keju,26,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
-m1vn7u79,1790485200000,27/09/2026 12:00,AMBIL,mjrgjxs,Plastik Sampah S,12,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
-m1wn1fdj,1790485200000,27/09/2026 12:00,AMBIL,mkpyjnk,Thermal Paper,16,molx3s9,Sari,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
-msu9wlh,1790398800000,26/09/2026 12:00,AMBIL,m1q1h2a,Ayam Suwir,10,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-mtuf1jo,1790398800000,26/09/2026 12:00,AMBIL,m2ymdky,Topping Kwetiau,13,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-mu8ynze,1790398800000,26/09/2026 12:00,AMBIL,m3ojt68,Ayam Jamur,16,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-mv5393f,1790398800000,26/09/2026 12:00,AMBIL,m4bo71q,Dada Gurih Manis,19,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-mw30w8a,1790398800000,26/09/2026 12:00,AMBIL,m5o80zg,Cumi,22,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-mxccawd,1790398800000,26/09/2026 12:00,AMBIL,m6bxcak,Lidah,10,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-my4osin,1790398800000,26/09/2026 12:00,AMBIL,m7n4lou,Teri Pete,13,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
-mz83oo8,1790398800000,26/09/2026 12:00,AMBIL,m8bd8ds,Sambal Bawang,16,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m10qnsh1,1790398800000,26/09/2026 12:00,AMBIL,m9ka5wa,Sambal Kuning,19,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m117uozz,1790398800000,26/09/2026 12:00,AMBIL,ma2rn1e,Bumbu Segara,22,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m12r6s7z,1790398800000,26/09/2026 12:00,AMBIL,mbkzgv3,Bumbu Kwetiau,10,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
-m13tcq83,1790398800000,26/09/2026 12:00,AMBIL,mcbd3eq,Mineral,13,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
-m14mug0y,1790398800000,26/09/2026 12:00,AMBIL,md9qr7l,Air Tahu,16,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
-m15sticr,1790398800000,26/09/2026 12:00,AMBIL,me7wzce,Soda Polaris,19,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
-m16stvg3,1790398800000,26/09/2026 12:00,AMBIL,mfwnv66,Kopi,22,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
-m17q406v,1790398800000,26/09/2026 12:00,AMBIL,mgi1yel,Diamond Milk,10,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
-m187x4uq,1790398800000,26/09/2026 12:00,AMBIL,mhbbnvy,Susu Evaporasi,13,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
-m19hl4k2,1790398800000,26/09/2026 12:00,AMBIL,miwyf2z,Keju,16,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
-m1arsgmi,1790398800000,26/09/2026 12:00,AMBIL,mjrgjxs,Plastik Sampah S,19,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
-m1bby9ge,1790398800000,26/09/2026 12:00,AMBIL,mkpyjnk,Thermal Paper,22,mp30vbe,Andi Wijaya,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+m2i22qc9,1790616184338,29/09/2026 00:23,AMBIL,m10coly,Ayam Suwir,5,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m2jw4cpc,1790616184338,29/09/2026 00:23,AMBIL,m2mu7n0,Topping Kwetiau,7,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m2kylibm,1790616184338,29/09/2026 00:23,AMBIL,m3vyiil,Ayam Jamur,9,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m2lv69go,1790616184338,29/09/2026 00:23,AMBIL,m4lqzwv,Dada Gurih Manis,11,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1yjx81j,1790571600000,28/09/2026 12:00,AMBIL,m10coly,Ayam Suwir,15,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1zmxlxs,1790571600000,28/09/2026 12:00,AMBIL,m2mu7n0,Topping Kwetiau,20,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m20pen8h,1790571600000,28/09/2026 12:00,AMBIL,m3vyiil,Ayam Jamur,25,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m21773um,1790571600000,28/09/2026 12:00,AMBIL,m4lqzwv,Dada Gurih Manis,30,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m2234z2p,1790571600000,28/09/2026 12:00,AMBIL,m57wr9j,Cumi,15,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m23i6im9,1790571600000,28/09/2026 12:00,AMBIL,m6tp9v4,Lidah,20,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m24cj9ff,1790571600000,28/09/2026 12:00,AMBIL,m7j6k35,Teri Pete,25,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m256yfuy,1790571600000,28/09/2026 12:00,AMBIL,m8hz0u0,Sambal Bawang,30,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m26k28av,1790571600000,28/09/2026 12:00,AMBIL,m9obd0s,Sambal Kuning,15,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m271a894,1790571600000,28/09/2026 12:00,AMBIL,mawsv08,Bumbu Segara,20,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m281jrmm,1790571600000,28/09/2026 12:00,AMBIL,mbpy3qx,Bumbu Kwetiau,25,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m29wykht,1790571600000,28/09/2026 12:00,AMBIL,mc7puqh,Mineral,30,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+m2ai5u3t,1790571600000,28/09/2026 12:00,AMBIL,mdu2xvh,Air Tahu,15,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+m2bigyrt,1790571600000,28/09/2026 12:00,AMBIL,me3xemz,Soda Polaris,20,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+m2cjpu7a,1790571600000,28/09/2026 12:00,AMBIL,mfannts,Kopi,25,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+m2dhbamk,1790571600000,28/09/2026 12:00,AMBIL,mgmpkn5,Diamond Milk,30,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+m2eeuzpi,1790571600000,28/09/2026 12:00,AMBIL,mhtq606,Susu Evaporasi,15,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+m2f5obz7,1790571600000,28/09/2026 12:00,AMBIL,miofm01,Keju,20,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+m2gndh9s,1790571600000,28/09/2026 12:00,AMBIL,mjvyxzx,Plastik Sampah S,25,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+m2hrfj95,1790571600000,28/09/2026 12:00,AMBIL,mkd0a8o,Thermal Paper,30,mn3kzj8,Budi Santoso,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+m1dr6xqx,1790485200000,27/09/2026 12:00,AMBIL,m10coly,Ayam Suwir,12,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1eh07n0,1790485200000,27/09/2026 12:00,AMBIL,m2mu7n0,Topping Kwetiau,16,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1fnhmep,1790485200000,27/09/2026 12:00,AMBIL,m3vyiil,Ayam Jamur,20,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1gzyern,1790485200000,27/09/2026 12:00,AMBIL,m4lqzwv,Dada Gurih Manis,24,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1h437ft,1790485200000,27/09/2026 12:00,AMBIL,m57wr9j,Cumi,28,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1ifbovy,1790485200000,27/09/2026 12:00,AMBIL,m6tp9v4,Lidah,14,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1jz610q,1790485200000,27/09/2026 12:00,AMBIL,m7j6k35,Teri Pete,18,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+m1k862ob,1790485200000,27/09/2026 12:00,AMBIL,m8hz0u0,Sambal Bawang,22,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m1lxyrmf,1790485200000,27/09/2026 12:00,AMBIL,m9obd0s,Sambal Kuning,26,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m1mhlg5w,1790485200000,27/09/2026 12:00,AMBIL,mawsv08,Bumbu Segara,12,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m1n19two,1790485200000,27/09/2026 12:00,AMBIL,mbpy3qx,Bumbu Kwetiau,16,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m1oveesm,1790485200000,27/09/2026 12:00,AMBIL,mc7puqh,Mineral,20,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+m1p35ggl,1790485200000,27/09/2026 12:00,AMBIL,mdu2xvh,Air Tahu,24,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+m1qep4n6,1790485200000,27/09/2026 12:00,AMBIL,me3xemz,Soda Polaris,28,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+m1r1i9a1,1790485200000,27/09/2026 12:00,AMBIL,mfannts,Kopi,14,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+m1selein,1790485200000,27/09/2026 12:00,AMBIL,mgmpkn5,Diamond Milk,18,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+m1tk195i,1790485200000,27/09/2026 12:00,AMBIL,mhtq606,Susu Evaporasi,22,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+m1uahtuw,1790485200000,27/09/2026 12:00,AMBIL,miofm01,Keju,26,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+m1v575av,1790485200000,27/09/2026 12:00,AMBIL,mjvyxzx,Plastik Sampah S,12,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+m1w7utyh,1790485200000,27/09/2026 12:00,AMBIL,mkd0a8o,Thermal Paper,16,mokej3l,Sari,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+msd33sj,1790398800000,26/09/2026 12:00,AMBIL,m10coly,Ayam Suwir,10,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+mtstkoz,1790398800000,26/09/2026 12:00,AMBIL,m2mu7n0,Topping Kwetiau,13,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+muigl61,1790398800000,26/09/2026 12:00,AMBIL,m3vyiil,Ayam Jamur,16,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+mv3ago3,1790398800000,26/09/2026 12:00,AMBIL,m4lqzwv,Dada Gurih Manis,19,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+mws6w6n,1790398800000,26/09/2026 12:00,AMBIL,m57wr9j,Cumi,22,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+mx9ykx1,1790398800000,26/09/2026 12:00,AMBIL,m6tp9v4,Lidah,10,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+myvrvhv,1790398800000,26/09/2026 12:00,AMBIL,m7j6k35,Teri Pete,13,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+mzajdvb,1790398800000,26/09/2026 12:00,AMBIL,m8hz0u0,Sambal Bawang,16,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m10zuxh3,1790398800000,26/09/2026 12:00,AMBIL,m9obd0s,Sambal Kuning,19,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m11n7b6t,1790398800000,26/09/2026 12:00,AMBIL,mawsv08,Bumbu Segara,22,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m12d6b41,1790398800000,26/09/2026 12:00,AMBIL,mbpy3qx,Bumbu Kwetiau,10,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+m13l0wyd,1790398800000,26/09/2026 12:00,AMBIL,mc7puqh,Mineral,13,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+m14cjeb8,1790398800000,26/09/2026 12:00,AMBIL,mdu2xvh,Air Tahu,16,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+m152hayv,1790398800000,26/09/2026 12:00,AMBIL,me3xemz,Soda Polaris,19,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+m16lxavj,1790398800000,26/09/2026 12:00,AMBIL,mfannts,Kopi,22,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+m17g7b8e,1790398800000,26/09/2026 12:00,AMBIL,mgmpkn5,Diamond Milk,10,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+m18xzm4s,1790398800000,26/09/2026 12:00,AMBIL,mhtq606,Susu Evaporasi,13,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+m19gf8h8,1790398800000,26/09/2026 12:00,AMBIL,miofm01,Keju,16,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+m1azvubm,1790398800000,26/09/2026 12:00,AMBIL,mjvyxzx,Plastik Sampah S,19,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+m1b1k0yz,1790398800000,26/09/2026 12:00,AMBIL,mkd0a8o,Thermal Paper,22,mpe6o5u,Andi Wijaya,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll

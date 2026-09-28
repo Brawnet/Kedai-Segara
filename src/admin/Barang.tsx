@@ -21,7 +21,7 @@ import { Banner, Button, Confirm, Dialog, Field, Input, PageTitle, Select, Tag, 
 import { DataTable, useAdmin, type Col } from './shared';
 import { KelolaKategoriDialog } from './KelolaKategoriDialog';
 
-type Form = Required<Omit<BarangInput, 'ambang_min' | 'stok_awal' | 'opname_rekap'>> & {
+type Form = Required<Omit<BarangInput, 'ambang_min' | 'stok_awal'>> & {
   ambang_min: string;
   stok_awal: string;
 };
@@ -163,7 +163,6 @@ export function BarangPage() {
       ...f,
       id: f.id || '',
       stok_awal: f.id ? undefined : f.stok_awal,
-      opname_rekap: true,
     };
     if (await A('simpanBarang', [o], 'Barang disimpan')) setF(null);
   };
