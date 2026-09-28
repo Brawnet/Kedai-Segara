@@ -1192,35 +1192,37 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
 
 function RekapOk({ st, onHome }: { st: Extract<Step, { s: 'rekapOk' }>; onHome: () => void }) {
   return (
-    <section class="flex flex-col gap-5">
+    <section class="mx-auto flex w-full max-w-xl flex-col gap-6 py-2">
       <div class="flex items-center gap-4">
-        <span class="grid size-14 shrink-0 place-items-center rounded-full bg-success-soft text-success">
+        <span class="grid size-12 sm:size-14 shrink-0 place-items-center rounded-full bg-success-soft text-success shadow-2xs">
           <CheckCircle size={32} weight="fill" aria-hidden />
         </span>
         <PageTitle kicker={`Rekap tersimpan · ${st.k.nama}`} title="Sisa dapur hari ini" />
       </div>
+
       <div class="overflow-hidden rounded-card border border-line bg-card shadow-sm">
-        <table class="w-full text-left">
-          <thead class="bg-muted text-sm text-muted-fg">
-            <tr>
-              <th class="px-4 py-3 font-semibold">Barang</th>
-              <th class="px-4 py-3 text-right font-semibold">Sisa</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-line">
-            {st.rows.map((r, i) => (
-              <tr key={r.barang_id}>
-                <td class="px-4 py-3 font-medium">{r.nama}</td>
-                <td class="num px-4 py-3 text-right font-bold text-fg">
-                  {nf(st.sisa[i]!)} {r.satuan}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div class="flex items-center justify-between border-b border-line bg-muted/60 px-4 py-2.5 sm:px-5 text-xs font-bold uppercase tracking-wider text-muted-fg">
+          <span>Barang</span>
+          <span>Sisa</span>
+        </div>
+        <ul class="divide-y divide-line">
+          {st.rows.map((r, i) => (
+            <li
+              key={r.barang_id}
+              class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5 transition-colors hover:bg-muted/40"
+            >
+              <span class="font-medium text-fg text-sm sm:text-base leading-snug">{r.nama}</span>
+              <span class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line/70 bg-muted/60 px-2.5 py-1 text-sm font-bold text-fg num">
+                <span class="text-primary font-bold">{nf(st.sisa[i]!)}</span>
+                <span class="text-xs font-medium text-muted-fg">{r.satuan}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
+
       <div>
-        <Button variant="primary" size="lg" onClick={onHome}>
+        <Button variant="primary" size="lg" onClick={onHome} class="w-full sm:w-auto">
           <House size={20} aria-hidden /> Kembali ke beranda
         </Button>
       </div>
