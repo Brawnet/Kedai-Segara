@@ -109,7 +109,20 @@ export function RekapPage() {
       label: 'Terpakai',
       align: 'center',
       w: 'w-[14%]',
-      cell: (x) => <strong class="num font-bold text-fg">{nf(x.terpakai)}</strong>,
+      cell: (x) => {
+        const s = parseNum(vals[x.i]);
+        const live = !isNaN(s) ? Math.max(0, (x.saldo_awal || 0) + (x.diambil || 0) - s) : x.terpakai;
+        return (
+          <span
+            class={cx(
+              'num font-bold px-2 py-0.5 rounded text-xs min-w-6 text-center inline-block',
+              live > 0 ? 'bg-primary-soft text-primary' : 'bg-muted text-muted-fg border border-line/60',
+            )}
+          >
+            {nf(live)}
+          </span>
+        );
+      },
     },
   ];
 
@@ -238,6 +251,96 @@ export function RekapPage() {
       [r.baris.map((x, i) => ({ barang_id: x.barang_id, sisa: String(parseNum(vals[i])) }))],
       (n) => (n ? `${n} baris dikoreksi` : 'Tidak ada perubahan'),
     );
+  const renderCardKoreksi = (x: RekapBaris & { i: number }) => {
+    const isBad = bad(x.i);
+    const sisaNum = parseNum(vals[x.i]);
+    const terpakaiLive = !isNaN(sisaNum) ? Math.max(0, (x.saldo_awal || 0) + (x.diambil || 0) - sisaNum) : x.terpakai;
+    const totalTercatat = (x.saldo_awal || 0) + (x.diambil || 0);
+
+    return (
+      <div
+        class={cx(
+          'rounded-card border bg-card p-3.5 sm:p-4 flex flex-col gap-3 shadow-xs transition-all',
+          isBad ? 'border-danger/80 ring-1 ring-danger/30' : 'border-line hover:border-line-strong/50',
+        )}
+      >
+        {/* Header: Nama Barang & Terpakai Badge */}
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-base text-fg leading-snug break-words">
+              {x.barang}
+            </h3>
+            {x.catatan && (
+              <p class="text-xs text-muted-fg mt-0.5 italic">
+                "{x.catatan}"
+              </p>
+            )}
+          </div>
+          <div class="flex flex-col items-end shrink-0">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-fg mb-0.5">
+              Terpakai
+            </span>
+            <span
+              class={cx(
+                'num font-extrabold px-2.5 py-1 rounded-md text-sm min-w-9 text-center shadow-2xs',
+                terpakaiLive > 0
+                  ? 'bg-primary-soft text-primary border border-primary/20'
+                  : 'bg-muted text-muted-fg border border-line',
+              )}
+            >
+              {nf(terpakaiLive)}
+            </span>
+          </div>
+        </div>
+
+        {/* Grid Status Saldo: Awal, Diambil, Total */}
+        <div class="grid grid-cols-3 gap-2 rounded-lg bg-muted/50 border border-line/60 p-2.5 text-center num text-xs">
+          <div class="flex flex-col items-center">
+            <span class="text-[10px] uppercase font-bold text-muted-fg tracking-wider">Awal</span>
+            <span class="font-semibold text-fg text-sm mt-0.5">{nf(x.saldo_awal)}</span>
+          </div>
+          <div class="flex flex-col items-center border-x border-line/60 px-1">
+            <span class="text-[10px] uppercase font-bold text-muted-fg tracking-wider">+Diambil</span>
+            <span class="font-semibold text-fg text-sm mt-0.5">+{nf(x.diambil)}</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <span class="text-[10px] uppercase font-bold text-muted-fg tracking-wider">Total</span>
+            <span class="font-bold text-fg text-sm mt-0.5">{nf(totalTercatat)}</span>
+          </div>
+        </div>
+
+        {/* Input Sisa: Elegan & Jelas */}
+        <div class="flex items-center justify-between gap-3 pt-1 border-t border-line/40">
+          <label for={`sisa-m-${x.i}`} class="text-xs font-bold uppercase tracking-wider text-muted-fg">
+            Koreksi Sisa
+          </label>
+          <div class="flex flex-col items-end">
+            <div class="relative w-32">
+              <Input
+                id={`sisa-m-${x.i}`}
+                inputmode="decimal"
+                autocomplete="off"
+                value={vals[x.i] ?? ''}
+                onInput={(e) => {
+                  const v = e.currentTarget.value;
+                  setVals((a) => a.map((y, j) => (j === x.i ? v : y)));
+                }}
+                aria-invalid={isBad}
+                class="num text-center font-bold text-base h-10 w-full"
+                placeholder="0"
+              />
+            </div>
+            {isBad && (
+              <p class="mt-1 text-[11px] font-semibold text-danger text-right">
+                Isi 0 sampai {nf(maks(x))}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div class="flex flex-col gap-6">
@@ -249,7 +352,13 @@ export function RekapPage() {
           </h2>
           {r.diedit_admin && <Tag>diedit admin</Tag>}
         </div>
-        <DataTable cols={cols} rows={r.baris.map((x, i) => ({ ...x, i }))} rowKey={(x) => x.barang_id} empty="Rekap ini tidak berisi barang." />
+        <DataTable
+          cols={cols}
+          rows={r.baris.map((x, i) => ({ ...x, i }))}
+          rowKey={(x) => x.barang_id}
+          renderCard={renderCardKoreksi}
+          empty="Rekap ini tidak berisi barang."
+        />
         <div class="flex flex-wrap items-center gap-3">
           <Button variant="primary" guard onClick={simpan} disabled={adaSalah || !r.baris.length}>
             Simpan koreksi
