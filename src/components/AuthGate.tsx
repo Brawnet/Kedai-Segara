@@ -3,12 +3,16 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   ArrowLeft,
   CheckCircle,
+  DeviceTablet,
   EnvelopeSimple,
   Key,
+  Lightning,
   ShieldCheck,
+  Sparkle,
+  UserGear,
   WarningCircle,
 } from '@phosphor-icons/react';
-import { call, pesan } from '../lib/api';
+import { call, diAppsScript, pesan } from '../lib/api';
 import { authStorage } from '../lib/auth-storage';
 import type { AuthSession, PublicAuthConfig } from '../lib/types';
 import { Button, Card, Field, Input, Loading, Tag } from './ui';
@@ -18,9 +22,11 @@ import { Logo } from './Logo';
 export function AuthGate({
   children,
   onLogout,
+  onLogin,
 }: {
   children: (session: AuthSession, logout: () => void) => ComponentChildren;
   onLogout?: () => void;
+  onLogin?: (session: AuthSession, preferredMode?: 'admin' | 'tablet') => void;
 }) {
   const [checking, setChecking] = useState(true);
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -133,6 +139,7 @@ export function AuthGate({
               const sess = await call('verifyGoogleCredential', res.credential, ua);
               authStorage.saveSession(sess);
               setSession(sess);
+              onLogin?.(sess);
             } catch (e) {
               setErr(pesan(e));
             } finally {
@@ -208,12 +215,52 @@ export function AuthGate({
       const sess = await call('verifyOtp', email.toLowerCase().trim(), cd, ua);
       authStorage.saveSession(sess);
       setSession(sess);
+      onLogin?.(sess);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isDummyEmail = (val: string) => {
+    const v = val.toLowerCase().trim();
+    return v === 'admin@segara.com' || v === 'tablet@segara.com' || v.endsWith('@segara.com');
+  };
+
+  const handleDummyLogin = async (targetEmail: string, preferredMode?: 'admin' | 'tablet') => {
+    setErr('');
+    setMsg('');
+    setLoading(true);
+    try {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      const sess = await call('verifyOtp', targetEmail, '123456', ua);
+      authStorage.saveSession(sess);
+      setSession(sess);
+      onLogin?.(sess, preferredMode);
     } catch (e) {
       setErr(pesan(e));
     } finally {
       setLoading(false);
     }
   };
+
+  const handleAutoFillAndVerifyDummy = async () => {
+    setCode('123456');
+    setErr('');
+    setLoading(true);
+    try {
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      const sess = await call('verifyOtp', email.toLowerCase().trim(), '123456', ua);
+      authStorage.saveSession(sess);
+      setSession(sess);
+      onLogin?.(sess);
+    } catch (e) {
+      setErr(pesan(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showDummyOption = import.meta.env.DEV || !diAppsScript() || config.allowDummyAuth !== false;
 
   const logout = () => {
     authStorage.clear();
@@ -287,6 +334,45 @@ export function AuthGate({
             </div>
           )}
 
+          {/* Login Cepat Dummy (Mode Uji Coba) */}
+          {showDummyOption && step === 'input_email' && (
+            <div class="rounded-card border border-primary/25 bg-primary-soft/30 p-3.5 flex flex-col gap-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Lightning size={15} weight="fill" />
+                  <span>Login Cepat (Akun Dummy)</span>
+                </span>
+                <span class="text-[11px] text-muted-fg font-medium">1-Klik Demo</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleDummyLogin('admin@segara.com', 'admin')}
+                  class="flex flex-col items-center justify-center gap-1 p-2.5 rounded-ctl border border-line bg-card hover:bg-muted hover:border-primary transition-all text-center cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  <span class="text-xs font-bold text-fg flex items-center gap-1">
+                    <UserGear size={16} weight="bold" class="text-primary" />
+                    <span>👑 Admin</span>
+                  </span>
+                  <span class="text-[10px] text-muted-fg font-mono">admin@segara.com</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleDummyLogin('tablet@segara.com', 'tablet')}
+                  class="flex flex-col items-center justify-center gap-1 p-2.5 rounded-ctl border border-line bg-card hover:bg-muted hover:border-primary transition-all text-center cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  <span class="text-xs font-bold text-fg flex items-center gap-1">
+                    <DeviceTablet size={16} weight="bold" class="text-primary" />
+                    <span>📱 Tablet</span>
+                  </span>
+                  <span class="text-[10px] text-muted-fg font-mono">tablet@segara.com</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Form OTP Email (Google / iCloud / Lainnya) */}
           {step === 'input_email' ? (
             <form onSubmit={handleKirimOtp} class="flex flex-col gap-4">
@@ -295,24 +381,47 @@ export function AuthGate({
                 hint="Gunakan email yang sudah didaftarkan owner di sistem."
               >
                 {(id, dId) => (
-                  <div class="relative">
-                    <EnvelopeSimple
-                      size={20}
-                      class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg"
-                      aria-hidden
-                    />
-                    <Input
-                      id={id}
-                      aria-describedby={dId}
-                      type="email"
-                      required
-                      autocomplete="email"
-                      value={email}
-                      onInput={(e) => setEmail(e.currentTarget.value)}
-                      placeholder="nama@gmail.com atau nama@icloud.com"
-                      class="pl-10"
-                      disabled={loading}
-                    />
+                  <div class="flex flex-col gap-1.5">
+                    <div class="relative">
+                      <EnvelopeSimple
+                        size={20}
+                        class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg"
+                        aria-hidden
+                      />
+                      <Input
+                        id={id}
+                        aria-describedby={dId}
+                        type="email"
+                        required
+                        autocomplete="email"
+                        value={email}
+                        onInput={(e) => setEmail(e.currentTarget.value)}
+                        placeholder="nama@gmail.com atau nama@icloud.com"
+                        class="pl-10"
+                        disabled={loading}
+                      />
+                    </div>
+                    {showDummyOption && (
+                      <div class="flex items-center gap-1.5 flex-wrap text-xs text-muted-fg pt-0.5">
+                        <Sparkle size={13} weight="fill" class="text-primary" />
+                        <span>Pilih dummy:</span>
+                        <button
+                          type="button"
+                          onClick={() => setEmail('admin@segara.com')}
+                          class="font-medium text-primary hover:underline cursor-pointer"
+                        >
+                          admin@segara.com
+                        </button>
+                        <span>•</span>
+                        <button
+                          type="button"
+                          onClick={() => setEmail('tablet@segara.com')}
+                          class="font-medium text-primary hover:underline cursor-pointer"
+                        >
+                          tablet@segara.com
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </Field>
@@ -336,7 +445,26 @@ export function AuthGate({
                 <span class="font-bold text-fg break-all">{email}</span>
               </div>
 
-
+              {isDummyEmail(email) && (
+                <div class="rounded-ctl bg-primary-soft/70 border border-primary/30 p-3 text-xs flex flex-col gap-2">
+                  <div class="flex items-center gap-1.5 font-bold text-primary">
+                    <Sparkle size={15} weight="fill" />
+                    <span>Akun Dummy Terdeteksi</span>
+                  </div>
+                  <p class="text-muted-fg leading-relaxed">
+                    Kode verifikasi standar untuk akun demo ini adalah <strong class="text-fg font-mono tracking-wider font-bold">123456</strong>.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={handleAutoFillAndVerifyDummy}
+                    class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-ctl bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Lightning size={14} weight="fill" />
+                    <span>Gunakan Kode 123456 & Masuk</span>
+                  </button>
+                </div>
+              )}
               <Field
                 label="Kode Verifikasi (6-Digit)"
                 hint={countdown > 0 ? `Berlaku selama ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, '0')}` : 'Kode kadaluarsa. Silakan minta kode baru.'}

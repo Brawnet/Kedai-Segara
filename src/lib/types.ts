@@ -185,6 +185,7 @@ export interface LoginLog {
 export interface PublicAuthConfig {
   hasGoogleAuth: boolean;
   googleClientId: string;
+  allowDummyAuth?: boolean;
 }
 
 export interface AuthSession {

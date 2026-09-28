@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { runInContext } from 'node:vm';
 import { createAppsScriptEnvironment } from './apps-script.test.ts';
 import { createMock } from '../src/lib/mock.ts';
-import { cocok, katOf } from '../src/lib/format.ts';
-import type { Barang } from '../src/lib/types.ts';
+import { cocok, katOf, menipis } from '../src/lib/format.ts';
+import type { Barang, Rekap } from '../src/lib/types.ts';
 
 interface Row extends Record<string, unknown> {
   id?: string;
@@ -292,5 +292,201 @@ describe('QA Subsystem & Feature Invariants', () => {
     const delRes = hapusBarang('12345', String(bNew.id));
     assert.equal(delRes.status, 'deleted');
     assert.ok(!rows_('Barang').some((x: Row) => x.id === bNew.id));
+  });
+  it('Lane 8: menipis in Dashboard only triggers for active items with ambang_min > 0', () => {
+    const sampleActive: Barang = {
+      id: 'b1',
+      nama: 'Kopi Susu',
+      satuan: 'Cup',
+      kategori: 'Drink',
+      alur: 'LUAR',
+      kode: 'KS',
+      catatan: '',
+      stok_dalam: 2,
+      stok_luar: 1,
+      ambang_min: 5,
+      aktif: true,
+    };
+    // 3 < 5 -> true
+    assert.equal(menipis(sampleActive), true);
+
+    // When stock is sufficient: 6 >= 5 -> false
+    assert.equal(menipis({ ...sampleActive, stok_dalam: 5 }), false);
+
+    // When archived: should never be menipis
+    assert.equal(menipis({ ...sampleActive, aktif: false }), false);
+
+    // When ambang_min <= 0: should never be menipis even if stock is 0
+    assert.equal(menipis({ ...sampleActive, stok_dalam: 0, stok_luar: 0, ambang_min: 0 }), false);
+  });
+
+  it('Lane 1: simpanBarang enforces case-insensitive item code uniqueness', () => {
+    const { context } = createAppsScriptEnvironment();
+    const simpanBarang = runInContext('simpanBarang', context);
+
+    // In initial sheetsData, b1 has code 'MG'
+    // Attempting to register another item with 'mg' (lowercase) must fail
+    assert.throws(
+      () =>
+        simpanBarang('12345', {
+          nama: 'Minyak Goreng Baru',
+          satuan: 'liter',
+          kategori: 'Bahan',
+          stok_awal: 0,
+          ambang_min: 0,
+          alur: 'LUAR',
+          aktif: true,
+          kode: 'mg',
+        }),
+      /Kode mg sudah dipakai barang lain/,
+    );
+
+    // Also test mock backend
+    const api = createMock();
+    // Default mock has AS ('Ayam Suwir')
+    assert.throws(
+      () =>
+        api.simpanBarang(
+          '12345',
+          {
+            nama: 'Ayam Suwir KW',
+            satuan: 'Porsi',
+            kategori: 'Freezer Protein',
+            alur: 'LUAR',
+            kode: 'as',
+            catatan: '',
+            ambang_min: 0,
+            aktif: true,
+            stok_awal: 0,
+          },
+        ),
+      /Kode as sudah dipakai barang lain/,
+    );
+  });
+
+  it('Lane 5: hitungRekap_ excludes inactive/archived items from closing rekap', () => {
+    const { context } = createAppsScriptEnvironment();
+    const hitungRekap_ = runInContext('hitungRekap_', context);
+    const rows_ = runInContext('rows_', context);
+    const update_ = runInContext('update_', context);
+
+    // b1 is active and has stock_luar: 0
+    const b1 = rows_('Barang').find((x: Row) => x.id === 'b1')!;
+    b1.stok_luar = 10;
+    b1.aktif = false; // archive b1
+    update_('Barang', b1);
+
+    const rows = hitungRekap_(Date.now());
+    // Archived item b1 must NOT appear in closing rekap rows
+    assert.ok(!rows.some((r: { barang_id: string }) => r.barang_id === 'b1'));
+
+    // Test mock backend hitung
+    const api = createMock();
+    const draf = api.rekapDraf();
+    // In mock, b2 is archived or any inactive item must not appear
+    const adminData = api.adminData('12345');
+    const inactiveIds = new Set(adminData.barang.filter((b) => !b.aktif).map((b) => b.id));
+    for (const r of draf.baris) {
+      assert.ok(!inactiveIds.has(r.barang_id), `Barang tidak aktif ${r.barang_id} tidak boleh masuk rekap`);
+    }
+  });
+
+  it('Lane 9: laporan enforces YYYY-MM-DD date validation and chronological ordering', () => {
+    const { context } = createAppsScriptEnvironment();
+    const laporan = runInContext('laporan', context);
+
+    // Invalid format throws
+    assert.throws(() => laporan('12345', 'invalid-date', '2026-09-30'), /Format tanggal laporan tidak valid/);
+    assert.throws(() => laporan('12345', '2026-09-01', ''), /Format tanggal laporan tidak valid/);
+
+    // dari > sampai throws
+    assert.throws(() => laporan('12345', '2026-09-30', '2026-09-01'), /Tanggal awal tidak boleh melebihi tanggal akhir/);
+
+    // Valid date range succeeds
+    const res = laporan('12345', '2026-09-01', '2026-09-30');
+    assert.ok(Array.isArray(res));
+
+    // Also test mock backend
+    const api = createMock();
+    assert.throws(() => api.laporan('12345', 'bad', '2026-09-30'), /Format tanggal laporan tidak valid/);
+    assert.throws(() => api.laporan('12345', '2026-09-30', '2026-09-01'), /Tanggal awal tidak boleh melebihi tanggal akhir/);
+    const mockRes = api.laporan('12345', '2026-09-01', '2026-09-30');
+    assert.ok(Array.isArray(mockRes));
+  });
+
+  it('Lane 10: Riwayat Rekap date filter filters records accurately by timestamp and formatted date', () => {
+    const sampleRekap: Rekap[] = [
+      {
+        id: 'r1',
+        ts: new Date('2026-09-28T21:35:00').getTime(),
+        waktu: '28/09/2026 21:35',
+        karyawan_id: 'k1',
+        karyawan: 'SAYA',
+        diedit_admin: false,
+        baris: [{ rekap_id: 'r1', barang_id: 'b1', barang: 'Sedotan', saldo_awal: 0, diambil: 10, sisa: 0, terpakai: 10, catatan: '' }],
+      },
+      {
+        id: 'r2',
+        ts: new Date('2026-09-25T21:00:00').getTime(),
+        waktu: '25/09/2026 21:00',
+        karyawan_id: 'k2',
+        karyawan: 'Budi',
+        diedit_admin: false,
+        baris: [],
+      },
+      {
+        id: 'r3',
+        ts: new Date('2026-09-20T21:00:00').getTime(),
+        waktu: '20/09/2026 21:00',
+        karyawan_id: 'k3',
+        karyawan: 'Andi',
+        diedit_admin: true,
+        baris: [],
+      },
+    ];
+
+    const rekapTgl = (x: Rekap) => {
+      if (x.ts && !isNaN(x.ts)) {
+        const dt = new Date(x.ts);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+      }
+      const m = x.waktu ? x.waktu.match(/^(\d{2})\/(\d{2})\/(\d{4})/) : null;
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+    };
+
+    const filter = (dari: string, sampai: string) =>
+      sampleRekap.filter((x) => {
+        const tgl = rekapTgl(x);
+        if (!tgl) return true;
+        if (dari && tgl < dari) return false;
+        if (sampai && tgl > sampai) return false;
+        return true;
+      });
+
+    // No filter: returns all 3
+    assert.equal(filter('', '').length, 3);
+
+    // Exactly 28/09/2026
+    const only28 = filter('2026-09-28', '2026-09-28');
+    assert.equal(only28.length, 1);
+    assert.equal(only28[0]!.id, 'r1');
+
+    // Range 2026-09-24 to 2026-09-28: returns r1 and r2
+    const range24to28 = filter('2026-09-24', '2026-09-28');
+    assert.equal(range24to28.length, 2);
+    assert.deepEqual(range24to28.map((r) => r.id), ['r1', 'r2']);
+
+    // Start date only: >= 2026-09-25
+    const from25 = filter('2026-09-25', '');
+    assert.equal(from25.length, 2);
+
+    // End date only: <= 2026-09-21
+    const until21 = filter('', '2026-09-21');
+    assert.equal(until21.length, 1);
+    assert.equal(until21[0]!.id, 'r3');
+
+    // Date with no records: 2026-09-22
+    assert.equal(filter('2026-09-22', '2026-09-22').length, 0);
   });
 });

@@ -1123,16 +1123,15 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
       <PageTitle
         kicker={`${st.k.nama} · Rekap`}
         title="Hitung sisa di area kerja"
-        sub="Isi jumlah yang masih tersisa di luar. Ketuk “Habis” kalau tidak ada sisa."
+        sub="Isi jumlah yang masih tersisa di luar."
       />
       <ul class="flex flex-col gap-3">
         {st.rows.map((r, i) => {
           const c = cek(i);
           const bad = c === 'salah' || (tried && c === 'kosong');
-          const s = parseNum(vals[i]);
           return (
             <li key={r.barang_id} class={`rounded-card border bg-card p-4 shadow-sm ${bad ? 'border-danger' : 'border-line'}`}>
-              <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(280px,340px)_120px] md:items-center">
+              <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px] sm:items-center">
                 <div class="min-w-0">
                   <p class="font-bold">{r.nama}</p>
                   <p class="num text-sm text-muted-fg">
@@ -1143,31 +1142,22 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
                   <label for={'sisa-' + i} class="text-sm font-semibold">
                     Sisa ({r.satuan})
                   </label>
-                  <div class="flex gap-2">
-                    <Input
-                      id={'sisa-' + i}
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      value={vals[i]}
-                      onInput={(e) => set(i, e.currentTarget.value)}
-                      aria-invalid={bad}
-                      aria-describedby={bad ? 'err-' + i : undefined}
-                      class="num min-h-12 text-lg font-bold"
-                    />
-                    <Button onClick={() => set(i, '0')} class="min-h-12 shrink-0">
-                      Habis
-                    </Button>
-                  </div>
+                  <Input
+                    id={'sisa-' + i}
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    value={vals[i]}
+                    onInput={(e) => set(i, e.currentTarget.value)}
+                    aria-invalid={bad}
+                    aria-describedby={bad ? 'err-' + i : undefined}
+                    class="num min-h-12 text-lg font-bold"
+                  />
                   {bad && (
                     <p id={'err-' + i} class="text-[13px] font-semibold text-danger">
                       {c === 'kosong' ? 'Belum diisi' : `Isi 0 sampai ${nf(r.maks)}`}
                     </p>
                   )}
-                </div>
-                <div class="flex items-center justify-between gap-2 md:flex-col md:items-end md:justify-center">
-                  <span class="text-sm text-muted-fg">Terpakai</span>
-                  <span class="num text-lg font-extrabold">{c === 'ok' ? `${nf(r3(r.maks - s))} ${r.satuan}` : '—'}</span>
                 </div>
               </div>
               <label class="mt-3 block">

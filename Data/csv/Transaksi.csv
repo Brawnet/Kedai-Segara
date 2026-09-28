@@ -1,0 +1,1520 @@
+id,ts,waktu,jenis,barang_id,barang,jumlah,karyawan_id,karyawan,alur,supplier,status,dicatat_oleh,catatan,kategori,satuan
+t0001,1788220800000,01/09/2026 08:00,MASUK,b001,Ayam Suwir,103,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0002,1788220860000,01/09/2026 08:01,MASUK,b003,Topping Mbakmoy,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0003,1788220920000,01/09/2026 08:02,MASUK,b006,Paha Gurih Manis,60,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0004,1788220980000,01/09/2026 08:03,MASUK,b005,Dada Gurih Manis,30,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0005,1788221040000,01/09/2026 08:04,MASUK,b007,Paha,93,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0006,1788221100000,01/09/2026 08:05,MASUK,b008,Dada,74,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0007,1788221160000,01/09/2026 08:06,MASUK,b002,Topping Kwetiau,88,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0008,1788221220000,01/09/2026 08:07,MASUK,b103,Tissue Meja,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0009,1788221280000,01/09/2026 08:08,MASUK,b104,Tissue Toilet,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0010,1788221340000,01/09/2026 08:09,MASUK,b001,Ayam Suwir,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0011,1788264000000,01/09/2026 20:00,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0012,1788264060000,01/09/2026 20:01,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0013,1788264120000,01/09/2026 20:02,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0014,1788264180000,01/09/2026 20:03,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0015,1788264240000,01/09/2026 20:04,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0016,1788264300000,01/09/2026 20:05,AMBIL,b095,Plastik Sampah S,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0017,1788264360000,01/09/2026 20:06,AMBIL,b096,Plastik Sampah M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0018,1788264420000,01/09/2026 20:07,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0019,1788264480000,01/09/2026 20:08,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0020,1788264540000,01/09/2026 20:09,AMBIL,b006,Paha Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0021,1788264600000,01/09/2026 20:10,AMBIL,b005,Dada Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0022,1788264660000,01/09/2026 20:11,AMBIL,b007,Paha,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0023,1788264720000,01/09/2026 20:12,AMBIL,b008,Dada,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0024,1788264780000,01/09/2026 20:13,AMBIL,b001,Ayam Suwir,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0025,1788264840000,01/09/2026 20:14,AMBIL,b002,Topping Kwetiau,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0026,1788264900000,01/09/2026 20:15,AMBIL,b010,Daging Slice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0027,1788264960000,01/09/2026 20:16,AMBIL,b004,Ayam Jamur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0028,1788265020000,01/09/2026 20:17,AMBIL,b011,Cumi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0029,1788265080000,01/09/2026 20:18,AMBIL,b020,Daging Sambal HIjau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0030,1788265140000,01/09/2026 20:19,AMBIL,b012,Kulit,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0031,1788265200000,01/09/2026 20:20,AMBIL,b013,Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0032,1788265260000,01/09/2026 20:21,AMBIL,b015,Teri Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0033,1788265320000,01/09/2026 20:22,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0034,1788265380000,01/09/2026 20:23,AMBIL,b021,Sambal Baby Cumi,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0035,1788265440000,01/09/2026 20:24,AMBIL,b019,Bagor,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0036,1788265500000,01/09/2026 20:25,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0037,1788265560000,01/09/2026 20:26,AMBIL,b009,Sayap Goreng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0038,1788265620000,01/09/2026 20:27,AMBIL,b043,Mineral,26,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0039,1788265680000,01/09/2026 20:28,AMBIL,b044,Air Tahu,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0040,1788265740000,01/09/2026 20:29,AMBIL,b041,Manggo Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0041,1788265800000,01/09/2026 20:30,AMBIL,b042,Mix Berries,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0042,1788265860000,01/09/2026 20:31,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0043,1788307200000,02/09/2026 08:00,MASUK,b014,Lidah Goreng Segara,11,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0044,1788307260000,02/09/2026 08:01,MASUK,b034,Bumbu Ungkep Lidah,9,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0045,1788307320000,02/09/2026 08:02,MASUK,b029,Bumbu Segara,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0046,1788307380000,02/09/2026 08:03,MASUK,b044,Air Tahu,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0047,1788307440000,02/09/2026 08:04,MASUK,b001,Ayam Suwir,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0048,1788350400000,02/09/2026 20:00,AMBIL,b072,Bumbu Racik,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0049,1788350460000,02/09/2026 20:01,AMBIL,b036,Bumbu Teri,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0050,1788350520000,02/09/2026 20:02,AMBIL,b090,Sagu Mutiara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0051,1788350580000,02/09/2026 20:03,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0052,1788350640000,02/09/2026 20:04,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0053,1788350700000,02/09/2026 20:05,AMBIL,b048,Apple Juice Diamond,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pcs
+t0054,1788350760000,02/09/2026 20:06,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0055,1788350820000,02/09/2026 20:07,AMBIL,b059,Sun Cara 1L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0056,1788350880000,02/09/2026 20:08,AMBIL,b099,Thermal Paper,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0057,1788350940000,02/09/2026 20:09,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0058,1788351000000,02/09/2026 20:10,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0059,1788351060000,02/09/2026 20:11,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0060,1788351120000,02/09/2026 20:12,AMBIL,b087,Tepung Telur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0061,1788351180000,02/09/2026 20:13,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0062,1788351240000,02/09/2026 20:14,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0063,1788351300000,02/09/2026 20:15,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0064,1788351360000,02/09/2026 20:16,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0065,1788351420000,02/09/2026 20:17,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0066,1788351480000,02/09/2026 20:18,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0067,1788351540000,02/09/2026 20:19,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0068,1788351600000,02/09/2026 20:20,AMBIL,b006,Paha Gurih Manis,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0069,1788351660000,02/09/2026 20:21,AMBIL,b005,Dada Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0070,1788351720000,02/09/2026 20:22,AMBIL,b007,Paha,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0071,1788351780000,02/09/2026 20:23,AMBIL,b008,Dada,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0072,1788351840000,02/09/2026 20:24,AMBIL,b001,Ayam Suwir,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0073,1788351900000,02/09/2026 20:25,AMBIL,b002,Topping Kwetiau,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0074,1788351960000,02/09/2026 20:26,AMBIL,b010,Daging Slice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0075,1788352020000,02/09/2026 20:27,AMBIL,b004,Ayam Jamur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0076,1788352080000,02/09/2026 20:28,AMBIL,b011,Cumi,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0077,1788352140000,02/09/2026 20:29,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0078,1788352200000,02/09/2026 20:30,AMBIL,b012,Kulit,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0079,1788352260000,02/09/2026 20:31,AMBIL,b016,Topping Nasi Gila,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0080,1788352320000,02/09/2026 20:32,AMBIL,b013,Lidah,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0081,1788352380000,02/09/2026 20:33,AMBIL,b015,Teri Pete,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0082,1788352440000,02/09/2026 20:34,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0083,1788352500000,02/09/2026 20:35,AMBIL,b021,Sambal Baby Cumi,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0084,1788352560000,02/09/2026 20:36,AMBIL,b019,Bagor,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0085,1788352620000,02/09/2026 20:37,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0086,1788352680000,02/09/2026 20:38,AMBIL,b009,Sayap Goreng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0087,1788352740000,02/09/2026 20:39,AMBIL,b043,Mineral,37,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0088,1788352800000,02/09/2026 20:40,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0089,1788352860000,02/09/2026 20:41,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0090,1788352920000,02/09/2026 20:42,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0091,1788352980000,02/09/2026 20:43,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0092,1788353040000,02/09/2026 20:44,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0093,1788393600000,03/09/2026 08:00,MASUK,b018,Pete,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0094,1788393660000,03/09/2026 08:01,MASUK,b004,Ayam Jamur,50,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0095,1788393720000,03/09/2026 08:02,MASUK,b031,Bumbu Serundeng,19,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0096,1788393780000,03/09/2026 08:03,MASUK,b019,Bagor,89,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0097,1788436800000,03/09/2026 20:00,AMBIL,b094,Vanilli,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t0098,1788436860000,03/09/2026 20:01,AMBIL,b039,Roti Angsle,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0099,1788436920000,03/09/2026 20:02,AMBIL,b038,Roti Bakar,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0100,1788436980000,03/09/2026 20:03,AMBIL,b089,Nurtijel Plain,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0101,1788437040000,03/09/2026 20:04,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0102,1788437100000,03/09/2026 20:05,AMBIL,b092,Pewarna Hijau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t0103,1788437160000,03/09/2026 20:06,AMBIL,b086,Tepung Tapioka,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0104,1788437220000,03/09/2026 20:07,AMBIL,b074,Terasi,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pcs
+t0105,1788437280000,03/09/2026 20:08,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0106,1788437340000,03/09/2026 20:09,AMBIL,b084,Tepung Maizena,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0107,1788437400000,03/09/2026 20:10,AMBIL,b085,Tepung Terigu,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0108,1788437460000,03/09/2026 20:11,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0109,1788437520000,03/09/2026 20:12,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0110,1788437580000,03/09/2026 20:13,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0111,1788437640000,03/09/2026 20:14,AMBIL,b069,Kunci Mas,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0112,1788437700000,03/09/2026 20:15,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0113,1788437760000,03/09/2026 20:16,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0114,1788437820000,03/09/2026 20:17,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0115,1788437880000,03/09/2026 20:18,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0116,1788437940000,03/09/2026 20:19,AMBIL,b062,Oatside Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0117,1788438000000,03/09/2026 20:20,AMBIL,b051,Dripp Pandan,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0118,1788438060000,03/09/2026 20:21,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0119,1788438120000,03/09/2026 20:22,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0120,1788438180000,03/09/2026 20:23,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0121,1788438240000,03/09/2026 20:24,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0122,1788438300000,03/09/2026 20:25,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0123,1788438360000,03/09/2026 20:26,AMBIL,b005,Dada Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0124,1788438420000,03/09/2026 20:27,AMBIL,b007,Paha,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0125,1788438480000,03/09/2026 20:28,AMBIL,b008,Dada,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0126,1788438540000,03/09/2026 20:29,AMBIL,b001,Ayam Suwir,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0127,1788438600000,03/09/2026 20:30,AMBIL,b002,Topping Kwetiau,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0128,1788438660000,03/09/2026 20:31,AMBIL,b010,Daging Slice,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0129,1788438720000,03/09/2026 20:32,AMBIL,b004,Ayam Jamur,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0130,1788438780000,03/09/2026 20:33,AMBIL,b011,Cumi,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0131,1788438840000,03/09/2026 20:34,AMBIL,b020,Daging Sambal HIjau,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0132,1788438900000,03/09/2026 20:35,AMBIL,b012,Kulit,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0133,1788438960000,03/09/2026 20:36,AMBIL,b016,Topping Nasi Gila,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0134,1788439020000,03/09/2026 20:37,AMBIL,b013,Lidah,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0135,1788439080000,03/09/2026 20:38,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0136,1788439140000,03/09/2026 20:39,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0137,1788439200000,03/09/2026 20:40,AMBIL,b021,Sambal Baby Cumi,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0138,1788439260000,03/09/2026 20:41,AMBIL,b019,Bagor,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0139,1788439320000,03/09/2026 20:42,AMBIL,b023,Cireng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0140,1788439380000,03/09/2026 20:43,AMBIL,b009,Sayap Goreng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0141,1788439440000,03/09/2026 20:44,AMBIL,b043,Mineral,34,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0142,1788439500000,03/09/2026 20:45,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0143,1788439560000,03/09/2026 20:46,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0144,1788439620000,03/09/2026 20:47,AMBIL,b042,Mix Berries,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0145,1788439680000,03/09/2026 20:48,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0146,1788439740000,03/09/2026 20:49,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0147,1788480000000,04/09/2026 08:00,MASUK,b084,Tepung Maizena,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0148,1788480060000,04/09/2026 08:01,MASUK,b086,Tepung Tapioka,9,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0149,1788480120000,04/09/2026 08:02,MASUK,b036,Bumbu Teri,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0150,1788523200000,04/09/2026 20:00,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0151,1788523260000,04/09/2026 20:01,AMBIL,b067,Keju,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0152,1788523320000,04/09/2026 20:02,AMBIL,b099,Thermal Paper,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0153,1788523380000,04/09/2026 20:03,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0154,1788523440000,04/09/2026 20:04,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0155,1788523500000,04/09/2026 20:05,AMBIL,b037,Bumbu Mie Goreng Jawa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0156,1788523560000,04/09/2026 20:06,AMBIL,b087,Tepung Telur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0157,1788523620000,04/09/2026 20:07,AMBIL,b035,Bumbu Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0158,1788523680000,04/09/2026 20:08,AMBIL,b028,Sambal Terong,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0159,1788523740000,04/09/2026 20:09,AMBIL,b031,Bumbu Serundeng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0160,1788523800000,04/09/2026 20:10,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0161,1788523860000,04/09/2026 20:11,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0162,1788523920000,04/09/2026 20:12,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0163,1788523980000,04/09/2026 20:13,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0164,1788524040000,04/09/2026 20:14,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0165,1788524100000,04/09/2026 20:15,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0166,1788524160000,04/09/2026 20:16,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0167,1788524220000,04/09/2026 20:17,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0168,1788524280000,04/09/2026 20:18,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0169,1788524340000,04/09/2026 20:19,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0170,1788524400000,04/09/2026 20:20,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0171,1788524460000,04/09/2026 20:21,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0172,1788524520000,04/09/2026 20:22,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0173,1788524580000,04/09/2026 20:23,AMBIL,b006,Paha Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0174,1788524640000,04/09/2026 20:24,AMBIL,b005,Dada Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0175,1788524700000,04/09/2026 20:25,AMBIL,b007,Paha,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0176,1788524760000,04/09/2026 20:26,AMBIL,b008,Dada,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0177,1788524820000,04/09/2026 20:27,AMBIL,b001,Ayam Suwir,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0178,1788524880000,04/09/2026 20:28,AMBIL,b002,Topping Kwetiau,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0179,1788524940000,04/09/2026 20:29,AMBIL,b010,Daging Slice,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0180,1788525000000,04/09/2026 20:30,AMBIL,b004,Ayam Jamur,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0181,1788525060000,04/09/2026 20:31,AMBIL,b011,Cumi,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0182,1788525120000,04/09/2026 20:32,AMBIL,b020,Daging Sambal HIjau,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0183,1788525180000,04/09/2026 20:33,AMBIL,b012,Kulit,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0184,1788525240000,04/09/2026 20:34,AMBIL,b016,Topping Nasi Gila,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0185,1788525300000,04/09/2026 20:35,AMBIL,b013,Lidah,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0186,1788525360000,04/09/2026 20:36,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0187,1788525420000,04/09/2026 20:37,AMBIL,b003,Topping Mbakmoy,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0188,1788525480000,04/09/2026 20:38,AMBIL,b021,Sambal Baby Cumi,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0189,1788525540000,04/09/2026 20:39,AMBIL,b019,Bagor,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0190,1788525600000,04/09/2026 20:40,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0191,1788525660000,04/09/2026 20:41,AMBIL,b009,Sayap Goreng,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0192,1788525720000,04/09/2026 20:42,AMBIL,b043,Mineral,35,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0193,1788525780000,04/09/2026 20:43,AMBIL,b044,Air Tahu,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0194,1788525840000,04/09/2026 20:44,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0195,1788525900000,04/09/2026 20:45,AMBIL,b042,Mix Berries,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0196,1788525960000,04/09/2026 20:46,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0197,1788526020000,04/09/2026 20:47,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0198,1788566400000,05/09/2026 08:00,MASUK,b068,Minyak Beku,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0199,1788566460000,05/09/2026 08:01,MASUK,b010,Daging Slice,40,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0200,1788566520000,05/09/2026 08:02,MASUK,b111,Sedotan,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0201,1788566580000,05/09/2026 08:03,MASUK,b020,Daging Sambal HIjau,83,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0202,1788609600000,05/09/2026 20:00,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0203,1788609660000,05/09/2026 20:01,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0204,1788609720000,05/09/2026 20:02,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0205,1788609780000,05/09/2026 20:03,AMBIL,b099,Thermal Paper,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0206,1788609840000,05/09/2026 20:04,AMBIL,b100,Ekonomi,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0207,1788609900000,05/09/2026 20:05,AMBIL,b025,Sambal Terasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0208,1788609960000,05/09/2026 20:06,AMBIL,b024,Sambal Bawang,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0209,1788610020000,05/09/2026 20:07,AMBIL,b038,Roti Bakar,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0210,1788610080000,05/09/2026 20:08,AMBIL,b087,Tepung Telur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0211,1788610140000,05/09/2026 20:09,AMBIL,b056,Kopi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+t0212,1788610200000,05/09/2026 20:10,AMBIL,b070,Gula,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0213,1788610260000,05/09/2026 20:11,AMBIL,b109,Take Away Bocx L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0214,1788610320000,05/09/2026 20:12,AMBIL,b105,Take Away Box M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0215,1788610380000,05/09/2026 20:13,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0216,1788610440000,05/09/2026 20:14,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0217,1788610500000,05/09/2026 20:15,AMBIL,b084,Tepung Maizena,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0218,1788610560000,05/09/2026 20:16,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0219,1788610620000,05/09/2026 20:17,AMBIL,b107,Plastik Bima uk24,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0220,1788610680000,05/09/2026 20:18,AMBIL,b106,Cup Sambal,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0221,1788610740000,05/09/2026 20:19,AMBIL,b115,2in1 Sendok,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0222,1788610800000,05/09/2026 20:20,AMBIL,b111,Sedotan,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0223,1788610860000,05/09/2026 20:21,AMBIL,b068,Minyak Beku,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0224,1788610920000,05/09/2026 20:22,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0225,1788610980000,05/09/2026 20:23,AMBIL,b071,Garam,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0226,1788611040000,05/09/2026 20:24,AMBIL,b120,Bumbu Ungkep,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0227,1788611100000,05/09/2026 20:25,AMBIL,b031,Bumbu Serundeng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0228,1788611160000,05/09/2026 20:26,AMBIL,b059,Sun Cara 1L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0229,1788611220000,05/09/2026 20:27,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0230,1788611280000,05/09/2026 20:28,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0231,1788611340000,05/09/2026 20:29,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0232,1788611400000,05/09/2026 20:30,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0233,1788611460000,05/09/2026 20:31,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0234,1788611520000,05/09/2026 20:32,AMBIL,b007,Paha,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Stock Kurang,Freezer Protein,Porsi
+t0235,1788611580000,05/09/2026 20:33,AMBIL,b001,Ayam Suwir,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Stock Kurang,Freezer Protein,Porsi
+t0236,1788611640000,05/09/2026 20:34,AMBIL,b090,Sagu Mutiara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0237,1788611700000,05/09/2026 20:35,AMBIL,b047,Lhychee Kaleng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0238,1788611760000,05/09/2026 20:36,AMBIL,b099,Thermal Paper,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0239,1788611820000,05/09/2026 20:37,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0240,1788611880000,05/09/2026 20:38,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0241,1788611940000,05/09/2026 20:39,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0242,1788612000000,05/09/2026 20:40,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0243,1788612060000,05/09/2026 20:41,AMBIL,b006,Paha Gurih Manis,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0244,1788612120000,05/09/2026 20:42,AMBIL,b005,Dada Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0245,1788612180000,05/09/2026 20:43,AMBIL,b007,Paha,19,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0246,1788612240000,05/09/2026 20:44,AMBIL,b008,Dada,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0247,1788612300000,05/09/2026 20:45,AMBIL,b001,Ayam Suwir,34,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0248,1788612360000,05/09/2026 20:46,AMBIL,b002,Topping Kwetiau,25,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0249,1788612420000,05/09/2026 20:47,AMBIL,b010,Daging Slice,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0250,1788612480000,05/09/2026 20:48,AMBIL,b004,Ayam Jamur,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0251,1788612540000,05/09/2026 20:49,AMBIL,b011,Cumi,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0252,1788612600000,05/09/2026 20:50,AMBIL,b020,Daging Sambal HIjau,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0253,1788612660000,05/09/2026 20:51,AMBIL,b012,Kulit,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0254,1788612720000,05/09/2026 20:52,AMBIL,b016,Topping Nasi Gila,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0255,1788612780000,05/09/2026 20:53,AMBIL,b013,Lidah,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0256,1788612840000,05/09/2026 20:54,AMBIL,b018,Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0257,1788612900000,05/09/2026 20:55,AMBIL,b015,Teri Pete,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0258,1788612960000,05/09/2026 20:56,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0259,1788613020000,05/09/2026 20:57,AMBIL,b021,Sambal Baby Cumi,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0260,1788613080000,05/09/2026 20:58,AMBIL,b019,Bagor,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0261,1788613140000,05/09/2026 20:59,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0262,1788613200000,05/09/2026 21:00,AMBIL,b009,Sayap Goreng,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0263,1788613260000,05/09/2026 21:01,AMBIL,b043,Mineral,59,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0264,1788613320000,05/09/2026 21:02,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0265,1788613380000,05/09/2026 21:03,AMBIL,b041,Manggo Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0266,1788613440000,05/09/2026 21:04,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0267,1788613500000,05/09/2026 21:05,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0268,1788613560000,05/09/2026 21:06,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0269,1788652800000,06/09/2026 08:00,MASUK,b107,Plastik Bima uk24,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0270,1788652860000,06/09/2026 08:01,MASUK,b115,2in1 Sendok,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0271,1788652920000,06/09/2026 08:02,MASUK,b106,Cup Sambal,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0272,1788652980000,06/09/2026 08:03,MASUK,b102,Plastik Soup XS,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0273,1788653040000,06/09/2026 08:04,MASUK,b079,Kecap Maggi,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Botol
+t0274,1788653100000,06/09/2026 08:05,MASUK,b077,Raja Rasa,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Botol
+t0275,1788653160000,06/09/2026 08:06,MASUK,b070,Gula,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0276,1788653220000,06/09/2026 08:07,MASUK,b072,Bumbu Racik,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0277,1788653280000,06/09/2026 08:08,MASUK,b073,Bumbu Gule,12,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0278,1788653340000,06/09/2026 08:09,MASUK,b074,Terasi,40,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pcs
+t0279,1788653400000,06/09/2026 08:10,MASUK,b075,Gula Halus,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0280,1788653460000,06/09/2026 08:11,MASUK,b083,Tepung Ketan,7,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0281,1788653520000,06/09/2026 08:12,MASUK,b060,Susu Evaporasi,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0282,1788653580000,06/09/2026 08:13,MASUK,b061,Susu Kental Manis Carnation,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0283,1788653640000,06/09/2026 08:14,MASUK,b085,Tepung Terigu,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0284,1788653700000,06/09/2026 08:15,MASUK,b112,Plastik Bima uk.15,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0285,1788653760000,06/09/2026 08:16,MASUK,b015,Teri Pete,31,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0286,1788653820000,06/09/2026 08:17,MASUK,b026,Sambal Kuning,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0287,1788696000000,06/09/2026 20:00,AMBIL,b079,Kecap Maggi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t0288,1788696060000,06/09/2026 20:01,AMBIL,b077,Raja Rasa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t0289,1788696120000,06/09/2026 20:02,AMBIL,b078,Kecap Ikan Tipparos,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t0290,1788696180000,06/09/2026 20:03,AMBIL,b084,Tepung Maizena,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0291,1788696240000,06/09/2026 20:04,AMBIL,b085,Tepung Terigu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0292,1788696300000,06/09/2026 20:05,AMBIL,b082,Tepung Beras Bola,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0293,1788696360000,06/09/2026 20:06,AMBIL,b075,Gula Halus,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0294,1788696420000,06/09/2026 20:07,AMBIL,b031,Bumbu Serundeng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0295,1788696480000,06/09/2026 20:08,AMBIL,b069,Kunci Mas,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0296,1788696540000,06/09/2026 20:09,AMBIL,b029,Bumbu Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0297,1788696600000,06/09/2026 20:10,AMBIL,b106,Cup Sambal,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0298,1788696660000,06/09/2026 20:11,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0299,1788696720000,06/09/2026 20:12,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0300,1788696780000,06/09/2026 20:13,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0301,1788696840000,06/09/2026 20:14,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0302,1788696900000,06/09/2026 20:15,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0303,1788696960000,06/09/2026 20:16,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0304,1788697020000,06/09/2026 20:17,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0305,1788697080000,06/09/2026 20:18,AMBIL,b060,Susu Evaporasi,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0306,1788697140000,06/09/2026 20:19,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0307,1788697200000,06/09/2026 20:20,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0308,1788697260000,06/09/2026 20:21,AMBIL,b065,Max Creamer,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0309,1788697320000,06/09/2026 20:22,AMBIL,b066,Milo,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0310,1788697380000,06/09/2026 20:23,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0311,1788697440000,06/09/2026 20:24,AMBIL,b116,Cup Hot,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0312,1788697500000,06/09/2026 20:25,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0313,1788697560000,06/09/2026 20:26,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0314,1788697620000,06/09/2026 20:27,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0315,1788697680000,06/09/2026 20:28,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0316,1788697740000,06/09/2026 20:29,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0317,1788697800000,06/09/2026 20:30,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0318,1788697860000,06/09/2026 20:31,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0319,1788697920000,06/09/2026 20:32,AMBIL,b006,Paha Gurih Manis,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0320,1788697980000,06/09/2026 20:33,AMBIL,b005,Dada Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0321,1788698040000,06/09/2026 20:34,AMBIL,b007,Paha,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0322,1788698100000,06/09/2026 20:35,AMBIL,b008,Dada,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0323,1788698160000,06/09/2026 20:36,AMBIL,b001,Ayam Suwir,22,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0324,1788698220000,06/09/2026 20:37,AMBIL,b002,Topping Kwetiau,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0325,1788698280000,06/09/2026 20:38,AMBIL,b010,Daging Slice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0326,1788698340000,06/09/2026 20:39,AMBIL,b004,Ayam Jamur,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0327,1788698400000,06/09/2026 20:40,AMBIL,b011,Cumi,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0328,1788698460000,06/09/2026 20:41,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0329,1788698520000,06/09/2026 20:42,AMBIL,b012,Kulit,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0330,1788698580000,06/09/2026 20:43,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0331,1788698640000,06/09/2026 20:44,AMBIL,b013,Lidah,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0332,1788698700000,06/09/2026 20:45,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0333,1788698760000,06/09/2026 20:46,AMBIL,b015,Teri Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0334,1788698820000,06/09/2026 20:47,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0335,1788698880000,06/09/2026 20:48,AMBIL,b021,Sambal Baby Cumi,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0336,1788698940000,06/09/2026 20:49,AMBIL,b019,Bagor,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0337,1788699000000,06/09/2026 20:50,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0338,1788699060000,06/09/2026 20:51,AMBIL,b009,Sayap Goreng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0339,1788699120000,06/09/2026 20:52,AMBIL,b043,Mineral,36,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0340,1788699180000,06/09/2026 20:53,AMBIL,b044,Air Tahu,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0341,1788699240000,06/09/2026 20:54,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0342,1788699300000,06/09/2026 20:55,AMBIL,b042,Mix Berries,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0343,1788699360000,06/09/2026 20:56,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0344,1788699420000,06/09/2026 20:57,AMBIL,b040,Sirsak Juice,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0345,1788739200000,07/09/2026 08:00,MASUK,b011,Cumi,127,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0346,1788739260000,07/09/2026 08:01,MASUK,b087,Tepung Telur,30,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0347,1788739320000,07/09/2026 08:02,MASUK,b043,Mineral,480,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0348,1788739380000,07/09/2026 08:03,MASUK,b006,Paha Gurih Manis,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0349,1788782400000,07/09/2026 20:00,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0350,1788782460000,07/09/2026 20:01,AMBIL,b088,Mie Urai,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0351,1788782520000,07/09/2026 20:02,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0352,1788782580000,07/09/2026 20:03,AMBIL,b095,Plastik Sampah S,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0353,1788782640000,07/09/2026 20:04,AMBIL,b099,Thermal Paper,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0354,1788782700000,07/09/2026 20:05,AMBIL,b108,Take Away Box S,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0355,1788782760000,07/09/2026 20:06,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0356,1788782820000,07/09/2026 20:07,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0357,1788782880000,07/09/2026 20:08,AMBIL,b030,Bumbu Lidah,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0358,1788782940000,07/09/2026 20:09,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0359,1788783000000,07/09/2026 20:10,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0360,1788783060000,07/09/2026 20:11,AMBIL,b100,Ekonomi,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0361,1788783120000,07/09/2026 20:12,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0362,1788783180000,07/09/2026 20:13,AMBIL,b089,Nurtijel Plain,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0363,1788783240000,07/09/2026 20:14,AMBIL,b064,Sun Cara 200Ml,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0364,1788783300000,07/09/2026 20:15,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0365,1788783360000,07/09/2026 20:16,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0366,1788783420000,07/09/2026 20:17,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0367,1788783480000,07/09/2026 20:18,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0368,1788783540000,07/09/2026 20:19,AMBIL,b006,Paha Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0369,1788783600000,07/09/2026 20:20,AMBIL,b005,Dada Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0370,1788783660000,07/09/2026 20:21,AMBIL,b007,Paha,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0371,1788783720000,07/09/2026 20:22,AMBIL,b008,Dada,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0372,1788783780000,07/09/2026 20:23,AMBIL,b001,Ayam Suwir,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0373,1788783840000,07/09/2026 20:24,AMBIL,b002,Topping Kwetiau,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0374,1788783900000,07/09/2026 20:25,AMBIL,b010,Daging Slice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0375,1788783960000,07/09/2026 20:26,AMBIL,b004,Ayam Jamur,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0376,1788784020000,07/09/2026 20:27,AMBIL,b011,Cumi,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0377,1788784080000,07/09/2026 20:28,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0378,1788784140000,07/09/2026 20:29,AMBIL,b012,Kulit,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0379,1788784200000,07/09/2026 20:30,AMBIL,b016,Topping Nasi Gila,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0380,1788784260000,07/09/2026 20:31,AMBIL,b013,Lidah,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0381,1788784320000,07/09/2026 20:32,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0382,1788784380000,07/09/2026 20:33,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0383,1788784440000,07/09/2026 20:34,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0384,1788784500000,07/09/2026 20:35,AMBIL,b021,Sambal Baby Cumi,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0385,1788784560000,07/09/2026 20:36,AMBIL,b019,Bagor,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0386,1788784620000,07/09/2026 20:37,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0387,1788784680000,07/09/2026 20:38,AMBIL,b009,Sayap Goreng,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0388,1788784740000,07/09/2026 20:39,AMBIL,b043,Mineral,35,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0389,1788784800000,07/09/2026 20:40,AMBIL,b044,Air Tahu,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0390,1788784860000,07/09/2026 20:41,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0391,1788784920000,07/09/2026 20:42,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0392,1788784980000,07/09/2026 20:43,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0393,1788785040000,07/09/2026 20:44,AMBIL,b040,Sirsak Juice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0394,1788825600000,08/09/2026 08:00,MASUK,b102,Plastik Soup XS,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0395,1788825660000,08/09/2026 08:01,MASUK,b105,Take Away Box M,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t0396,1788825720000,08/09/2026 08:02,MASUK,b012,Kulit,51,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0397,1788825780000,08/09/2026 08:03,MASUK,b026,Sambal Kuning,7,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0398,1788825840000,08/09/2026 08:04,MASUK,b044,Air Tahu,15,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0399,1788868800000,08/09/2026 20:00,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0400,1788868860000,08/09/2026 20:01,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0401,1788868920000,08/09/2026 20:02,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0402,1788868980000,08/09/2026 20:03,AMBIL,b064,Sun Cara 200Ml,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0403,1788869040000,08/09/2026 20:04,AMBIL,b091,Nata Decoco,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0404,1788869100000,08/09/2026 20:05,AMBIL,b072,Bumbu Racik,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0405,1788869160000,08/09/2026 20:06,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0406,1788869220000,08/09/2026 20:07,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0407,1788869280000,08/09/2026 20:08,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0408,1788869340000,08/09/2026 20:09,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0409,1788869400000,08/09/2026 20:10,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0410,1788869460000,08/09/2026 20:11,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0411,1788869520000,08/09/2026 20:12,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0412,1788869580000,08/09/2026 20:13,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0413,1788869640000,08/09/2026 20:14,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0414,1788869700000,08/09/2026 20:15,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0415,1788869760000,08/09/2026 20:16,AMBIL,b006,Paha Gurih Manis,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0416,1788869820000,08/09/2026 20:17,AMBIL,b005,Dada Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0417,1788869880000,08/09/2026 20:18,AMBIL,b007,Paha,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0418,1788869940000,08/09/2026 20:19,AMBIL,b008,Dada,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0419,1788870000000,08/09/2026 20:20,AMBIL,b001,Ayam Suwir,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0420,1788870060000,08/09/2026 20:21,AMBIL,b002,Topping Kwetiau,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0421,1788870120000,08/09/2026 20:22,AMBIL,b010,Daging Slice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0422,1788870180000,08/09/2026 20:23,AMBIL,b004,Ayam Jamur,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0423,1788870240000,08/09/2026 20:24,AMBIL,b011,Cumi,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0424,1788870300000,08/09/2026 20:25,AMBIL,b020,Daging Sambal HIjau,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0425,1788870360000,08/09/2026 20:26,AMBIL,b012,Kulit,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0426,1788870420000,08/09/2026 20:27,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0427,1788870480000,08/09/2026 20:28,AMBIL,b013,Lidah,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0428,1788870540000,08/09/2026 20:29,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0429,1788870600000,08/09/2026 20:30,AMBIL,b015,Teri Pete,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0430,1788870660000,08/09/2026 20:31,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0431,1788870720000,08/09/2026 20:32,AMBIL,b021,Sambal Baby Cumi,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0432,1788870780000,08/09/2026 20:33,AMBIL,b019,Bagor,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0433,1788870840000,08/09/2026 20:34,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0434,1788870900000,08/09/2026 20:35,AMBIL,b009,Sayap Goreng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0435,1788870960000,08/09/2026 20:36,AMBIL,b043,Mineral,44,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0436,1788871020000,08/09/2026 20:37,AMBIL,b044,Air Tahu,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0437,1788871080000,08/09/2026 20:38,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0438,1788871140000,08/09/2026 20:39,AMBIL,b042,Mix Berries,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0439,1788871200000,08/09/2026 20:40,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0440,1788871260000,08/09/2026 20:41,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0441,1788912000000,09/09/2026 08:00,MASUK,b001,Ayam Suwir,42,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0442,1788912060000,09/09/2026 08:01,MASUK,b022,Tahu Aci,9,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Pack
+t0443,1788955200000,09/09/2026 20:00,AMBIL,b072,Bumbu Racik,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0444,1788955260000,09/09/2026 20:01,AMBIL,b071,Garam,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0445,1788955320000,09/09/2026 20:02,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0446,1788955380000,09/09/2026 20:03,AMBIL,b028,Sambal Terong,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0447,1788955440000,09/09/2026 20:04,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0448,1788955500000,09/09/2026 20:05,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0449,1788955560000,09/09/2026 20:06,AMBIL,b037,Bumbu Mie Goreng Jawa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0450,1788955620000,09/09/2026 20:07,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0451,1788955680000,09/09/2026 20:08,AMBIL,b087,Tepung Telur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0452,1788955740000,09/09/2026 20:09,AMBIL,b084,Tepung Maizena,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0453,1788955800000,09/09/2026 20:10,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0454,1788955860000,09/09/2026 20:11,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0455,1788955920000,09/09/2026 20:12,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0456,1788955980000,09/09/2026 20:13,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0457,1788956040000,09/09/2026 20:14,AMBIL,b067,Keju,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0458,1788956100000,09/09/2026 20:15,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0459,1788956160000,09/09/2026 20:16,AMBIL,b086,Tepung Tapioka,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0460,1788956220000,09/09/2026 20:17,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0461,1788956280000,09/09/2026 20:18,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0462,1788956340000,09/09/2026 20:19,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0463,1788956400000,09/09/2026 20:20,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0464,1788956460000,09/09/2026 20:21,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0465,1788956520000,09/09/2026 20:22,AMBIL,b006,Paha Gurih Manis,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0466,1788956580000,09/09/2026 20:23,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0467,1788956640000,09/09/2026 20:24,AMBIL,b007,Paha,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0468,1788956700000,09/09/2026 20:25,AMBIL,b008,Dada,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0469,1788956760000,09/09/2026 20:26,AMBIL,b001,Ayam Suwir,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0470,1788956820000,09/09/2026 20:27,AMBIL,b002,Topping Kwetiau,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0471,1788956880000,09/09/2026 20:28,AMBIL,b010,Daging Slice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0472,1788956940000,09/09/2026 20:29,AMBIL,b004,Ayam Jamur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0473,1788957000000,09/09/2026 20:30,AMBIL,b011,Cumi,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0474,1788957060000,09/09/2026 20:31,AMBIL,b020,Daging Sambal HIjau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0475,1788957120000,09/09/2026 20:32,AMBIL,b012,Kulit,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0476,1788957180000,09/09/2026 20:33,AMBIL,b016,Topping Nasi Gila,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0477,1788957240000,09/09/2026 20:34,AMBIL,b013,Lidah,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0478,1788957300000,09/09/2026 20:35,AMBIL,b018,Pete,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0479,1788957360000,09/09/2026 20:36,AMBIL,b015,Teri Pete,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0480,1788957420000,09/09/2026 20:37,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0481,1788957480000,09/09/2026 20:38,AMBIL,b021,Sambal Baby Cumi,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0482,1788957540000,09/09/2026 20:39,AMBIL,b019,Bagor,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0483,1788957600000,09/09/2026 20:40,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0484,1788957660000,09/09/2026 20:41,AMBIL,b009,Sayap Goreng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0485,1788957720000,09/09/2026 20:42,AMBIL,b043,Mineral,33,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0486,1788957780000,09/09/2026 20:43,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0487,1788957840000,09/09/2026 20:44,AMBIL,b041,Manggo Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0488,1788957900000,09/09/2026 20:45,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0489,1788957960000,09/09/2026 20:46,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0490,1788958020000,09/09/2026 20:47,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0491,1789041600000,10/09/2026 20:00,AMBIL,b099,Thermal Paper,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0492,1789041660000,10/09/2026 20:01,AMBIL,b031,Bumbu Serundeng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0493,1789041720000,10/09/2026 20:02,AMBIL,b094,Vanilli,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t0494,1789041780000,10/09/2026 20:03,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0495,1789041840000,10/09/2026 20:04,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0496,1789041900000,10/09/2026 20:05,AMBIL,b119,Lakban Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0497,1789041960000,10/09/2026 20:06,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0498,1789042020000,10/09/2026 20:07,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0499,1789042080000,10/09/2026 20:08,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0500,1789042140000,10/09/2026 20:09,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0501,1789042200000,10/09/2026 20:10,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0502,1789042260000,10/09/2026 20:11,AMBIL,b054,Ecolate Lemongrass,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+t0503,1789042320000,10/09/2026 20:12,AMBIL,b061,Susu Kental Manis Carnation,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0504,1789042380000,10/09/2026 20:13,AMBIL,b062,Oatside Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0505,1789042440000,10/09/2026 20:14,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0506,1789042500000,10/09/2026 20:15,AMBIL,b063,Cashew Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0507,1789042560000,10/09/2026 20:16,AMBIL,b111,Sedotan,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0508,1789042620000,10/09/2026 20:17,AMBIL,b065,Max Creamer,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0509,1789042680000,10/09/2026 20:18,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0510,1789042740000,10/09/2026 20:19,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0511,1789042800000,10/09/2026 20:20,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0512,1789042860000,10/09/2026 20:21,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0513,1789042920000,10/09/2026 20:22,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0514,1789042980000,10/09/2026 20:23,AMBIL,b006,Paha Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0515,1789043040000,10/09/2026 20:24,AMBIL,b005,Dada Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0516,1789043100000,10/09/2026 20:25,AMBIL,b007,Paha,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0517,1789043160000,10/09/2026 20:26,AMBIL,b008,Dada,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0518,1789043220000,10/09/2026 20:27,AMBIL,b001,Ayam Suwir,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0519,1789043280000,10/09/2026 20:28,AMBIL,b002,Topping Kwetiau,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0520,1789043340000,10/09/2026 20:29,AMBIL,b010,Daging Slice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0521,1789043400000,10/09/2026 20:30,AMBIL,b004,Ayam Jamur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0522,1789043460000,10/09/2026 20:31,AMBIL,b011,Cumi,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0523,1789043520000,10/09/2026 20:32,AMBIL,b020,Daging Sambal HIjau,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0524,1789043580000,10/09/2026 20:33,AMBIL,b012,Kulit,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0525,1789043640000,10/09/2026 20:34,AMBIL,b016,Topping Nasi Gila,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0526,1789043700000,10/09/2026 20:35,AMBIL,b013,Lidah,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0527,1789043760000,10/09/2026 20:36,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0528,1789043820000,10/09/2026 20:37,AMBIL,b015,Teri Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0529,1789043880000,10/09/2026 20:38,AMBIL,b003,Topping Mbakmoy,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0530,1789043940000,10/09/2026 20:39,AMBIL,b021,Sambal Baby Cumi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0531,1789044000000,10/09/2026 20:40,AMBIL,b019,Bagor,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0532,1789044060000,10/09/2026 20:41,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0533,1789044120000,10/09/2026 20:42,AMBIL,b009,Sayap Goreng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0534,1789044180000,10/09/2026 20:43,AMBIL,b043,Mineral,34,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0535,1789044240000,10/09/2026 20:44,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0536,1789044300000,10/09/2026 20:45,AMBIL,b041,Manggo Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0537,1789044360000,10/09/2026 20:46,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0538,1789044420000,10/09/2026 20:47,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0539,1789044480000,10/09/2026 20:48,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0540,1789084800000,11/09/2026 08:00,MASUK,b030,Bumbu Lidah,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0541,1789084860000,11/09/2026 08:01,MASUK,b004,Ayam Jamur,55,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0542,1789084920000,11/09/2026 08:02,MASUK,b001,Ayam Suwir,69,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0543,1789084980000,11/09/2026 08:03,MASUK,b008,Dada,52,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0544,1789085040000,11/09/2026 08:04,MASUK,b007,Paha,100,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0545,1789128000000,11/09/2026 20:00,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0546,1789128060000,11/09/2026 20:01,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0547,1789128120000,11/09/2026 20:02,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0548,1789128180000,11/09/2026 20:03,AMBIL,b119,Lakban Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0549,1789128240000,11/09/2026 20:04,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0550,1789128300000,11/09/2026 20:05,AMBIL,b036,Bumbu Teri,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0551,1789128360000,11/09/2026 20:06,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0552,1789128420000,11/09/2026 20:07,AMBIL,b099,Thermal Paper,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0553,1789128480000,11/09/2026 20:08,AMBIL,b106,Cup Sambal,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0554,1789128540000,11/09/2026 20:09,AMBIL,b022,Tahu Aci,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Pack
+t0555,1789128600000,11/09/2026 20:10,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0556,1789128660000,11/09/2026 20:11,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0557,1789128720000,11/09/2026 20:12,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0558,1789128780000,11/09/2026 20:13,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0559,1789128840000,11/09/2026 20:14,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0560,1789128900000,11/09/2026 20:15,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0561,1789128960000,11/09/2026 20:16,AMBIL,b006,Paha Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0562,1789129020000,11/09/2026 20:17,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0563,1789129080000,11/09/2026 20:18,AMBIL,b007,Paha,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0564,1789129140000,11/09/2026 20:19,AMBIL,b008,Dada,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0565,1789129200000,11/09/2026 20:20,AMBIL,b001,Ayam Suwir,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0566,1789129260000,11/09/2026 20:21,AMBIL,b002,Topping Kwetiau,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0567,1789129320000,11/09/2026 20:22,AMBIL,b010,Daging Slice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0568,1789129380000,11/09/2026 20:23,AMBIL,b004,Ayam Jamur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0569,1789129440000,11/09/2026 20:24,AMBIL,b011,Cumi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0570,1789129500000,11/09/2026 20:25,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0571,1789129560000,11/09/2026 20:26,AMBIL,b012,Kulit,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0572,1789129620000,11/09/2026 20:27,AMBIL,b016,Topping Nasi Gila,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0573,1789129680000,11/09/2026 20:28,AMBIL,b013,Lidah,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0574,1789129740000,11/09/2026 20:29,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0575,1789129800000,11/09/2026 20:30,AMBIL,b015,Teri Pete,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0576,1789129860000,11/09/2026 20:31,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0577,1789129920000,11/09/2026 20:32,AMBIL,b021,Sambal Baby Cumi,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0578,1789129980000,11/09/2026 20:33,AMBIL,b019,Bagor,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0579,1789130040000,11/09/2026 20:34,AMBIL,b023,Cireng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0580,1789130100000,11/09/2026 20:35,AMBIL,b009,Sayap Goreng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0581,1789130160000,11/09/2026 20:36,AMBIL,b043,Mineral,26,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0582,1789130220000,11/09/2026 20:37,AMBIL,b044,Air Tahu,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0583,1789130280000,11/09/2026 20:38,AMBIL,b041,Manggo Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0584,1789130340000,11/09/2026 20:39,AMBIL,b042,Mix Berries,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0585,1789130400000,11/09/2026 20:40,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0586,1789130460000,11/09/2026 20:41,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0587,1789171200000,12/09/2026 08:00,MASUK,b001,Ayam Suwir,16,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0588,1789171260000,12/09/2026 08:01,MASUK,b002,Topping Kwetiau,78,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0589,1789171320000,12/09/2026 08:02,MASUK,b019,Bagor,87,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0590,1789171380000,12/09/2026 08:03,MASUK,b011,Cumi,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebbih,Freezer Protein,Porsi
+t0591,1789171440000,12/09/2026 08:04,MASUK,b065,Max Creamer,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0592,1789171500000,12/09/2026 08:05,MASUK,b031,Bumbu Serundeng,22,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0593,1789171560000,12/09/2026 08:06,MASUK,b038,Roti Bakar,4,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t0594,1789171620000,12/09/2026 08:07,MASUK,b039,Roti Angsle,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t0595,1789214400000,12/09/2026 20:00,AMBIL,b037,Bumbu Mie Goreng Jawa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0596,1789214460000,12/09/2026 20:01,AMBIL,b105,Take Away Box M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0597,1789214520000,12/09/2026 20:02,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0598,1789214580000,12/09/2026 20:03,AMBIL,b048,Apple Juice Diamond,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pcs
+t0599,1789214640000,12/09/2026 20:04,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0600,1789214700000,12/09/2026 20:05,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0601,1789214760000,12/09/2026 20:06,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0602,1789214820000,12/09/2026 20:07,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0603,1789214880000,12/09/2026 20:08,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0604,1789214940000,12/09/2026 20:09,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0605,1789215000000,12/09/2026 20:10,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0606,1789215060000,12/09/2026 20:11,AMBIL,b107,Plastik Bima uk24,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0607,1789215120000,12/09/2026 20:12,AMBIL,b090,Sagu Mutiara,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0608,1789215180000,12/09/2026 20:13,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0609,1789215240000,12/09/2026 20:14,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0610,1789215300000,12/09/2026 20:15,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0611,1789215360000,12/09/2026 20:16,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0612,1789215420000,12/09/2026 20:17,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0613,1789215480000,12/09/2026 20:18,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0614,1789215540000,12/09/2026 20:19,AMBIL,b005,Dada Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0615,1789215600000,12/09/2026 20:20,AMBIL,b007,Paha,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0616,1789215660000,12/09/2026 20:21,AMBIL,b008,Dada,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0617,1789215720000,12/09/2026 20:22,AMBIL,b001,Ayam Suwir,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0618,1789215780000,12/09/2026 20:23,AMBIL,b002,Topping Kwetiau,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0619,1789215840000,12/09/2026 20:24,AMBIL,b010,Daging Slice,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0620,1789215900000,12/09/2026 20:25,AMBIL,b004,Ayam Jamur,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0621,1789215960000,12/09/2026 20:26,AMBIL,b011,Cumi,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0622,1789216020000,12/09/2026 20:27,AMBIL,b020,Daging Sambal HIjau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0623,1789216080000,12/09/2026 20:28,AMBIL,b012,Kulit,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0624,1789216140000,12/09/2026 20:29,AMBIL,b016,Topping Nasi Gila,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0625,1789216200000,12/09/2026 20:30,AMBIL,b013,Lidah,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0626,1789216260000,12/09/2026 20:31,AMBIL,b018,Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0627,1789216320000,12/09/2026 20:32,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0628,1789216380000,12/09/2026 20:33,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0629,1789216440000,12/09/2026 20:34,AMBIL,b021,Sambal Baby Cumi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0630,1789216500000,12/09/2026 20:35,AMBIL,b019,Bagor,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0631,1789216560000,12/09/2026 20:36,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0632,1789216620000,12/09/2026 20:37,AMBIL,b009,Sayap Goreng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0633,1789216680000,12/09/2026 20:38,AMBIL,b043,Mineral,21,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0634,1789216740000,12/09/2026 20:39,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0635,1789216800000,12/09/2026 20:40,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0636,1789216860000,12/09/2026 20:41,AMBIL,b042,Mix Berries,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0637,1789216920000,12/09/2026 20:42,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0638,1789216980000,12/09/2026 20:43,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0639,1789300800000,13/09/2026 20:00,AMBIL,b072,Bumbu Racik,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0640,1789300860000,13/09/2026 20:01,AMBIL,b099,Thermal Paper,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0641,1789300920000,13/09/2026 20:02,AMBIL,b069,Kunci Mas,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0642,1789300980000,13/09/2026 20:03,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0643,1789301040000,13/09/2026 20:04,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0644,1789301100000,13/09/2026 20:05,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0645,1789301160000,13/09/2026 20:06,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0646,1789301220000,13/09/2026 20:07,AMBIL,b025,Sambal Terasi,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0647,1789301280000,13/09/2026 20:08,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0648,1789301340000,13/09/2026 20:09,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0649,1789301400000,13/09/2026 20:10,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0650,1789301460000,13/09/2026 20:11,AMBIL,b028,Sambal Terong,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0651,1789301520000,13/09/2026 20:12,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0652,1789301580000,13/09/2026 20:13,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0653,1789301640000,13/09/2026 20:14,AMBIL,b006,Paha Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Rusak,Freezer Protein,Porsi
+t0654,1789301700000,13/09/2026 20:15,AMBIL,b094,Vanilli,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t0655,1789301760000,13/09/2026 20:16,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0656,1789301820000,13/09/2026 20:17,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0657,1789301880000,13/09/2026 20:18,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0658,1789301940000,13/09/2026 20:19,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0659,1789302000000,13/09/2026 20:20,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0660,1789302060000,13/09/2026 20:21,AMBIL,b006,Paha Gurih Manis,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0661,1789302120000,13/09/2026 20:22,AMBIL,b005,Dada Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0662,1789302180000,13/09/2026 20:23,AMBIL,b007,Paha,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0663,1789302240000,13/09/2026 20:24,AMBIL,b008,Dada,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0664,1789302300000,13/09/2026 20:25,AMBIL,b001,Ayam Suwir,25,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0665,1789302360000,13/09/2026 20:26,AMBIL,b002,Topping Kwetiau,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0666,1789302420000,13/09/2026 20:27,AMBIL,b010,Daging Slice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0667,1789302480000,13/09/2026 20:28,AMBIL,b004,Ayam Jamur,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0668,1789302540000,13/09/2026 20:29,AMBIL,b011,Cumi,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0669,1789302600000,13/09/2026 20:30,AMBIL,b020,Daging Sambal HIjau,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0670,1789302660000,13/09/2026 20:31,AMBIL,b012,Kulit,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0671,1789302720000,13/09/2026 20:32,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0672,1789302780000,13/09/2026 20:33,AMBIL,b013,Lidah,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0673,1789302840000,13/09/2026 20:34,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0674,1789302900000,13/09/2026 20:35,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0675,1789302960000,13/09/2026 20:36,AMBIL,b003,Topping Mbakmoy,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0676,1789303020000,13/09/2026 20:37,AMBIL,b021,Sambal Baby Cumi,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0677,1789303080000,13/09/2026 20:38,AMBIL,b019,Bagor,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0678,1789303140000,13/09/2026 20:39,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0679,1789303200000,13/09/2026 20:40,AMBIL,b009,Sayap Goreng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0680,1789303260000,13/09/2026 20:41,AMBIL,b043,Mineral,38,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0681,1789303320000,13/09/2026 20:42,AMBIL,b044,Air Tahu,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0682,1789303380000,13/09/2026 20:43,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0683,1789303440000,13/09/2026 20:44,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0684,1789303500000,13/09/2026 20:45,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0685,1789303560000,13/09/2026 20:46,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0686,1789344000000,14/09/2026 08:00,MASUK,b044,Air Tahu,15,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0687,1789344060000,14/09/2026 08:01,MASUK,b051,Dripp Pandan,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0688,1789344120000,14/09/2026 08:02,MASUK,b052,Dripp Lhychee,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0689,1789344180000,14/09/2026 08:03,MASUK,b050,Dripp Butterschotch,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0690,1789344240000,14/09/2026 08:04,MASUK,b057,Lemon Tea,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Pack
+t0691,1789344300000,14/09/2026 08:05,MASUK,b014,Lidah Goreng Segara,39,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0692,1789387200000,14/09/2026 20:00,AMBIL,b053,Sunquick Manggo,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0693,1789387260000,14/09/2026 20:01,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0694,1789387320000,14/09/2026 20:02,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0695,1789387380000,14/09/2026 20:03,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0696,1789387440000,14/09/2026 20:04,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0697,1789387500000,14/09/2026 20:05,AMBIL,b089,Nurtijel Plain,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0698,1789387560000,14/09/2026 20:06,AMBIL,b031,Bumbu Serundeng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0699,1789387620000,14/09/2026 20:07,AMBIL,b014,Lidah Goreng Segara,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0700,1789387680000,14/09/2026 20:08,AMBIL,b100,Ekonomi,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0701,1789387740000,14/09/2026 20:09,AMBIL,b029,Bumbu Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0702,1789387800000,14/09/2026 20:10,AMBIL,b052,Dripp Lhychee,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0703,1789387860000,14/09/2026 20:11,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0704,1789387920000,14/09/2026 20:12,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0705,1789387980000,14/09/2026 20:13,AMBIL,b095,Plastik Sampah S,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0706,1789388040000,14/09/2026 20:14,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0707,1789388100000,14/09/2026 20:15,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0708,1789388160000,14/09/2026 20:16,AMBIL,b098,Plastik Sampah XL,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0709,1789388220000,14/09/2026 20:17,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0710,1789388280000,14/09/2026 20:18,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0711,1789388340000,14/09/2026 20:19,AMBIL,b007,Paha,16,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0712,1789388400000,14/09/2026 20:20,AMBIL,b008,Dada,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0713,1789388460000,14/09/2026 20:21,AMBIL,b001,Ayam Suwir,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0714,1789388520000,14/09/2026 20:22,AMBIL,b002,Topping Kwetiau,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0715,1789388580000,14/09/2026 20:23,AMBIL,b010,Daging Slice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0716,1789388640000,14/09/2026 20:24,AMBIL,b004,Ayam Jamur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0717,1789388700000,14/09/2026 20:25,AMBIL,b011,Cumi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0718,1789388760000,14/09/2026 20:26,AMBIL,b020,Daging Sambal HIjau,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0719,1789388820000,14/09/2026 20:27,AMBIL,b012,Kulit,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0720,1789388880000,14/09/2026 20:28,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0721,1789388940000,14/09/2026 20:29,AMBIL,b013,Lidah,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0722,1789389000000,14/09/2026 20:30,AMBIL,b018,Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0723,1789389060000,14/09/2026 20:31,AMBIL,b015,Teri Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0724,1789389120000,14/09/2026 20:32,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0725,1789389180000,14/09/2026 20:33,AMBIL,b021,Sambal Baby Cumi,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0726,1789389240000,14/09/2026 20:34,AMBIL,b019,Bagor,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0727,1789389300000,14/09/2026 20:35,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0728,1789389360000,14/09/2026 20:36,AMBIL,b009,Sayap Goreng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0729,1789389420000,14/09/2026 20:37,AMBIL,b043,Mineral,21,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0730,1789389480000,14/09/2026 20:38,AMBIL,b044,Air Tahu,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0731,1789389540000,14/09/2026 20:39,AMBIL,b041,Manggo Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0732,1789389600000,14/09/2026 20:40,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0733,1789389660000,14/09/2026 20:41,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0734,1789389720000,14/09/2026 20:42,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0735,1789430400000,15/09/2026 08:00,MASUK,b066,Milo,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0736,1789430460000,15/09/2026 08:01,MASUK,b065,Max Creamer,3,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0737,1789430520000,15/09/2026 08:02,MASUK,b070,Gula,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0738,1789430580000,15/09/2026 08:03,MASUK,b072,Bumbu Racik,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0739,1789430640000,15/09/2026 08:04,MASUK,b086,Tepung Tapioka,7,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0740,1789430700000,15/09/2026 08:05,MASUK,b085,Tepung Terigu,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0741,1789430760000,15/09/2026 08:06,MASUK,b013,Lidah,19,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0742,1789430820000,15/09/2026 08:07,MASUK,b069,Kunci Mas,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0743,1789430880000,15/09/2026 08:08,MASUK,b009,Sayap Goreng,25,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0744,1789430940000,15/09/2026 08:09,MASUK,b001,Ayam Suwir,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0745,1789431000000,15/09/2026 08:10,MASUK,b008,Dada,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0746,1789431060000,15/09/2026 08:11,MASUK,b011,Cumi,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0747,1789431120000,15/09/2026 08:12,MASUK,b028,Sambal Terong,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Bumbu,Pack
+t0748,1789473600000,15/09/2026 20:00,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0749,1789473660000,15/09/2026 20:01,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0750,1789473720000,15/09/2026 20:02,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0751,1789473780000,15/09/2026 20:03,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0752,1789473840000,15/09/2026 20:04,AMBIL,b107,Plastik Bima uk24,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0753,1789473900000,15/09/2026 20:05,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0754,1789473960000,15/09/2026 20:06,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0755,1789474020000,15/09/2026 20:07,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0756,1789474080000,15/09/2026 20:08,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0757,1789474140000,15/09/2026 20:09,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0758,1789474200000,15/09/2026 20:10,AMBIL,b064,Sun Cara 200Ml,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0759,1789474260000,15/09/2026 20:11,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Kurang,Freezer Protein,Porsi
+t0760,1789474320000,15/09/2026 20:12,AMBIL,b056,Kopi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+t0761,1789474380000,15/09/2026 20:13,AMBIL,b078,Kecap Ikan Tipparos,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t0762,1789474440000,15/09/2026 20:14,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0763,1789474500000,15/09/2026 20:15,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0764,1789474560000,15/09/2026 20:16,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0765,1789474620000,15/09/2026 20:17,AMBIL,b098,Plastik Sampah XL,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0766,1789474680000,15/09/2026 20:18,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0767,1789474740000,15/09/2026 20:19,AMBIL,b005,Dada Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0768,1789474800000,15/09/2026 20:20,AMBIL,b007,Paha,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0769,1789474860000,15/09/2026 20:21,AMBIL,b008,Dada,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0770,1789474920000,15/09/2026 20:22,AMBIL,b001,Ayam Suwir,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0771,1789474980000,15/09/2026 20:23,AMBIL,b002,Topping Kwetiau,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0772,1789475040000,15/09/2026 20:24,AMBIL,b010,Daging Slice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0773,1789475100000,15/09/2026 20:25,AMBIL,b004,Ayam Jamur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0774,1789475160000,15/09/2026 20:26,AMBIL,b011,Cumi,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0775,1789475220000,15/09/2026 20:27,AMBIL,b020,Daging Sambal HIjau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0776,1789475280000,15/09/2026 20:28,AMBIL,b012,Kulit,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0777,1789475340000,15/09/2026 20:29,AMBIL,b016,Topping Nasi Gila,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0778,1789475400000,15/09/2026 20:30,AMBIL,b013,Lidah,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0779,1789475460000,15/09/2026 20:31,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0780,1789475520000,15/09/2026 20:32,AMBIL,b015,Teri Pete,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0781,1789475580000,15/09/2026 20:33,AMBIL,b014,Lidah Goreng Segara,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0782,1789475640000,15/09/2026 20:34,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0783,1789475700000,15/09/2026 20:35,AMBIL,b021,Sambal Baby Cumi,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0784,1789475760000,15/09/2026 20:36,AMBIL,b019,Bagor,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0785,1789475820000,15/09/2026 20:37,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0786,1789475880000,15/09/2026 20:38,AMBIL,b009,Sayap Goreng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0787,1789475940000,15/09/2026 20:39,AMBIL,b043,Mineral,25,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0788,1789476000000,15/09/2026 20:40,AMBIL,b044,Air Tahu,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0789,1789476060000,15/09/2026 20:41,AMBIL,b041,Manggo Juice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0790,1789476120000,15/09/2026 20:42,AMBIL,b042,Mix Berries,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0791,1789476180000,15/09/2026 20:43,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0792,1789476240000,15/09/2026 20:44,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0793,1789476300000,15/09/2026 20:45,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0794,1789476360000,15/09/2026 20:46,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0795,1789476420000,15/09/2026 20:47,AMBIL,b050,Dripp Butterschotch,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0796,1789476480000,15/09/2026 20:48,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0797,1789476540000,15/09/2026 20:49,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0798,1789476600000,15/09/2026 20:50,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0799,1789476660000,15/09/2026 20:51,AMBIL,b034,Bumbu Ungkep Lidah,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0800,1789476720000,15/09/2026 20:52,AMBIL,b025,Sambal Terasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0801,1789476780000,15/09/2026 20:53,AMBIL,b031,Bumbu Serundeng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0802,1789476840000,15/09/2026 20:54,AMBIL,b024,Sambal Bawang,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0803,1789476900000,15/09/2026 20:55,AMBIL,b054,Ecolate Lemongrass,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+t0804,1789476960000,15/09/2026 20:56,AMBIL,b074,Terasi,35,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pcs
+t0805,1789477020000,15/09/2026 20:57,AMBIL,b095,Plastik Sampah S,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0806,1789477080000,15/09/2026 20:58,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0807,1789477140000,15/09/2026 20:59,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0808,1789477200000,15/09/2026 21:00,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0809,1789477260000,15/09/2026 21:01,AMBIL,b006,Paha Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0810,1789477320000,15/09/2026 21:02,AMBIL,b005,Dada Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0811,1789477380000,15/09/2026 21:03,AMBIL,b007,Paha,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0812,1789477440000,15/09/2026 21:04,AMBIL,b008,Dada,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0813,1789477500000,15/09/2026 21:05,AMBIL,b001,Ayam Suwir,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0814,1789477560000,15/09/2026 21:06,AMBIL,b002,Topping Kwetiau,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0815,1789477620000,15/09/2026 21:07,AMBIL,b010,Daging Slice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0816,1789477680000,15/09/2026 21:08,AMBIL,b004,Ayam Jamur,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0817,1789477740000,15/09/2026 21:09,AMBIL,b011,Cumi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0818,1789477800000,15/09/2026 21:10,AMBIL,b020,Daging Sambal HIjau,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0819,1789477860000,15/09/2026 21:11,AMBIL,b012,Kulit,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0820,1789477920000,15/09/2026 21:12,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0821,1789477980000,15/09/2026 21:13,AMBIL,b013,Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0822,1789478040000,15/09/2026 21:14,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0823,1789478100000,15/09/2026 21:15,AMBIL,b015,Teri Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0824,1789478160000,15/09/2026 21:16,AMBIL,b014,Lidah Goreng Segara,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0825,1789478220000,15/09/2026 21:17,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0826,1789478280000,15/09/2026 21:18,AMBIL,b021,Sambal Baby Cumi,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0827,1789478340000,15/09/2026 21:19,AMBIL,b019,Bagor,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0828,1789478400000,15/09/2026 21:20,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0829,1789478460000,15/09/2026 21:21,AMBIL,b009,Sayap Goreng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0830,1789478520000,15/09/2026 21:22,AMBIL,b043,Mineral,25,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0831,1789478580000,15/09/2026 21:23,AMBIL,b044,Air Tahu,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0832,1789478640000,15/09/2026 21:24,AMBIL,b041,Manggo Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0833,1789478700000,15/09/2026 21:25,AMBIL,b042,Mix Berries,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0834,1789478760000,15/09/2026 21:26,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0835,1789478820000,15/09/2026 21:27,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0836,1789603200000,17/09/2026 08:00,MASUK,b001,Ayam Suwir,59,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0837,1789603260000,17/09/2026 08:01,MASUK,b006,Paha Gurih Manis,60,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0838,1789603320000,17/09/2026 08:02,MASUK,b005,Dada Gurih Manis,40,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0839,1789603380000,17/09/2026 08:03,MASUK,b025,Sambal Terasi,7,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0840,1789646400000,17/09/2026 20:00,AMBIL,b039,Roti Angsle,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0841,1789646460000,17/09/2026 20:01,AMBIL,b099,Thermal Paper,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t0842,1789646520000,17/09/2026 20:02,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0843,1789646580000,17/09/2026 20:03,AMBIL,b068,Minyak Beku,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0844,1789646640000,17/09/2026 20:04,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0845,1789646700000,17/09/2026 20:05,AMBIL,b037,Bumbu Mie Goreng Jawa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0846,1789646760000,17/09/2026 20:06,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0847,1789646820000,17/09/2026 20:07,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0848,1789646880000,17/09/2026 20:08,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0849,1789646940000,17/09/2026 20:09,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0850,1789647000000,17/09/2026 20:10,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0851,1789647060000,17/09/2026 20:11,AMBIL,b095,Plastik Sampah S,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0852,1789647120000,17/09/2026 20:12,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0853,1789647180000,17/09/2026 20:13,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0854,1789647240000,17/09/2026 20:14,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0855,1789647300000,17/09/2026 20:15,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0856,1789647360000,17/09/2026 20:16,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0857,1789647420000,17/09/2026 20:17,AMBIL,b007,Paha,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0858,1789647480000,17/09/2026 20:18,AMBIL,b008,Dada,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0859,1789647540000,17/09/2026 20:19,AMBIL,b001,Ayam Suwir,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0860,1789647600000,17/09/2026 20:20,AMBIL,b002,Topping Kwetiau,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0861,1789647660000,17/09/2026 20:21,AMBIL,b010,Daging Slice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0862,1789647720000,17/09/2026 20:22,AMBIL,b004,Ayam Jamur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0863,1789647780000,17/09/2026 20:23,AMBIL,b011,Cumi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0864,1789647840000,17/09/2026 20:24,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0865,1789647900000,17/09/2026 20:25,AMBIL,b012,Kulit,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0866,1789647960000,17/09/2026 20:26,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0867,1789648020000,17/09/2026 20:27,AMBIL,b013,Lidah,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0868,1789648080000,17/09/2026 20:28,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0869,1789648140000,17/09/2026 20:29,AMBIL,b015,Teri Pete,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0870,1789648200000,17/09/2026 20:30,AMBIL,b014,Lidah Goreng Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0871,1789648260000,17/09/2026 20:31,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0872,1789648320000,17/09/2026 20:32,AMBIL,b021,Sambal Baby Cumi,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0873,1789648380000,17/09/2026 20:33,AMBIL,b019,Bagor,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0874,1789648440000,17/09/2026 20:34,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0875,1789648500000,17/09/2026 20:35,AMBIL,b009,Sayap Goreng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0876,1789648560000,17/09/2026 20:36,AMBIL,b043,Mineral,24,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0877,1789648620000,17/09/2026 20:37,AMBIL,b044,Air Tahu,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0878,1789648680000,17/09/2026 20:38,AMBIL,b041,Manggo Juice,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0879,1789648740000,17/09/2026 20:39,AMBIL,b042,Mix Berries,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0880,1789648800000,17/09/2026 20:40,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0881,1789648860000,17/09/2026 20:41,AMBIL,b040,Sirsak Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0882,1789689600000,18/09/2026 08:00,MASUK,b032,Bumbu Kwetiau,4,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t0883,1789689660000,18/09/2026 08:01,MASUK,b003,Topping Mbakmoy,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0884,1789689720000,18/09/2026 08:02,MASUK,b087,Tepung Telur,23,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0885,1789689780000,18/09/2026 08:03,MASUK,b008,Dada,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0886,1789732800000,18/09/2026 20:00,AMBIL,b031,Bumbu Serundeng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0887,1789732860000,18/09/2026 20:01,AMBIL,b111,Sedotan,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0888,1789732920000,18/09/2026 20:02,AMBIL,b087,Tepung Telur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0889,1789732980000,18/09/2026 20:03,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0890,1789733040000,18/09/2026 20:04,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0891,1789733100000,18/09/2026 20:05,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0892,1789733160000,18/09/2026 20:06,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0893,1789733220000,18/09/2026 20:07,AMBIL,b070,Gula,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0894,1789733280000,18/09/2026 20:08,AMBIL,b090,Sagu Mutiara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0895,1789733340000,18/09/2026 20:09,AMBIL,b084,Tepung Maizena,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0896,1789733400000,18/09/2026 20:10,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0897,1789733460000,18/09/2026 20:11,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0898,1789733520000,18/09/2026 20:12,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0899,1789733580000,18/09/2026 20:13,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0900,1789733640000,18/09/2026 20:14,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0901,1789733700000,18/09/2026 20:15,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0902,1789733760000,18/09/2026 20:16,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0903,1789733820000,18/09/2026 20:17,AMBIL,b006,Paha Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0904,1789733880000,18/09/2026 20:18,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0905,1789733940000,18/09/2026 20:19,AMBIL,b007,Paha,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0906,1789734000000,18/09/2026 20:20,AMBIL,b008,Dada,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0907,1789734060000,18/09/2026 20:21,AMBIL,b001,Ayam Suwir,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0908,1789734120000,18/09/2026 20:22,AMBIL,b002,Topping Kwetiau,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0909,1789734180000,18/09/2026 20:23,AMBIL,b010,Daging Slice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0910,1789734240000,18/09/2026 20:24,AMBIL,b004,Ayam Jamur,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0911,1789734300000,18/09/2026 20:25,AMBIL,b011,Cumi,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0912,1789734360000,18/09/2026 20:26,AMBIL,b020,Daging Sambal HIjau,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0913,1789734420000,18/09/2026 20:27,AMBIL,b012,Kulit,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0914,1789734480000,18/09/2026 20:28,AMBIL,b016,Topping Nasi Gila,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0915,1789734540000,18/09/2026 20:29,AMBIL,b013,Lidah,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0916,1789734600000,18/09/2026 20:30,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0917,1789734660000,18/09/2026 20:31,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0918,1789734720000,18/09/2026 20:32,AMBIL,b014,Lidah Goreng Segara,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0919,1789734780000,18/09/2026 20:33,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0920,1789734840000,18/09/2026 20:34,AMBIL,b021,Sambal Baby Cumi,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0921,1789734900000,18/09/2026 20:35,AMBIL,b019,Bagor,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0922,1789734960000,18/09/2026 20:36,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0923,1789735020000,18/09/2026 20:37,AMBIL,b009,Sayap Goreng,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0924,1789735080000,18/09/2026 20:38,AMBIL,b043,Mineral,37,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0925,1789735140000,18/09/2026 20:39,AMBIL,b044,Air Tahu,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0926,1789735200000,18/09/2026 20:40,AMBIL,b041,Manggo Juice,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0927,1789735260000,18/09/2026 20:41,AMBIL,b042,Mix Berries,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0928,1789735320000,18/09/2026 20:42,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0929,1789735380000,18/09/2026 20:43,AMBIL,b040,Sirsak Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0930,1789776000000,19/09/2026 08:00,MASUK,b021,Sambal Baby Cumi,164,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0931,1789819200000,19/09/2026 20:00,AMBIL,b067,Keju,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0932,1789819260000,19/09/2026 20:01,AMBIL,b094,Vanilli,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t0933,1789819320000,19/09/2026 20:02,AMBIL,b088,Mie Urai,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0934,1789819380000,19/09/2026 20:03,AMBIL,b091,Nata Decoco,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0935,1789819440000,19/09/2026 20:04,AMBIL,b031,Bumbu Serundeng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0936,1789819500000,19/09/2026 20:05,AMBIL,b048,Apple Juice Diamond,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pcs
+t0937,1789819560000,19/09/2026 20:06,AMBIL,b072,Bumbu Racik,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t0938,1789819620000,19/09/2026 20:07,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t0939,1789819680000,19/09/2026 20:08,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t0940,1789819740000,19/09/2026 20:09,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0941,1789819800000,19/09/2026 20:10,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0942,1789819860000,19/09/2026 20:11,AMBIL,b079,Kecap Maggi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t0943,1789819920000,19/09/2026 20:12,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t0944,1789819980000,19/09/2026 20:13,AMBIL,b024,Sambal Bawang,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0945,1789820040000,19/09/2026 20:14,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0946,1789820100000,19/09/2026 20:15,AMBIL,b025,Sambal Terasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t0947,1789820160000,19/09/2026 20:16,AMBIL,b095,Plastik Sampah S,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0948,1789820220000,19/09/2026 20:17,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0949,1789820280000,19/09/2026 20:18,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0950,1789820340000,19/09/2026 20:19,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t0951,1789820400000,19/09/2026 20:20,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0952,1789820460000,19/09/2026 20:21,AMBIL,b005,Dada Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0953,1789820520000,19/09/2026 20:22,AMBIL,b007,Paha,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0954,1789820580000,19/09/2026 20:23,AMBIL,b008,Dada,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0955,1789820640000,19/09/2026 20:24,AMBIL,b001,Ayam Suwir,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0956,1789820700000,19/09/2026 20:25,AMBIL,b002,Topping Kwetiau,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0957,1789820760000,19/09/2026 20:26,AMBIL,b010,Daging Slice,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0958,1789820820000,19/09/2026 20:27,AMBIL,b004,Ayam Jamur,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0959,1789820880000,19/09/2026 20:28,AMBIL,b011,Cumi,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0960,1789820940000,19/09/2026 20:29,AMBIL,b020,Daging Sambal HIjau,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0961,1789821000000,19/09/2026 20:30,AMBIL,b012,Kulit,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0962,1789821060000,19/09/2026 20:31,AMBIL,b016,Topping Nasi Gila,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0963,1789821120000,19/09/2026 20:32,AMBIL,b013,Lidah,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0964,1789821180000,19/09/2026 20:33,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0965,1789821240000,19/09/2026 20:34,AMBIL,b015,Teri Pete,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0966,1789821300000,19/09/2026 20:35,AMBIL,b014,Lidah Goreng Segara,24,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0967,1789821360000,19/09/2026 20:36,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0968,1789821420000,19/09/2026 20:37,AMBIL,b021,Sambal Baby Cumi,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0969,1789821480000,19/09/2026 20:38,AMBIL,b019,Bagor,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0970,1789821540000,19/09/2026 20:39,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0971,1789821600000,19/09/2026 20:40,AMBIL,b009,Sayap Goreng,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t0972,1789821660000,19/09/2026 20:41,AMBIL,b043,Mineral,49,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0973,1789821720000,19/09/2026 20:42,AMBIL,b044,Air Tahu,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t0974,1789821780000,19/09/2026 20:43,AMBIL,b041,Manggo Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0975,1789821840000,19/09/2026 20:44,AMBIL,b042,Mix Berries,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0976,1789821900000,19/09/2026 20:45,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t0977,1789821960000,19/09/2026 20:46,AMBIL,b040,Sirsak Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t0978,1789862400000,20/09/2026 08:00,MASUK,b044,Air Tahu,15,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t0979,1789862460000,20/09/2026 08:01,MASUK,b041,Manggo Juice,33,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t0980,1789862520000,20/09/2026 08:02,MASUK,b042,Mix Berries,40,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t0981,1789862580000,20/09/2026 08:03,MASUK,b040,Sirsak Juice,26,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t0982,1789862640000,20/09/2026 08:04,MASUK,b084,Tepung Maizena,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0983,1789862700000,20/09/2026 08:05,MASUK,b085,Tepung Terigu,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0984,1789862760000,20/09/2026 08:06,MASUK,b067,Keju,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0985,1789862820000,20/09/2026 08:07,MASUK,b061,Susu Kental Manis Carnation,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t0986,1789862880000,20/09/2026 08:08,MASUK,b060,Susu Evaporasi,8,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t0987,1789862940000,20/09/2026 08:09,MASUK,b091,Nata Decoco,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0988,1789863000000,20/09/2026 08:10,MASUK,b077,Raja Rasa,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Botol
+t0989,1789863060000,20/09/2026 08:11,MASUK,b078,Kecap Ikan Tipparos,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Botol
+t0990,1789863120000,20/09/2026 08:12,MASUK,b074,Terasi,40,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pcs
+t0991,1789863180000,20/09/2026 08:13,MASUK,b076,Knorr,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t0992,1789863240000,20/09/2026 08:14,MASUK,b016,Topping Nasi Gila,48,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0993,1789863300000,20/09/2026 08:15,MASUK,b002,Topping Kwetiau,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0994,1789863360000,20/09/2026 08:16,MASUK,b015,Teri Pete,29,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0995,1789863420000,20/09/2026 08:17,MASUK,b090,Sagu Mutiara,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t0996,1789863480000,20/09/2026 08:18,MASUK,b014,Lidah Goreng Segara,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0997,1789863540000,20/09/2026 08:19,MASUK,b018,Pete,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t0998,1789863600000,20/09/2026 08:20,MASUK,b006,Paha Gurih Manis,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lebih,Freezer Protein,Porsi
+t0999,1789905600000,20/09/2026 20:00,AMBIL,b085,Tepung Terigu,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1000,1789905660000,20/09/2026 20:01,AMBIL,b084,Tepung Maizena,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1001,1789905720000,20/09/2026 20:02,AMBIL,b086,Tepung Tapioka,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1002,1789905780000,20/09/2026 20:03,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1003,1789905840000,20/09/2026 20:04,AMBIL,b031,Bumbu Serundeng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1004,1789905900000,20/09/2026 20:05,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1005,1789905960000,20/09/2026 20:06,AMBIL,b099,Thermal Paper,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1006,1789906020000,20/09/2026 20:07,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t1007,1789906080000,20/09/2026 20:08,AMBIL,b061,Susu Kental Manis Carnation,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1008,1789906140000,20/09/2026 20:09,AMBIL,b065,Max Creamer,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1009,1789906200000,20/09/2026 20:10,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1010,1789906260000,20/09/2026 20:11,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1011,1789906320000,20/09/2026 20:12,AMBIL,b048,Apple Juice Diamond,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pcs
+t1012,1789906380000,20/09/2026 20:13,AMBIL,b028,Sambal Terong,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1013,1789906440000,20/09/2026 20:14,AMBIL,b076,Knorr,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1014,1789906500000,20/09/2026 20:15,AMBIL,b077,Raja Rasa,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t1015,1789906560000,20/09/2026 20:16,AMBIL,b104,Tissue Toilet,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1016,1789906620000,20/09/2026 20:17,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1017,1789906680000,20/09/2026 20:18,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1018,1789906740000,20/09/2026 20:19,AMBIL,b036,Bumbu Teri,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1019,1789906800000,20/09/2026 20:20,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1020,1789906860000,20/09/2026 20:21,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1021,1789906920000,20/09/2026 20:22,AMBIL,b106,Cup Sambal,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1022,1789906980000,20/09/2026 20:23,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1023,1789907040000,20/09/2026 20:24,AMBIL,b015,Teri Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Hilang,Freezer Protein,Porsi
+t1024,1789907100000,20/09/2026 20:25,AMBIL,b099,Thermal Paper,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1025,1789907160000,20/09/2026 20:26,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1026,1789907220000,20/09/2026 20:27,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1027,1789907280000,20/09/2026 20:28,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1028,1789907340000,20/09/2026 20:29,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1029,1789907400000,20/09/2026 20:30,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1030,1789907460000,20/09/2026 20:31,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1031,1789907520000,20/09/2026 20:32,AMBIL,b007,Paha,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1032,1789907580000,20/09/2026 20:33,AMBIL,b008,Dada,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1033,1789907640000,20/09/2026 20:34,AMBIL,b001,Ayam Suwir,26,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1034,1789907700000,20/09/2026 20:35,AMBIL,b002,Topping Kwetiau,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1035,1789907760000,20/09/2026 20:36,AMBIL,b010,Daging Slice,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1036,1789907820000,20/09/2026 20:37,AMBIL,b004,Ayam Jamur,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1037,1789907880000,20/09/2026 20:38,AMBIL,b011,Cumi,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1038,1789907940000,20/09/2026 20:39,AMBIL,b020,Daging Sambal HIjau,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1039,1789908000000,20/09/2026 20:40,AMBIL,b012,Kulit,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1040,1789908060000,20/09/2026 20:41,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1041,1789908120000,20/09/2026 20:42,AMBIL,b013,Lidah,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1042,1789908180000,20/09/2026 20:43,AMBIL,b018,Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1043,1789908240000,20/09/2026 20:44,AMBIL,b015,Teri Pete,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1044,1789908300000,20/09/2026 20:45,AMBIL,b014,Lidah Goreng Segara,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1045,1789908360000,20/09/2026 20:46,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1046,1789908420000,20/09/2026 20:47,AMBIL,b021,Sambal Baby Cumi,16,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1047,1789908480000,20/09/2026 20:48,AMBIL,b019,Bagor,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1048,1789908540000,20/09/2026 20:49,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1049,1789908600000,20/09/2026 20:50,AMBIL,b009,Sayap Goreng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1050,1789908660000,20/09/2026 20:51,AMBIL,b043,Mineral,63,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1051,1789908720000,20/09/2026 20:52,AMBIL,b044,Air Tahu,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1052,1789908780000,20/09/2026 20:53,AMBIL,b041,Manggo Juice,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1053,1789908840000,20/09/2026 20:54,AMBIL,b042,Mix Berries,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1054,1789908900000,20/09/2026 20:55,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1055,1789908960000,20/09/2026 20:56,AMBIL,b040,Sirsak Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1056,1789948800000,21/09/2026 08:00,MASUK,b104,Tissue Toilet,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t1057,1789948860000,21/09/2026 08:01,MASUK,b103,Tissue Meja,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Cleaning Supplies + Utensils,Pack
+t1058,1789948920000,21/09/2026 08:02,MASUK,b013,Lidah,15,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1059,1789948980000,21/09/2026 08:03,MASUK,b009,Sayap Goreng,27,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1060,1789949040000,21/09/2026 08:04,MASUK,b024,Sambal Bawang,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t1061,1789949100000,21/09/2026 08:05,MASUK,b001,Ayam Suwir,60,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1062,1789949160000,21/09/2026 08:06,MASUK,b002,Topping Kwetiau,35,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1063,1789992000000,21/09/2026 20:00,AMBIL,b072,Bumbu Racik,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1064,1789992060000,21/09/2026 20:01,AMBIL,b031,Bumbu Serundeng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1065,1789992120000,21/09/2026 20:02,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1066,1789992180000,21/09/2026 20:03,AMBIL,b104,Tissue Toilet,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1067,1789992240000,21/09/2026 20:04,AMBIL,b059,Sun Cara 1L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1068,1789992300000,21/09/2026 20:05,AMBIL,b112,Plastik Bima uk.15,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1069,1789992360000,21/09/2026 20:06,AMBIL,b093,Pewarna Pink,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t1070,1789992420000,21/09/2026 20:07,AMBIL,b100,Ekonomi,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1071,1789992480000,21/09/2026 20:08,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1072,1789992540000,21/09/2026 20:09,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1073,1789992600000,21/09/2026 20:10,AMBIL,b099,Thermal Paper,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1074,1789992660000,21/09/2026 20:11,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1075,1789992720000,21/09/2026 20:12,AMBIL,b096,Plastik Sampah M,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,u/ minyak Beku,Cleaning Supplies + Utensils,Lbr
+t1076,1789992780000,21/09/2026 20:13,AMBIL,b090,Sagu Mutiara,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1077,1789992840000,21/09/2026 20:14,AMBIL,b063,Cashew Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1078,1789992900000,21/09/2026 20:15,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1079,1789992960000,21/09/2026 20:16,AMBIL,b062,Oatside Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1080,1789993020000,21/09/2026 20:17,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1081,1789993080000,21/09/2026 20:18,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1082,1789993140000,21/09/2026 20:19,AMBIL,b086,Tepung Tapioka,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1083,1789993200000,21/09/2026 20:20,AMBIL,b029,Bumbu Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1084,1789993260000,21/09/2026 20:21,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1085,1789993320000,21/09/2026 20:22,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1086,1789993380000,21/09/2026 20:23,AMBIL,b095,Plastik Sampah S,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1087,1789993440000,21/09/2026 20:24,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1088,1789993500000,21/09/2026 20:25,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1089,1789993560000,21/09/2026 20:26,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1090,1789993620000,21/09/2026 20:27,AMBIL,b006,Paha Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1091,1789993680000,21/09/2026 20:28,AMBIL,b005,Dada Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1092,1789993740000,21/09/2026 20:29,AMBIL,b007,Paha,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1093,1789993800000,21/09/2026 20:30,AMBIL,b008,Dada,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1094,1789993860000,21/09/2026 20:31,AMBIL,b001,Ayam Suwir,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1095,1789993920000,21/09/2026 20:32,AMBIL,b002,Topping Kwetiau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1096,1789993980000,21/09/2026 20:33,AMBIL,b010,Daging Slice,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1097,1789994040000,21/09/2026 20:34,AMBIL,b004,Ayam Jamur,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1098,1789994100000,21/09/2026 20:35,AMBIL,b011,Cumi,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1099,1789994160000,21/09/2026 20:36,AMBIL,b020,Daging Sambal HIjau,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1100,1789994220000,21/09/2026 20:37,AMBIL,b012,Kulit,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1101,1789994280000,21/09/2026 20:38,AMBIL,b016,Topping Nasi Gila,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1102,1789994340000,21/09/2026 20:39,AMBIL,b013,Lidah,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1103,1789994400000,21/09/2026 20:40,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1104,1789994460000,21/09/2026 20:41,AMBIL,b015,Teri Pete,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1105,1789994520000,21/09/2026 20:42,AMBIL,b014,Lidah Goreng Segara,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1106,1789994580000,21/09/2026 20:43,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1107,1789994640000,21/09/2026 20:44,AMBIL,b021,Sambal Baby Cumi,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1108,1789994700000,21/09/2026 20:45,AMBIL,b019,Bagor,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1109,1789994760000,21/09/2026 20:46,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1110,1789994820000,21/09/2026 20:47,AMBIL,b009,Sayap Goreng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1111,1789994880000,21/09/2026 20:48,AMBIL,b043,Mineral,56,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1112,1789994940000,21/09/2026 20:49,AMBIL,b044,Air Tahu,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1113,1789995000000,21/09/2026 20:50,AMBIL,b041,Manggo Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1114,1789995060000,21/09/2026 20:51,AMBIL,b042,Mix Berries,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1115,1789995120000,21/09/2026 20:52,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1116,1789995180000,21/09/2026 20:53,AMBIL,b040,Sirsak Juice,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1117,1790035200000,22/09/2026 08:00,MASUK,b007,Paha,100,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1118,1790035260000,22/09/2026 08:01,MASUK,b008,Dada,75,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1119,1790035320000,22/09/2026 08:02,MASUK,b012,Kulit,96,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1120,1790035380000,22/09/2026 08:03,MASUK,b004,Ayam Jamur,40,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1121,1790035440000,22/09/2026 08:04,MASUK,b013,Lidah,23,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1122,1790035500000,22/09/2026 08:05,MASUK,b031,Bumbu Serundeng,18,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t1123,1790078400000,22/09/2026 20:00,AMBIL,b069,Kunci Mas,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1124,1790078460000,22/09/2026 20:01,AMBIL,b029,Bumbu Segara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1125,1790078520000,22/09/2026 20:02,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1126,1790078580000,22/09/2026 20:03,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1127,1790078640000,22/09/2026 20:04,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1128,1790078700000,22/09/2026 20:05,AMBIL,b048,Apple Juice Diamond,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pcs
+t1129,1790078760000,22/09/2026 20:06,AMBIL,b055,Ecolate Wintermelon Tea,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+t1130,1790078820000,22/09/2026 20:07,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t1131,1790078880000,22/09/2026 20:08,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1132,1790078940000,22/09/2026 20:09,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1133,1790079000000,22/09/2026 20:10,AMBIL,b105,Take Away Box M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1134,1790079060000,22/09/2026 20:11,AMBIL,b109,Take Away Bocx L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1135,1790079120000,22/09/2026 20:12,AMBIL,b087,Tepung Telur,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1136,1790079180000,22/09/2026 20:13,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1137,1790079240000,22/09/2026 20:14,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1138,1790079300000,22/09/2026 20:15,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1139,1790079360000,22/09/2026 20:16,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1140,1790079420000,22/09/2026 20:17,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1141,1790079480000,22/09/2026 20:18,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1142,1790079540000,22/09/2026 20:19,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1143,1790079600000,22/09/2026 20:20,AMBIL,b099,Thermal Paper,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1144,1790079660000,22/09/2026 20:21,AMBIL,b088,Mie Urai,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1145,1790079720000,22/09/2026 20:22,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1146,1790079780000,22/09/2026 20:23,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1147,1790079840000,22/09/2026 20:24,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1148,1790079900000,22/09/2026 20:25,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1149,1790079960000,22/09/2026 20:26,AMBIL,b006,Paha Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1150,1790080020000,22/09/2026 20:27,AMBIL,b005,Dada Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1151,1790080080000,22/09/2026 20:28,AMBIL,b007,Paha,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1152,1790080140000,22/09/2026 20:29,AMBIL,b008,Dada,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1153,1790080200000,22/09/2026 20:30,AMBIL,b001,Ayam Suwir,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1154,1790080260000,22/09/2026 20:31,AMBIL,b002,Topping Kwetiau,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1155,1790080320000,22/09/2026 20:32,AMBIL,b010,Daging Slice,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1156,1790080380000,22/09/2026 20:33,AMBIL,b004,Ayam Jamur,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1157,1790080440000,22/09/2026 20:34,AMBIL,b011,Cumi,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1158,1790080500000,22/09/2026 20:35,AMBIL,b020,Daging Sambal HIjau,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1159,1790080560000,22/09/2026 20:36,AMBIL,b012,Kulit,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1160,1790080620000,22/09/2026 20:37,AMBIL,b016,Topping Nasi Gila,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1161,1790080680000,22/09/2026 20:38,AMBIL,b013,Lidah,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1162,1790080740000,22/09/2026 20:39,AMBIL,b018,Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1163,1790080800000,22/09/2026 20:40,AMBIL,b015,Teri Pete,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1164,1790080860000,22/09/2026 20:41,AMBIL,b014,Lidah Goreng Segara,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1165,1790080920000,22/09/2026 20:42,AMBIL,b003,Topping Mbakmoy,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1166,1790080980000,22/09/2026 20:43,AMBIL,b021,Sambal Baby Cumi,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1167,1790081040000,22/09/2026 20:44,AMBIL,b019,Bagor,18,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1168,1790081100000,22/09/2026 20:45,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1169,1790081160000,22/09/2026 20:46,AMBIL,b009,Sayap Goreng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1170,1790081220000,22/09/2026 20:47,AMBIL,b043,Mineral,46,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1171,1790081280000,22/09/2026 20:48,AMBIL,b044,Air Tahu,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1172,1790081340000,22/09/2026 20:49,AMBIL,b041,Manggo Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1173,1790081400000,22/09/2026 20:50,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1174,1790081460000,22/09/2026 20:51,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1175,1790081520000,22/09/2026 20:52,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1176,1790121600000,23/09/2026 08:00,MASUK,b013,Lidah,8,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1177,1790121660000,23/09/2026 08:01,MASUK,b014,Lidah Goreng Segara,28,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1178,1790121720000,23/09/2026 08:02,MASUK,b026,Sambal Kuning,7,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t1179,1790121780000,23/09/2026 08:03,MASUK,b015,Teri Pete,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Lbh,Freezer Protein,Porsi
+t1180,1790121840000,23/09/2026 08:04,MASUK,b041,Manggo Juice,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t1181,1790121900000,23/09/2026 08:05,MASUK,b040,Sirsak Juice,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t1182,1790121960000,23/09/2026 08:06,MASUK,b042,Mix Berries,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t1183,1790122020000,23/09/2026 08:07,MASUK,b044,Air Tahu,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t1184,1790122080000,23/09/2026 08:08,MASUK,b043,Mineral,480,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t1185,1790122140000,23/09/2026 08:09,MASUK,b039,Roti Angsle,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Akumulasi,Freezer Roti & Juice,Pack
+t1186,1790122200000,23/09/2026 08:10,MASUK,b048,Apple Juice Diamond,7,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,Akumulasi,Flavourful Drink,Pcs
+t1187,1790122260000,23/09/2026 08:11,MASUK,b056,Kopi,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Pack
+t1188,1790122320000,23/09/2026 08:12,MASUK,b061,Susu Kental Manis Carnation,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1189,1790122380000,23/09/2026 08:13,MASUK,b064,Sun Cara 200Ml,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1190,1790164800000,23/09/2026 20:00,AMBIL,b092,Pewarna Hijau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t1191,1790164860000,23/09/2026 20:01,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1192,1790164920000,23/09/2026 20:02,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1193,1790164980000,23/09/2026 20:03,AMBIL,b045,Soda Polaris,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1194,1790165040000,23/09/2026 20:04,AMBIL,b037,Bumbu Mie Goreng Jawa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1195,1790165100000,23/09/2026 20:05,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1196,1790165160000,23/09/2026 20:06,AMBIL,b087,Tepung Telur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1197,1790165220000,23/09/2026 20:07,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1198,1790165280000,23/09/2026 20:08,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1199,1790165340000,23/09/2026 20:09,AMBIL,b065,Max Creamer,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1200,1790165400000,23/09/2026 20:10,AMBIL,b111,Sedotan,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1201,1790165460000,23/09/2026 20:11,AMBIL,b064,Sun Cara 200Ml,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1202,1790165520000,23/09/2026 20:12,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1203,1790165580000,23/09/2026 20:13,AMBIL,b066,Milo,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1204,1790165640000,23/09/2026 20:14,AMBIL,b038,Roti Bakar,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Akumulasi,Freezer Roti & Juice,Pack
+t1205,1790165700000,23/09/2026 20:15,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1206,1790165760000,23/09/2026 20:16,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1207,1790165820000,23/09/2026 20:17,AMBIL,b097,Plastik Sampah L,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1208,1790165880000,23/09/2026 20:18,AMBIL,b098,Plastik Sampah XL,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1209,1790165940000,23/09/2026 20:19,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Minus,Freezer Protein,Porsi
+t1210,1790166000000,23/09/2026 20:20,AMBIL,b006,Paha Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1211,1790166060000,23/09/2026 20:21,AMBIL,b005,Dada Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1212,1790166120000,23/09/2026 20:22,AMBIL,b007,Paha,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1213,1790166180000,23/09/2026 20:23,AMBIL,b008,Dada,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1214,1790166240000,23/09/2026 20:24,AMBIL,b001,Ayam Suwir,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1215,1790166300000,23/09/2026 20:25,AMBIL,b002,Topping Kwetiau,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1216,1790166360000,23/09/2026 20:26,AMBIL,b010,Daging Slice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1217,1790166420000,23/09/2026 20:27,AMBIL,b004,Ayam Jamur,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1218,1790166480000,23/09/2026 20:28,AMBIL,b011,Cumi,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1219,1790166540000,23/09/2026 20:29,AMBIL,b020,Daging Sambal HIjau,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1220,1790166600000,23/09/2026 20:30,AMBIL,b012,Kulit,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1221,1790166660000,23/09/2026 20:31,AMBIL,b016,Topping Nasi Gila,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1222,1790166720000,23/09/2026 20:32,AMBIL,b013,Lidah,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1223,1790166780000,23/09/2026 20:33,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1224,1790166840000,23/09/2026 20:34,AMBIL,b015,Teri Pete,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1225,1790166900000,23/09/2026 20:35,AMBIL,b014,Lidah Goreng Segara,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1226,1790166960000,23/09/2026 20:36,AMBIL,b003,Topping Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1227,1790167020000,23/09/2026 20:37,AMBIL,b021,Sambal Baby Cumi,18,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1228,1790167080000,23/09/2026 20:38,AMBIL,b019,Bagor,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1229,1790167140000,23/09/2026 20:39,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1230,1790167200000,23/09/2026 20:40,AMBIL,b009,Sayap Goreng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1231,1790167260000,23/09/2026 20:41,AMBIL,b043,Mineral,37,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1232,1790167320000,23/09/2026 20:42,AMBIL,b044,Air Tahu,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1233,1790167380000,23/09/2026 20:43,AMBIL,b041,Manggo Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1234,1790167440000,23/09/2026 20:44,AMBIL,b042,Mix Berries,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1235,1790167500000,23/09/2026 20:45,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1236,1790167560000,23/09/2026 20:46,AMBIL,b040,Sirsak Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1237,1790208000000,24/09/2026 08:00,MASUK,b010,Daging Slice,30,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1238,1790208060000,24/09/2026 08:01,MASUK,b013,Lidah,15,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1239,1790208120000,24/09/2026 08:02,MASUK,b036,Bumbu Teri,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t1240,1790208180000,24/09/2026 08:03,MASUK,b030,Bumbu Lidah,5,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t1241,1790251200000,24/09/2026 20:00,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1242,1790251260000,24/09/2026 20:01,AMBIL,b094,Vanilli,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Btl
+t1243,1790251320000,24/09/2026 20:02,AMBIL,b087,Tepung Telur,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1244,1790251380000,24/09/2026 20:03,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1245,1790251440000,24/09/2026 20:04,AMBIL,b035,Bumbu Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1246,1790251500000,24/09/2026 20:05,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1247,1790251560000,24/09/2026 20:06,AMBIL,b024,Sambal Bawang,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1248,1790251620000,24/09/2026 20:07,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1249,1790251680000,24/09/2026 20:08,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1250,1790251740000,24/09/2026 20:09,AMBIL,b068,Minyak Beku,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Akumulasi,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1251,1790251800000,24/09/2026 20:10,AMBIL,b069,Kunci Mas,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,Akumulasi,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1252,1790251860000,24/09/2026 20:11,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1253,1790251920000,24/09/2026 20:12,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1254,1790251980000,24/09/2026 20:13,AMBIL,b099,Thermal Paper,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1255,1790252040000,24/09/2026 20:14,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1256,1790252100000,24/09/2026 20:15,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1257,1790252160000,24/09/2026 20:16,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1258,1790252220000,24/09/2026 20:17,AMBIL,b098,Plastik Sampah XL,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1259,1790252280000,24/09/2026 20:18,AMBIL,b006,Paha Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1260,1790252340000,24/09/2026 20:19,AMBIL,b005,Dada Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1261,1790252400000,24/09/2026 20:20,AMBIL,b007,Paha,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1262,1790252460000,24/09/2026 20:21,AMBIL,b008,Dada,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1263,1790252520000,24/09/2026 20:22,AMBIL,b001,Ayam Suwir,18,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1264,1790252580000,24/09/2026 20:23,AMBIL,b002,Topping Kwetiau,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1265,1790252640000,24/09/2026 20:24,AMBIL,b010,Daging Slice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1266,1790252700000,24/09/2026 20:25,AMBIL,b004,Ayam Jamur,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1267,1790252760000,24/09/2026 20:26,AMBIL,b011,Cumi,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1268,1790252820000,24/09/2026 20:27,AMBIL,b020,Daging Sambal HIjau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1269,1790252880000,24/09/2026 20:28,AMBIL,b012,Kulit,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1270,1790252940000,24/09/2026 20:29,AMBIL,b016,Topping Nasi Gila,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1271,1790253000000,24/09/2026 20:30,AMBIL,b013,Lidah,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1272,1790253060000,24/09/2026 20:31,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1273,1790253120000,24/09/2026 20:32,AMBIL,b015,Teri Pete,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1274,1790253180000,24/09/2026 20:33,AMBIL,b014,Lidah Goreng Segara,21,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1275,1790253240000,24/09/2026 20:34,AMBIL,b003,Topping Mbakmoy,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1276,1790253300000,24/09/2026 20:35,AMBIL,b021,Sambal Baby Cumi,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1277,1790253360000,24/09/2026 20:36,AMBIL,b019,Bagor,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1278,1790253420000,24/09/2026 20:37,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1279,1790253480000,24/09/2026 20:38,AMBIL,b009,Sayap Goreng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1280,1790253540000,24/09/2026 20:39,AMBIL,b043,Mineral,29,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1281,1790253600000,24/09/2026 20:40,AMBIL,b044,Air Tahu,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1282,1790253660000,24/09/2026 20:41,AMBIL,b041,Manggo Juice,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1283,1790253720000,24/09/2026 20:42,AMBIL,b042,Mix Berries,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1284,1790253780000,24/09/2026 20:43,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1285,1790253840000,24/09/2026 20:44,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1286,1790294400000,25/09/2026 08:00,MASUK,b042,Mix Berries,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t1287,1790294460000,25/09/2026 08:01,MASUK,b068,Minyak Beku,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1288,1790294520000,25/09/2026 08:02,MASUK,b069,Kunci Mas,6,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1289,1790294580000,25/09/2026 08:03,MASUK,b017,Pete Add On,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1290,1790294640000,25/09/2026 08:04,MASUK,b020,Daging Sambal HIjau,56,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1291,1790294700000,25/09/2026 08:05,MASUK,b013,Lidah,22,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1292,1790294760000,25/09/2026 08:06,MASUK,b014,Lidah Goreng Segara,23,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1293,1790294820000,25/09/2026 08:07,MASUK,b019,Bagor,89,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1294,1790294880000,25/09/2026 08:08,MASUK,b070,Gula,15,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t1295,1790294940000,25/09/2026 08:09,MASUK,b094,Vanilli,12,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Btl
+t1296,1790295000000,25/09/2026 08:10,MASUK,b001,Ayam Suwir,26,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1297,1790295060000,25/09/2026 08:11,MASUK,b014,Lidah Goreng Segara,26,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1298,1790295120000,25/09/2026 08:12,MASUK,b013,Lidah,22,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1299,1790295180000,25/09/2026 08:13,MASUK,b003,Topping Mbakmoy,32,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1300,1790337600000,25/09/2026 20:00,AMBIL,b068,Minyak Beku,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1301,1790337660000,25/09/2026 20:01,AMBIL,b031,Bumbu Serundeng,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1302,1790337720000,25/09/2026 20:02,AMBIL,b108,Take Away Box S,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1303,1790337780000,25/09/2026 20:03,AMBIL,b105,Take Away Box M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1304,1790337840000,25/09/2026 20:04,AMBIL,b039,Roti Angsle,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1305,1790337900000,25/09/2026 20:05,AMBIL,b038,Roti Bakar,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1306,1790337960000,25/09/2026 20:06,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1307,1790338020000,25/09/2026 20:07,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t1308,1790338080000,25/09/2026 20:08,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1309,1790338140000,25/09/2026 20:09,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1310,1790338200000,25/09/2026 20:10,AMBIL,b089,Nurtijel Plain,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1311,1790338260000,25/09/2026 20:11,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1312,1790338320000,25/09/2026 20:12,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1313,1790338380000,25/09/2026 20:13,AMBIL,b099,Thermal Paper,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1314,1790338440000,25/09/2026 20:14,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1315,1790338500000,25/09/2026 20:15,AMBIL,b072,Bumbu Racik,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1316,1790338560000,25/09/2026 20:16,AMBIL,b025,Sambal Terasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1317,1790338620000,25/09/2026 20:17,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1318,1790338680000,25/09/2026 20:18,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1319,1790338740000,25/09/2026 20:19,AMBIL,b100,Ekonomi,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1320,1790338800000,25/09/2026 20:20,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1321,1790338860000,25/09/2026 20:21,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1322,1790338920000,25/09/2026 20:22,AMBIL,b095,Plastik Sampah S,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1323,1790338980000,25/09/2026 20:23,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1324,1790339040000,25/09/2026 20:24,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1325,1790339100000,25/09/2026 20:25,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1326,1790339160000,25/09/2026 20:26,AMBIL,b006,Paha Gurih Manis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1327,1790339220000,25/09/2026 20:27,AMBIL,b005,Dada Gurih Manis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1328,1790339280000,25/09/2026 20:28,AMBIL,b007,Paha,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1329,1790339340000,25/09/2026 20:29,AMBIL,b008,Dada,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1330,1790339400000,25/09/2026 20:30,AMBIL,b001,Ayam Suwir,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1331,1790339460000,25/09/2026 20:31,AMBIL,b002,Topping Kwetiau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1332,1790339520000,25/09/2026 20:32,AMBIL,b010,Daging Slice,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1333,1790339580000,25/09/2026 20:33,AMBIL,b004,Ayam Jamur,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1334,1790339640000,25/09/2026 20:34,AMBIL,b011,Cumi,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1335,1790339700000,25/09/2026 20:35,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1336,1790339760000,25/09/2026 20:36,AMBIL,b012,Kulit,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1337,1790339820000,25/09/2026 20:37,AMBIL,b016,Topping Nasi Gila,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1338,1790339880000,25/09/2026 20:38,AMBIL,b013,Lidah,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1339,1790339940000,25/09/2026 20:39,AMBIL,b017,Pete Add On,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1340,1790340000000,25/09/2026 20:40,AMBIL,b018,Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1341,1790340060000,25/09/2026 20:41,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1342,1790340120000,25/09/2026 20:42,AMBIL,b014,Lidah Goreng Segara,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1343,1790340180000,25/09/2026 20:43,AMBIL,b003,Topping Mbakmoy,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1344,1790340240000,25/09/2026 20:44,AMBIL,b021,Sambal Baby Cumi,14,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1345,1790340300000,25/09/2026 20:45,AMBIL,b019,Bagor,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1346,1790340360000,25/09/2026 20:46,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1347,1790340420000,25/09/2026 20:47,AMBIL,b009,Sayap Goreng,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1348,1790340480000,25/09/2026 20:48,AMBIL,b043,Mineral,41,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1349,1790340540000,25/09/2026 20:49,AMBIL,b044,Air Tahu,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1350,1790340600000,25/09/2026 20:50,AMBIL,b041,Manggo Juice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1351,1790340660000,25/09/2026 20:51,AMBIL,b042,Mix Berries,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1352,1790340720000,25/09/2026 20:52,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1353,1790340780000,25/09/2026 20:53,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1354,1790424000000,26/09/2026 20:00,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1355,1790424060000,26/09/2026 20:01,AMBIL,b069,Kunci Mas,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1356,1790424120000,26/09/2026 20:02,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1357,1790424180000,26/09/2026 20:03,AMBIL,b048,Apple Juice Diamond,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pcs
+t1358,1790424240000,26/09/2026 20:04,AMBIL,b101,Cup Ice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1359,1790424300000,26/09/2026 20:05,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1360,1790424360000,26/09/2026 20:06,AMBIL,b084,Tepung Maizena,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1361,1790424420000,26/09/2026 20:07,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1362,1790424480000,26/09/2026 20:08,AMBIL,b090,Sagu Mutiara,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1363,1790424540000,26/09/2026 20:09,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1364,1790424600000,26/09/2026 20:10,AMBIL,b099,Thermal Paper,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1365,1790424660000,26/09/2026 20:11,AMBIL,b088,Mie Urai,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1366,1790424720000,26/09/2026 20:12,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1367,1790424780000,26/09/2026 20:13,AMBIL,b027,Sambal Petis,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1368,1790424840000,26/09/2026 20:14,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1369,1790424900000,26/09/2026 20:15,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1370,1790424960000,26/09/2026 20:16,AMBIL,b064,Sun Cara 200Ml,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1371,1790425020000,26/09/2026 20:17,AMBIL,b032,Bumbu Kwetiau,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1372,1790425080000,26/09/2026 20:18,AMBIL,b056,Kopi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Pack
+t1373,1790425140000,26/09/2026 20:19,AMBIL,b109,Take Away Bocx L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1374,1790425200000,26/09/2026 20:20,AMBIL,b036,Bumbu Teri,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1375,1790425260000,26/09/2026 20:21,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1376,1790425320000,26/09/2026 20:22,AMBIL,b107,Plastik Bima uk24,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1377,1790425380000,26/09/2026 20:23,AMBIL,b112,Plastik Bima uk.15,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1378,1790425440000,26/09/2026 20:24,AMBIL,b095,Plastik Sampah S,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1379,1790425500000,26/09/2026 20:25,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1380,1790425560000,26/09/2026 20:26,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1381,1790425620000,26/09/2026 20:27,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1382,1790425680000,26/09/2026 20:28,AMBIL,b006,Paha Gurih Manis,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1383,1790425740000,26/09/2026 20:29,AMBIL,b005,Dada Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1384,1790425800000,26/09/2026 20:30,AMBIL,b007,Paha,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1385,1790425860000,26/09/2026 20:31,AMBIL,b008,Dada,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1386,1790425920000,26/09/2026 20:32,AMBIL,b001,Ayam Suwir,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1387,1790425980000,26/09/2026 20:33,AMBIL,b002,Topping Kwetiau,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1388,1790426040000,26/09/2026 20:34,AMBIL,b010,Daging Slice,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1389,1790426100000,26/09/2026 20:35,AMBIL,b004,Ayam Jamur,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1390,1790426160000,26/09/2026 20:36,AMBIL,b011,Cumi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1391,1790426220000,26/09/2026 20:37,AMBIL,b020,Daging Sambal HIjau,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1392,1790426280000,26/09/2026 20:38,AMBIL,b012,Kulit,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1393,1790426340000,26/09/2026 20:39,AMBIL,b016,Topping Nasi Gila,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1394,1790426400000,26/09/2026 20:40,AMBIL,b013,Lidah,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1395,1790426460000,26/09/2026 20:41,AMBIL,b017,Pete Add On,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1396,1790426520000,26/09/2026 20:42,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1397,1790426580000,26/09/2026 20:43,AMBIL,b015,Teri Pete,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1398,1790426640000,26/09/2026 20:44,AMBIL,b014,Lidah Goreng Segara,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1399,1790426700000,26/09/2026 20:45,AMBIL,b003,Topping Mbakmoy,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1400,1790426760000,26/09/2026 20:46,AMBIL,b021,Sambal Baby Cumi,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1401,1790426820000,26/09/2026 20:47,AMBIL,b019,Bagor,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1402,1790426880000,26/09/2026 20:48,AMBIL,b023,Cireng,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1403,1790426940000,26/09/2026 20:49,AMBIL,b009,Sayap Goreng,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1404,1790427000000,26/09/2026 20:50,AMBIL,b043,Mineral,29,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1405,1790427060000,26/09/2026 20:51,AMBIL,b044,Air Tahu,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1406,1790427120000,26/09/2026 20:52,AMBIL,b041,Manggo Juice,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1407,1790427180000,26/09/2026 20:53,AMBIL,b042,Mix Berries,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1408,1790427240000,26/09/2026 20:54,AMBIL,b046,Zoda Water,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1409,1790427300000,26/09/2026 20:55,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1410,1790467200000,27/09/2026 08:00,MASUK,b087,Tepung Telur,31,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Snack / Dessert + Tepung,Pack
+t1411,1790467260000,27/09/2026 08:01,MASUK,b044,Air Tahu,20,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t1412,1790467320000,27/09/2026 08:02,MASUK,b038,Roti Bakar,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Roti & Juice,Pack
+t1413,1790510400000,27/09/2026 20:00,AMBIL,b045,Soda Polaris,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1414,1790510460000,27/09/2026 20:01,AMBIL,b100,Ekonomi,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1415,1790510520000,27/09/2026 20:02,AMBIL,b085,Tepung Terigu,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1416,1790510580000,27/09/2026 20:03,AMBIL,b108,Take Away Box S,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1417,1790510640000,27/09/2026 20:04,AMBIL,b031,Bumbu Serundeng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1418,1790510700000,27/09/2026 20:05,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1419,1790510760000,27/09/2026 20:06,AMBIL,b063,Cashew Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1420,1790510820000,27/09/2026 20:07,AMBIL,b061,Susu Kental Manis Carnation,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1421,1790510880000,27/09/2026 20:08,AMBIL,b060,Susu Evaporasi,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Kaleng
+t1422,1790510940000,27/09/2026 20:09,AMBIL,b065,Max Creamer,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1423,1790511000000,27/09/2026 20:10,AMBIL,b070,Gula,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1424,1790511060000,27/09/2026 20:11,AMBIL,b091,Nata Decoco,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1425,1790511120000,27/09/2026 20:12,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1426,1790511180000,27/09/2026 20:13,AMBIL,b073,Bumbu Gule,15,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1427,1790511240000,27/09/2026 20:14,AMBIL,b072,Bumbu Racik,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1428,1790511300000,27/09/2026 20:15,AMBIL,b033,Gorengan Mbakmoy,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1429,1790511360000,27/09/2026 20:16,AMBIL,b106,Cup Sambal,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1430,1790511420000,27/09/2026 20:17,AMBIL,b104,Tissue Toilet,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1431,1790511480000,27/09/2026 20:18,AMBIL,b103,Tissue Meja,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1432,1790511540000,27/09/2026 20:19,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1433,1790511600000,27/09/2026 20:20,AMBIL,b096,Plastik Sampah M,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1434,1790511660000,27/09/2026 20:21,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1435,1790511720000,27/09/2026 20:22,AMBIL,b098,Plastik Sampah XL,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1436,1790511780000,27/09/2026 20:23,AMBIL,b006,Paha Gurih Manis,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1437,1790511840000,27/09/2026 20:24,AMBIL,b005,Dada Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1438,1790511900000,27/09/2026 20:25,AMBIL,b007,Paha,12,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1439,1790511960000,27/09/2026 20:26,AMBIL,b008,Dada,17,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1440,1790512020000,27/09/2026 20:27,AMBIL,b001,Ayam Suwir,22,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1441,1790512080000,27/09/2026 20:28,AMBIL,b002,Topping Kwetiau,20,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1442,1790512140000,27/09/2026 20:29,AMBIL,b010,Daging Slice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1443,1790512200000,27/09/2026 20:30,AMBIL,b004,Ayam Jamur,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1444,1790512260000,27/09/2026 20:31,AMBIL,b011,Cumi,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1445,1790512320000,27/09/2026 20:32,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1446,1790512380000,27/09/2026 20:33,AMBIL,b012,Kulit,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1447,1790512440000,27/09/2026 20:34,AMBIL,b016,Topping Nasi Gila,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1448,1790512500000,27/09/2026 20:35,AMBIL,b013,Lidah,11,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1449,1790512560000,27/09/2026 20:36,AMBIL,b017,Pete Add On,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1450,1790512620000,27/09/2026 20:37,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1451,1790512680000,27/09/2026 20:38,AMBIL,b015,Teri Pete,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1452,1790512740000,27/09/2026 20:39,AMBIL,b014,Lidah Goreng Segara,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1453,1790512800000,27/09/2026 20:40,AMBIL,b003,Topping Mbakmoy,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1454,1790512860000,27/09/2026 20:41,AMBIL,b021,Sambal Baby Cumi,10,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1455,1790512920000,27/09/2026 20:42,AMBIL,b019,Bagor,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1456,1790512980000,27/09/2026 20:43,AMBIL,b023,Cireng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1457,1790513040000,27/09/2026 20:44,AMBIL,b009,Sayap Goreng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1458,1790513100000,27/09/2026 20:45,AMBIL,b043,Mineral,49,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1459,1790513160000,27/09/2026 20:46,AMBIL,b044,Air Tahu,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1460,1790513220000,27/09/2026 20:47,AMBIL,b041,Manggo Juice,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1461,1790513280000,27/09/2026 20:48,AMBIL,b042,Mix Berries,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1462,1790513340000,27/09/2026 20:49,AMBIL,b046,Zoda Water,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1463,1790513400000,27/09/2026 20:50,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1464,1790553600000,28/09/2026 08:00,MASUK,b065,Max Creamer,2,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1465,1790553660000,28/09/2026 08:01,MASUK,b053,Sunquick Manggo,1,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Flavourful Drink,Botol
+t1466,1790553720000,28/09/2026 08:02,MASUK,b072,Bumbu Racik,10,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Bahan Dasar + Kecap,Pack
+t1467,1790553780000,28/09/2026 08:03,MASUK,b027,Sambal Petis,12,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Bumbu,Pack
+t1468,1790553840000,28/09/2026 08:04,MASUK,b011,Cumi,112,k1,Admin Segara,DALAM,CV. Dapur Rumah Rasa,AKTIF,admin,,Freezer Protein,Porsi
+t1469,1790596800000,28/09/2026 20:00,AMBIL,b077,Raja Rasa,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Botol
+t1470,1790596860000,28/09/2026 20:01,AMBIL,b104,Tissue Toilet,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1471,1790596920000,28/09/2026 20:02,AMBIL,b100,Ekonomi,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pcs
+t1472,1790596980000,28/09/2026 20:03,AMBIL,b113,Sumpit,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1473,1790597040000,28/09/2026 20:04,AMBIL,b102,Plastik Soup XS,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Pack
+t1474,1790597100000,28/09/2026 20:05,AMBIL,b117,Plastik Soup M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Roll
+t1475,1790597160000,28/09/2026 20:06,AMBIL,b081,Saus Tomat,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1476,1790597220000,28/09/2026 20:07,AMBIL,b080,Saus Sambal,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1477,1790597280000,28/09/2026 20:08,AMBIL,b031,Bumbu Serundeng,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1478,1790597340000,28/09/2026 20:09,AMBIL,b027,Sambal Petis,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1479,1790597400000,28/09/2026 20:10,AMBIL,b024,Sambal Bawang,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1480,1790597460000,28/09/2026 20:11,AMBIL,b045,Soda Polaris,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1481,1790597520000,28/09/2026 20:12,AMBIL,b058,Diamond Milk,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1482,1790597580000,28/09/2026 20:13,AMBIL,b072,Bumbu Racik,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Dasar + Kecap,Pack
+t1483,1790597640000,28/09/2026 20:14,AMBIL,b026,Sambal Kuning,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1484,1790597700000,28/09/2026 20:15,AMBIL,b067,Keju,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Barang Kering (Dairy + Plant Base Milk),Pcs
+t1485,1790597760000,28/09/2026 20:16,AMBIL,b087,Tepung Telur,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Bahan Snack / Dessert + Tepung,Pack
+t1486,1790597820000,28/09/2026 20:17,AMBIL,b036,Bumbu Teri,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1487,1790597880000,28/09/2026 20:18,AMBIL,b030,Bumbu Lidah,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Bumbu,Pack
+t1488,1790597940000,28/09/2026 20:19,AMBIL,b095,Plastik Sampah S,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1489,1790598000000,28/09/2026 20:20,AMBIL,b096,Plastik Sampah M,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1490,1790598060000,28/09/2026 20:21,AMBIL,b097,Plastik Sampah L,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1491,1790598120000,28/09/2026 20:22,AMBIL,b098,Plastik Sampah XL,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Cleaning Supplies + Utensils,Lbr
+t1492,1790598180000,28/09/2026 20:23,AMBIL,b006,Paha Gurih Manis,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1493,1790598240000,28/09/2026 20:24,AMBIL,b005,Dada Gurih Manis,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1494,1790598300000,28/09/2026 20:25,AMBIL,b007,Paha,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1495,1790598360000,28/09/2026 20:26,AMBIL,b008,Dada,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1496,1790598420000,28/09/2026 20:27,AMBIL,b001,Ayam Suwir,13,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1497,1790598480000,28/09/2026 20:28,AMBIL,b002,Topping Kwetiau,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1498,1790598540000,28/09/2026 20:29,AMBIL,b010,Daging Slice,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1499,1790598600000,28/09/2026 20:30,AMBIL,b004,Ayam Jamur,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1500,1790598660000,28/09/2026 20:31,AMBIL,b011,Cumi,8,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1501,1790598720000,28/09/2026 20:32,AMBIL,b020,Daging Sambal HIjau,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1502,1790598780000,28/09/2026 20:33,AMBIL,b012,Kulit,9,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1503,1790598840000,28/09/2026 20:34,AMBIL,b016,Topping Nasi Gila,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1504,1790598900000,28/09/2026 20:35,AMBIL,b013,Lidah,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1505,1790598960000,28/09/2026 20:36,AMBIL,b017,Pete Add On,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1506,1790599020000,28/09/2026 20:37,AMBIL,b018,Pete,0,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1507,1790599080000,28/09/2026 20:38,AMBIL,b015,Teri Pete,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1508,1790599140000,28/09/2026 20:39,AMBIL,b014,Lidah Goreng Segara,5,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1509,1790599200000,28/09/2026 20:40,AMBIL,b003,Topping Mbakmoy,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1510,1790599260000,28/09/2026 20:41,AMBIL,b021,Sambal Baby Cumi,7,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1511,1790599320000,28/09/2026 20:42,AMBIL,b019,Bagor,6,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1512,1790599380000,28/09/2026 20:43,AMBIL,b023,Cireng,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1513,1790599440000,28/09/2026 20:44,AMBIL,b009,Sayap Goreng,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Protein,Porsi
+t1514,1790599500000,28/09/2026 20:45,AMBIL,b043,Mineral,33,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1515,1790599560000,28/09/2026 20:46,AMBIL,b044,Air Tahu,3,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Botol
+t1516,1790599620000,28/09/2026 20:47,AMBIL,b041,Manggo Juice,4,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1517,1790599680000,28/09/2026 20:48,AMBIL,b042,Mix Berries,2,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack
+t1518,1790599740000,28/09/2026 20:49,AMBIL,b046,Zoda Water,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Flavourful Drink,Kaleng
+t1519,1790599800000,28/09/2026 20:50,AMBIL,b040,Sirsak Juice,1,k2,Dapur Segara,LUAR,,AKTIF,karyawan,,Freezer Roti & Juice,Pack

@@ -40,6 +40,9 @@ export const r3 = (n: number) => {
   if (!Number.isFinite(n)) return 0;
   return Math.round(n * 1000) / 1000;
 };
+export const total = (b: { stok_dalam: number; stok_luar: number }) => b.stok_dalam + b.stok_luar;
+export const menipis = (b: { stok_dalam: number; stok_luar: number; ambang_min: number; aktif?: boolean }) =>
+  b.aktif !== false && b.ambang_min > 0 && total(b) < b.ambang_min;
 export const katOf = (b: { kategori?: string }) => b.kategori || 'Lainnya';
 
 /** Urutan kategori: urutan dari pengaturan dulu, lalu sisanya sesuai kemunculan. */

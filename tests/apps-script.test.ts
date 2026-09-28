@@ -378,6 +378,38 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     const tx = sheetsData.Transaksi.find((r) => r[0] === txId);
     assert.equal(tx[11], 'BATAL');
   });
+  it('ambil and batalAmbil correctly handle LANGSUNG_HABIS items without modifying stok_luar', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const ambil = runInContext('ambil', context);
+    const batalAmbil = runInContext('batalAmbil', context);
+
+    // b2 has alur: 'LANGSUNG_HABIS', stok_dalam: 10, stok_luar: 0
+    const b2Before = sheetsData.Barang.find((r: unknown[]) => r[0] === 'b2');
+    assert.equal(b2Before[4], 10);
+    assert.equal(b2Before[5], 0);
+    assert.equal(b2Before[7], 'LANGSUNG_HABIS');
+
+    const res = ambil('k1', 'b2', 3);
+    assert.ok(res.tx.id);
+    assert.equal(res.barang.alur, 'LANGSUNG_HABIS');
+
+    const b2AfterAmbil = sheetsData.Barang.find((r: unknown[]) => r[0] === 'b2');
+    assert.equal(b2AfterAmbil[4], 7); // 10 - 3
+    assert.equal(b2AfterAmbil[5], 0); // stok_luar remains 0!
+    assert.equal(b2AfterAmbil[7], 'LANGSUNG_HABIS'); // alur is preserved!
+
+    const txRow = sheetsData.Transaksi.find((r: unknown[]) => r[0] === res.tx.id);
+    assert.equal(txRow[9], 'LANGSUNG_HABIS');
+
+    // Batal ambil
+    const ok = batalAmbil(res.tx.id, '');
+    assert.equal(ok, true);
+
+    const b2AfterBatal = sheetsData.Barang.find((r: unknown[]) => r[0] === 'b2');
+    assert.equal(b2AfterBatal[4], 10); // restored
+    assert.equal(b2AfterBatal[5], 0);  // unchanged
+    assert.equal(b2AfterBatal[7], 'LANGSUNG_HABIS');
+  });
 
   it('simpanBarang enforces non-negative stok_awal and ambang_min', () => {
     const { context } = createAppsScriptEnvironment();
@@ -849,6 +881,33 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
       () => requestOtp('user@real.com'),
       /Tunggu 60 detik sebelum meminta kode baru/,
     );
+  });
+
+  it('supports dummy login directly for @segara.com accounts with 123456 code in Kode.gs', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+      { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const verifyOtp = runInContext('verifyOtp', context);
+    const getPublicAuthConfig = runInContext('getPublicAuthConfig', context);
+
+    // Direct verify dummy admin
+    const adminSess = verifyOtp('admin@segara.com', '123456', 'Mozilla/5.0');
+    assert.equal(adminSess.email, 'admin@segara.com');
+    assert.equal(adminSess.role, 'admin');
+    assert.ok(adminSess.token);
+
+    // Direct verify dummy tablet
+    const tabletSess = verifyOtp('tablet@segara.com', '123456', 'Mozilla/5.0');
+    assert.equal(tabletSess.email, 'tablet@segara.com');
+    assert.equal(tabletSess.role, 'tablet');
+    assert.ok(tabletSess.token);
+
+    // Public auth config reflects allowDummyAuth
+    const conf = getPublicAuthConfig();
+    assert.equal(conf.allowDummyAuth, true);
   });
 
   it('rejects getTablet and ambil when server session is missing or invalid in production', () => {

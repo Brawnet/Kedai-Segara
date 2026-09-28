@@ -276,7 +276,7 @@ function OpnameHistoryCardMobile({ o }: { o: Opname }) {
 export function OpnamePage() {
   const { d, A } = useAdmin();
   const { toast } = useApp();
-  const aktif = useMemo(() => d.barang.filter((b) => b.aktif && b.opname_rekap !== false), [d]);
+  const aktif = useMemo(() => d.barang.filter((b) => b.aktif), [d]);
   const [vals, setVals] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState<number | null>(null);
   const [confirmBuang, setConfirmBuang] = useState(false);

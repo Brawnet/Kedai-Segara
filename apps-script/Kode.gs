@@ -59,6 +59,10 @@ function setup() {
   });
   migrasi_(ss);
   if (getSetting_('jam_tutup') === '') setSetting_('jam_tutup', '21:00');
+  if (getSetting_('urutan_kategori') === '') {
+    var defaultUrut = DATA_SEGARA.map(function (g) { return g[0]; });
+    setSetting_('urutan_kategori', JSON.stringify(defaultUrut));
+  }
 }
 
 /* ---------- Helpers ---------- */
@@ -399,14 +403,8 @@ function lastRekapTs_() {
   return rows_('Rekap').reduce(function (m, r) { return Math.max(m, num_(r.ts)); }, 0);
 }
 function openTx_(last) {
-  var rekapMap = {};
-  rows_('Barang').forEach(function (b) {
-    if (b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap)) {
-      rekapMap[String(b.id)] = true;
-    }
-  });
   return rows_('Transaksi').filter(function (t) {
-    return t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && num_(t.ts) > last && rekapMap[String(t.barang_id)];
+    return t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && num_(t.ts) > last;
   });
 }
 function status_() {
@@ -415,8 +413,7 @@ function status_() {
   var d = new Date(); d.setHours(0, 0, 0, 0);
   var today0 = d.getTime();
   var luar = rows_('Barang').filter(function (b) {
-    var inRekap = b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap);
-    return inRekap && num_(b.stok_luar) > 0;
+    return b.alur !== 'LANGSUNG_HABIS' && num_(b.stok_luar) > 0;
   }).length;
   return {
     belumRekap: tx.length,
@@ -428,7 +425,7 @@ function status_() {
 
 /* ---------- Tablet ---------- */
 // Karyawan tidak boleh melihat stok gudang (stok_dalam), tapi stok_luar (di depan/dapur) ditampilkan.
-function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar), opname_rekap: b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap) }; }
+function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar), opname_rekap: b.alur !== 'LANGSUNG_HABIS' }; }
 function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token) {
   var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
   var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
@@ -471,12 +468,12 @@ function ambil_(karyawanId, barangId, jumlah, ts, oleh) {
     if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
     if (!k || (oleh === 'karyawan' && !truthy_(k.aktif))) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     if (jumlah > num_(b.stok_dalam) + 1e-9) throw new Error(oleh === 'admin' ? 'Stok gudang tidak cukup. Sisa: ' + num_(b.stok_dalam) + ' ' + b.satuan : 'Jumlah melebihi stok gudang yang tercatat. Hubungi admin.');
+    var alur = b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     b.stok_dalam = r_(num_(b.stok_dalam) - jumlah);
-    b.stok_luar = r_(num_(b.stok_luar) + jumlah);
-    b.alur = 'LUAR';
+    if (alur === 'LUAR') b.stok_luar = r_(num_(b.stok_luar) + jumlah);
     update_('Barang', b);
     var t = { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'AMBIL', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-      karyawan_id: String(k.id), karyawan: k.nama, alur: 'LUAR', status: 'AKTIF', dicatat_oleh: oleh,
+      karyawan_id: String(k.id), karyawan: k.nama, alur: alur, status: 'AKTIF', dicatat_oleh: oleh,
       kategori: String(b.kategori || ''), satuan: String(b.satuan || '') };
     append_('Transaksi', t);
     return { tx: { id: t.id, ts: ts }, barang: oleh === 'admin' ? pub_(b) : tab_(pub_(b)) };
@@ -513,7 +510,7 @@ function batalAmbil(txId, pin, token) {
     var b = find_('Barang', t.barang_id);
     if (!b) throw new Error('Barang tidak ditemukan');
     b.stok_dalam = r_(num_(b.stok_dalam) + num_(t.jumlah));
-    b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
+    if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
     update_('Barang', b);
     t.status = 'BATAL';
     if (adminEmail) t.dicatat_oleh = adminEmail;
@@ -530,7 +527,7 @@ function hitungRekap_(cutoff, last) {
     m[id] = r_((m[id] || 0) + num_(t.jumlah));
   });
   return rows_('Barang').filter(function (b) {
-    return b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap);
+    return truthy_(b.aktif) && b.alur !== 'LANGSUNG_HABIS';
   }).map(function (b) {
     var id = String(b.id), d = before[id] || 0, a = after[id] || 0, luar = num_(b.stok_luar);
     var awal = Math.max(0, r_(luar - d - a));
@@ -614,7 +611,7 @@ function simpanBarang(pin, o, token) {
     if (min < 0) throw new Error('Ambang minimum tidak boleh negatif');
     var alur = o.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     var kd = String(o.kode || '').trim();
-    if (kd && rows_('Barang').some(function (x) { return String(x.kode) === kd && String(x.id) !== String(o.id || ''); })) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
+    if (kd && rows_('Barang').some(function (x) { return String(x.kode || '').trim().toLowerCase() === kd.toLowerCase() && String(x.id) !== String(o.id || ''); })) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
     if (o.id) {
       var b = find_('Barang', o.id);
       if (!b) throw new Error('Barang tidak ditemukan');
@@ -624,7 +621,7 @@ function simpanBarang(pin, o, token) {
       b.nama = o.nama.trim(); b.satuan = o.satuan.trim(); b.kategori = (o.kategori || '').trim();
       if (o.kode !== undefined) b.kode = kd;
       if (o.catatan !== undefined) b.catatan = String(o.catatan || '').trim();
-      b.alur = alur; b.ambang_min = min; b.aktif = aktif; b.opname_rekap = o.opname_rekap !== false;
+      b.alur = alur; b.ambang_min = min; b.aktif = aktif; b.opname_rekap = true;
       update_('Barang', b);
     } else {
       var awal = r_(num_(o.stok_awal));
@@ -632,7 +629,7 @@ function simpanBarang(pin, o, token) {
       var id = uid_(), ts = Date.now();
       append_('Barang', { id: id, nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: (o.kategori || '').trim(),
         stok_dalam: awal, stok_luar: 0, ambang_min: min, alur: alur, aktif: true,
-        kode: kd, catatan: String(o.catatan || '').trim(), opname_rekap: o.opname_rekap !== false });
+        kode: kd, catatan: String(o.catatan || '').trim(), opname_rekap: true });
       if (awal > 0) append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: id, barang: o.nama.trim(),
         jumlah: awal, alur: 'DALAM', status: 'AKTIF', dicatat_oleh: 'admin', catatan: 'Stok awal', kategori: (o.kategori || '').trim(), satuan: o.satuan.trim() });
     }
@@ -933,8 +930,15 @@ function simpanPengaturan(pin, jamTutup, pinBaru, token) {
 
 function laporan(pin, dari, sampai, token) {
   auth_(pin, token);
+  var sDari = String(dari || '').trim(), sSampai = String(sampai || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(sDari) || !/^\d{4}-\d{2}-\d{2}$/.test(sSampai)) {
+    throw new Error('Format tanggal laporan tidak valid (harus YYYY-MM-DD)');
+  }
+  if (sDari > sSampai) {
+    throw new Error('Tanggal awal tidak boleh melebihi tanggal akhir');
+  }
   var p = function (s, add) { var a = String(s).split('-').map(Number); return new Date(a[0], a[1] - 1, a[2] + (add || 0)).getTime(); };
-  var t0 = p(dari), t1 = p(sampai, 1), map = {};
+  var t0 = p(sDari), t1 = p(sSampai, 1), map = {};
   var barang = rows_('Barang').map(pub_);
   var g = function (id, nama) {
     id = String(id);
@@ -1091,7 +1095,8 @@ function getPublicAuthConfig() {
   var clientId = (p && p.getProperty('GOOGLE_CLIENT_ID')) || '';
   return {
     hasGoogleAuth: Boolean(clientId && clientId.trim()),
-    googleClientId: clientId ? clientId.trim() : ''
+    googleClientId: clientId ? clientId.trim() : '',
+    allowDummyAuth: isDummyAllowed_()
   };
 }
 
@@ -1467,7 +1472,7 @@ function simpanGoogleClientId(pin, clientId, token) {
   return true;
 }
 
-/* ---------- Data Kedai Segara (Laporan Stock Agustus · CV. Dapur Rumah Rasa) ---------- */
+/* ---------- Data Kedai Segara (Laporan Stock September · CV. Dapur Rumah Rasa) ---------- */
 // Kategori = judul merah di laporan. Format barang: [kode, nama, satuan, catatan (opsional)]
 var DATA_SEGARA = [
   ['Freezer Protein', [
@@ -1484,14 +1489,16 @@ var DATA_SEGARA = [
     ['C', 'Cumi', 'Porsi'],
     ['K', 'Kulit', 'Porsi'],
     ['L', 'Lidah', 'Porsi'],
+    ['LGS', 'Lidah Goreng Segara', 'Porsi'],
     ['TP', 'Teri Pete', 'Porsi'],
     ['TNG', 'Topping Nasi Gila', 'Porsi'],
+    ['PTA', 'Pete Add On', 'Porsi'],
     ['PT', 'Pete', 'Porsi'],
     ['B', 'Bagor', 'Porsi'],
-    ['DS', 'Daging Sambal Hijau', 'Porsi'],
+    ['DS', 'Daging Sambal HIjau', 'Porsi'],
     ['BC', 'Sambal Baby Cumi', 'Porsi'],
     ['TA', 'Tahu Aci', 'Pack'],
-    ['Cr', 'Cireng', 'Porsi']
+    ['Cr', 'Cireng', 'Porsi'],
   ]],
   ['Freezer Bumbu', [
     ['SB', 'Sambal Bawang', 'Pack'],
@@ -1501,19 +1508,20 @@ var DATA_SEGARA = [
     ['ST', 'Sambal Terong', 'Pack'],
     ['BS', 'Bumbu Segara', 'Pack'],
     ['BL', 'Bumbu Lidah', 'Pack'],
+    ['Serundeng', 'Bumbu Serundeng', 'Pack'],
     ['BK', 'Bumbu Kwetiau', 'Pack'],
     ['GM', 'Gorengan Mbakmoy', 'Pack'],
-    ['BU', 'Bumbu Ungkep', 'Pack'],
+    ['BUL', 'Bumbu Ungkep Lidah', 'Pack'],
     ['BNG', 'Bumbu Nasi Gila', 'Pack'],
     ['BT', 'Bumbu Teri', 'Pack'],
-    ['BMG', 'Bumbu Mie Goreng Jawa', 'Pack']
+    ['BMG', 'Bumbu Mie Goreng Jawa', 'Pack'],
   ]],
   ['Freezer Roti & Juice', [
     ['RotiB', 'Roti Bakar', 'Pack'],
     ['RotiA', 'Roti Angsle', 'Pack'],
     ['Sirsak', 'Sirsak Juice', 'Pack'],
     ['SM', 'Manggo Juice', 'Pack'],
-    ['Berries', 'Mix Berries', 'Pack']
+    ['Berries', 'Mix Berries', 'Pack'],
   ]],
   ['Flavourful Drink', [
     ['M', 'Mineral', 'Botol'],
@@ -1530,7 +1538,7 @@ var DATA_SEGARA = [
     ['Lemon', 'Ecolate Lemongrass', 'Pack'],
     ['Winter', 'Ecolate Wintermelon Tea', 'Pack'],
     ['Kopi', 'Kopi', 'Pack'],
-    ['LT', 'Lemon Tea', 'Pack']
+    ['LT', 'Lemon Tea', 'Pack'],
   ]],
   ['Barang Kering (Dairy + Plant Base Milk)', [
     ['UHT', 'Diamond Milk', 'Pcs'],
@@ -1544,7 +1552,7 @@ var DATA_SEGARA = [
     ['Milo', 'Milo', 'Pcs'],
     ['Keju', 'Keju', 'Pcs'],
     ['MB', 'Minyak Beku', 'Pcs'],
-    ['MC', 'Kunci Mas', 'Pcs']
+    ['MC', 'Kunci Mas', 'Pcs'],
   ]],
   ['Bahan Dasar + Kecap', [
     ['Gula', 'Gula', 'Pack'],
@@ -1558,22 +1566,22 @@ var DATA_SEGARA = [
     ['Tipparos', 'Kecap Ikan Tipparos', 'Botol'],
     ['Maggi', 'Kecap Maggi', 'Botol'],
     ['SS', 'Saus Sambal', 'Pack'],
-    ['Tomat', 'Saus Tomat', 'Pack']
+    ['Tomat', 'Saus Tomat', 'Pack'],
   ]],
-  ['Bahan Snack/Dessert + Tepung', [
+  ['Bahan Snack / Dessert + Tepung', [
     ['Beras', 'Tepung Beras Bola', 'Pack'],
     ['Ketan', 'Tepung Ketan', 'Pack'],
     ['Maizena', 'Tepung Maizena', 'Pack'],
     ['Terigu', 'Tepung Terigu', 'Pack'],
     ['Tapioka', 'Tepung Tapioka', 'Pack'],
-    ['Urai', 'Mie Urai', 'Pack'],
     ['TT', 'Tepung Telur', 'Pack'],
+    ['Urai', 'Mie Urai', 'Pack'],
     ['Plain', 'Nurtijel Plain', 'Pack'],
     ['Sagu', 'Sagu Mutiara', 'Pack'],
     ['Nata', 'Nata Decoco', 'Pack'],
     ['Hijau', 'Pewarna Hijau', 'Btl'],
     ['Pink', 'Pewarna Pink', 'Btl'],
-    ['V', 'Vanilli', 'Btl']
+    ['V', 'Vanilli', 'Btl'],
   ]],
   ['Cleaning Supplies + Utensils', [
     ['Ps.ukS', 'Plastik Sampah S', 'Lbr', '1 Pack Isi 10 pcs'],
@@ -1588,9 +1596,9 @@ var DATA_SEGARA = [
     ['TWC', 'Tissue Toilet', 'Pack'],
     ['Tbm', 'Take Away Box M', 'Pack'],
     ['CupS', 'Cup Sambal', 'Pack'],
-    ['Bm21', 'Plastik Bima uk21', 'Pack'],
+    ['Bm24', 'Plastik Bima uk24', 'Pack'],
     ['Tbs', 'Take Away Box S', 'Pack'],
-    ['TbL', 'Take Away Box L', 'Pack'],
+    ['TbL', 'Take Away Bocx L', 'Pack'],
     ['Bm28', 'Plastik Bima uk.28', 'Pack'],
     ['Sdt', 'Sedotan', 'Pack'],
     ['Bm15', 'Plastik Bima uk.15', 'Pack'],
@@ -1600,8 +1608,8 @@ var DATA_SEGARA = [
     ['Hot', 'Cup Hot', 'Pack'],
     ['SoupM', 'Plastik Soup M', 'Roll'],
     ['SoupL', 'Plastik Soup L', 'Pack'],
-    ['Lakban', 'Lakban Segara', 'Roll']
-  ]]
+    ['Lakban', 'Lakban Segara', 'Roll'],
+  ]],
 ];
 
 /**
@@ -1620,7 +1628,7 @@ function imporDataSegara() {
       g[1].forEach(function (r) {
         if (ada[r[0]]) { lewati++; return; }
         var o = { id: uid_(), nama: r[1], satuan: r[2], kategori: g[0], stok_dalam: 0, stok_luar: 0, ambang_min: 0,
-          alur: 'LUAR', aktif: true, kode: r[0], catatan: r[3] || '' };
+          alur: 'LUAR', aktif: true, kode: r[0], catatan: r[3] || '', opname_rekap: true };
         baru.push(SHEETS.Barang.map(function (k) { return safeCell_(o[k] === undefined ? '' : o[k]); }));
       });
     });

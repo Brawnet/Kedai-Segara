@@ -1,0 +1,121 @@
+id,nama,satuan,kategori,stok_dalam,stok_luar,ambang_min,alur,aktif,kode,catatan,opname_rekap
+b001,Ayam Suwir,Porsi,Freezer Protein,30,0,0,LUAR,True,AS,,True
+b002,Topping Kwetiau,Porsi,Freezer Protein,38,0,0,LUAR,True,TK,,True
+b003,Topping Mbakmoy,Porsi,Freezer Protein,20,0,0,LUAR,True,TM,,True
+b004,Ayam Jamur,Porsi,Freezer Protein,2,0,0,LUAR,True,AJ,,True
+b005,Dada Gurih Manis,Porsi,Freezer Protein,39,0,0,LUAR,True,DGM,,True
+b006,Paha Gurih Manis,Porsi,Freezer Protein,30,0,0,LUAR,True,PGM,,True
+b007,Paha,Porsi,Freezer Protein,46,0,0,LUAR,True,P,,True
+b008,Dada,Porsi,Freezer Protein,17,0,0,LUAR,True,D,,True
+b009,Sayap Goreng,Porsi,Freezer Protein,19,0,0,LUAR,True,Syp,,True
+b010,Daging Slice,Porsi,Freezer Protein,21,0,0,LUAR,True,Daging,,True
+b011,Cumi,Porsi,Freezer Protein,144,0,0,LUAR,True,C,,True
+b012,Kulit,Porsi,Freezer Protein,63,0,0,LUAR,True,K,,True
+b013,Lidah,Porsi,Freezer Protein,61,0,0,LUAR,True,L,,True
+b014,Lidah Goreng Segara,Porsi,Freezer Protein,20,0,0,LUAR,True,LGS,,True
+b015,Teri Pete,Porsi,Freezer Protein,16,0,0,LUAR,True,TP,,True
+b016,Topping Nasi Gila,Porsi,Freezer Protein,20,0,0,LUAR,True,TNG,,True
+b017,Pete Add On,Porsi,Freezer Protein,7,0,0,LUAR,True,PTA,,True
+b018,Pete,Porsi,Freezer Protein,8,0,0,LUAR,True,PT,,True
+b019,Bagor,Porsi,Freezer Protein,64,0,0,LUAR,True,B,,True
+b020,Daging Sambal HIjau,Porsi,Freezer Protein,50,0,0,LUAR,True,DS,,True
+b021,Sambal Baby Cumi,Porsi,Freezer Protein,60,0,0,LUAR,True,BC,,True
+b022,Tahu Aci,Pack,Freezer Protein,8,0,0,LUAR,True,TA,,True
+b023,Cireng,Porsi,Freezer Protein,4,0,0,LUAR,True,Cr,,True
+b024,Sambal Bawang,Pack,Freezer Bumbu,1,0,0,LUAR,True,SB,,True
+b025,Sambal Terasi,Pack,Freezer Bumbu,5,0,0,LUAR,True,S.terasi,,True
+b026,Sambal Kuning,Pack,Freezer Bumbu,4,0,0,LUAR,True,SK,,True
+b027,Sambal Petis,Pack,Freezer Bumbu,11,0,0,LUAR,True,SP,,True
+b028,Sambal Terong,Pack,Freezer Bumbu,3,0,0,LUAR,True,ST,,True
+b029,Bumbu Segara,Pack,Freezer Bumbu,6,0,0,LUAR,True,BS,,True
+b030,Bumbu Lidah,Pack,Freezer Bumbu,4,0,0,LUAR,True,BL,,True
+b031,Bumbu Serundeng,Pack,Freezer Bumbu,20,0,0,LUAR,True,Serundeng,,True
+b032,Bumbu Kwetiau,Pack,Freezer Bumbu,1,0,0,LUAR,True,BK,,True
+b033,Gorengan Mbakmoy,Pack,Freezer Bumbu,0,0,0,LUAR,True,GM,,True
+b034,Bumbu Ungkep Lidah,Pack,Freezer Bumbu,5,0,0,LUAR,True,BUL,,True
+b035,Bumbu Nasi Gila,Pack,Freezer Bumbu,4,0,0,LUAR,True,BNG,,True
+b036,Bumbu Teri,Pack,Freezer Bumbu,4,0,0,LUAR,True,BT,,True
+b037,Bumbu Mie Goreng Jawa,Pack,Freezer Bumbu,1,0,0,LUAR,True,BMG,,True
+b038,Roti Bakar,Pack,Freezer Roti & Juice,0,0,0,LUAR,True,RotiB,,True
+b039,Roti Angsle,Pack,Freezer Roti & Juice,0,0,0,LUAR,True,RotiA,,True
+b040,Sirsak Juice,Pack,Freezer Roti & Juice,7,0,0,LUAR,True,Sirsak,,True
+b041,Manggo Juice,Pack,Freezer Roti & Juice,2,0,0,LUAR,True,SM,,True
+b042,Mix Berries,Pack,Freezer Roti & Juice,0,0,0,LUAR,True,Berries,,True
+b043,Mineral,Botol,Flavourful Drink,329,0,0,LUAR,True,M,,True
+b044,Air Tahu,Botol,Flavourful Drink,15,0,0,LUAR,True,AT,,True
+b045,Soda Polaris,Kaleng,Flavourful Drink,3,0,0,LUAR,True,Polaris,,True
+b046,Zoda Water,Kaleng,Flavourful Drink,14,0,0,LUAR,True,ZD,,True
+b047,Lhychee Kaleng,Kaleng,Flavourful Drink,9,0,0,LUAR,True,Kaleng,,True
+b048,Apple Juice Diamond,Pcs,Flavourful Drink,3,0,0,LUAR,True,Apple,,True
+b049,Syrup Dht,Jug,Flavourful Drink,1,0,0,LUAR,True,DHT,,True
+b050,Dripp Butterschotch,Botol,Flavourful Drink,1,0,0,LUAR,True,Butter,,True
+b051,Dripp Pandan,Botol,Flavourful Drink,2,0,0,LUAR,True,Pandan,,True
+b052,Dripp Lhychee,Botol,Flavourful Drink,2,0,0,LUAR,True,Lhychee,,True
+b053,Sunquick Manggo,Botol,Flavourful Drink,1,0,0,LUAR,True,Sun,,True
+b054,Ecolate Lemongrass,Pack,Flavourful Drink,1,0,0,LUAR,True,Lemon,,True
+b055,Ecolate Wintermelon Tea,Pack,Flavourful Drink,2,0,0,LUAR,True,Winter,,True
+b056,Kopi,Pack,Flavourful Drink,0,0,0,LUAR,True,Kopi,,True
+b057,Lemon Tea,Pack,Flavourful Drink,3,0,0,LUAR,True,LT,,True
+b058,Diamond Milk,Pcs,Barang Kering (Dairy + Plant Base Milk),2,0,0,LUAR,True,UHT,,True
+b059,Sun Cara 1L,Pcs,Barang Kering (Dairy + Plant Base Milk),11,0,0,LUAR,True,Cara1,,True
+b060,Susu Evaporasi,Kaleng,Barang Kering (Dairy + Plant Base Milk),7,0,0,LUAR,True,Evap,,True
+b061,Susu Kental Manis Carnation,Pcs,Barang Kering (Dairy + Plant Base Milk),7,0,0,LUAR,True,SKM,,True
+b062,Oatside Milk,Pcs,Barang Kering (Dairy + Plant Base Milk),2,0,0,LUAR,True,Oatside,,True
+b063,Cashew Milk,Pcs,Barang Kering (Dairy + Plant Base Milk),3,0,0,LUAR,True,Cashew,,True
+b064,Sun Cara 200Ml,Pcs,Barang Kering (Dairy + Plant Base Milk),8,0,0,LUAR,True,Cara200,,True
+b065,Max Creamer,Pcs,Barang Kering (Dairy + Plant Base Milk),2,0,0,LUAR,True,Creamer,,True
+b066,Milo,Pcs,Barang Kering (Dairy + Plant Base Milk),2,0,0,LUAR,True,Milo,,True
+b067,Keju,Pcs,Barang Kering (Dairy + Plant Base Milk),2,0,0,LUAR,True,Keju,,True
+b068,Minyak Beku,Pcs,Barang Kering (Dairy + Plant Base Milk),5,0,0,LUAR,True,MB,,True
+b069,Kunci Mas,Pcs,Barang Kering (Dairy + Plant Base Milk),6,0,0,LUAR,True,MC,,True
+b070,Gula,Pack,Bahan Dasar + Kecap,18,0,0,LUAR,True,Gula,,True
+b071,Garam,Pack,Bahan Dasar + Kecap,5,0,0,LUAR,True,Garam,,True
+b072,Bumbu Racik,Pack,Bahan Dasar + Kecap,14,0,0,LUAR,True,BR,,True
+b073,Bumbu Gule,Pack,Bahan Dasar + Kecap,3,0,0,LUAR,True,BG,,True
+b074,Terasi,Pcs,Bahan Dasar + Kecap,77,0,0,LUAR,True,T,,True
+b075,Gula Halus,Pack,Bahan Dasar + Kecap,2,0,0,LUAR,True,GulaH,,True
+b076,Knorr,Pack,Bahan Dasar + Kecap,1,0,0,LUAR,True,Knor,,True
+b077,Raja Rasa,Botol,Bahan Dasar + Kecap,2,0,0,LUAR,True,RR,,True
+b078,Kecap Ikan Tipparos,Botol,Bahan Dasar + Kecap,2,0,0,LUAR,True,Tipparos,,True
+b079,Kecap Maggi,Botol,Bahan Dasar + Kecap,1,0,0,LUAR,True,Maggi,,True
+b080,Saus Sambal,Pack,Bahan Dasar + Kecap,6,0,0,LUAR,True,SS,,True
+b081,Saus Tomat,Pack,Bahan Dasar + Kecap,7,0,0,LUAR,True,Tomat,,True
+b082,Tepung Beras Bola,Pack,Bahan Snack / Dessert + Tepung,7,0,0,LUAR,True,Beras,,True
+b083,Tepung Ketan,Pack,Bahan Snack / Dessert + Tepung,8,0,0,LUAR,True,Ketan,,True
+b084,Tepung Maizena,Pack,Bahan Snack / Dessert + Tepung,2,0,0,LUAR,True,Maizena,,True
+b085,Tepung Terigu,Pack,Bahan Snack / Dessert + Tepung,3,0,0,LUAR,True,Terigu,,True
+b086,Tepung Tapioka,Pack,Bahan Snack / Dessert + Tepung,10,0,0,LUAR,True,Tapioka,,True
+b087,Tepung Telur,Pack,Bahan Snack / Dessert + Tepung,36,0,0,LUAR,True,TT,,True
+b088,Mie Urai,Pack,Bahan Snack / Dessert + Tepung,1,0,0,LUAR,True,Urai,,True
+b089,Nurtijel Plain,Pack,Bahan Snack / Dessert + Tepung,12,0,0,LUAR,True,Plain,,True
+b090,Sagu Mutiara,Pack,Bahan Snack / Dessert + Tepung,2,0,0,LUAR,True,Sagu,,True
+b091,Nata Decoco,Pack,Bahan Snack / Dessert + Tepung,1,0,0,LUAR,True,Nata,,True
+b092,Pewarna Hijau,Btl,Bahan Snack / Dessert + Tepung,9,0,0,LUAR,True,Hijau,,True
+b093,Pewarna Pink,Btl,Bahan Snack / Dessert + Tepung,2,0,0,LUAR,True,Pink,,True
+b094,Vanilli,Btl,Bahan Snack / Dessert + Tepung,13,0,0,LUAR,True,V,,True
+b095,Plastik Sampah S,Lbr,Cleaning Supplies + Utensils,48,0,0,LUAR,True,Ps.ukS,1 Pack Isi 10 pcs,True
+b096,Plastik Sampah M,Lbr,Cleaning Supplies + Utensils,23,0,0,LUAR,True,Ps.ukM,1 Pack Isi 10 pcs,True
+b097,Plastik Sampah L,Lbr,Cleaning Supplies + Utensils,31,0,0,LUAR,True,Ps.ukL,1 Pack Isi 10 pcs,True
+b098,Plastik Sampah XL,Lbr,Cleaning Supplies + Utensils,18,0,0,LUAR,True,Ps.ukXL,1 Pack Isi 10 pcs,True
+b099,Thermal Paper,Roll,Cleaning Supplies + Utensils,124,0,0,LUAR,True,Paper,,True
+b100,Ekonomi,Pcs,Cleaning Supplies + Utensils,51,0,0,LUAR,True,Eko,,True
+b101,Cup Ice,Pack,Cleaning Supplies + Utensils,6,0,0,LUAR,True,Ice,,True
+b102,Plastik Soup XS,Pack,Cleaning Supplies + Utensils,13,0,0,LUAR,True,SoupXS,,True
+b103,Tissue Meja,Pack,Cleaning Supplies + Utensils,4,0,0,LUAR,True,Tmeja,,True
+b104,Tissue Toilet,Pack,Cleaning Supplies + Utensils,7,0,0,LUAR,True,TWC,,True
+b105,Take Away Box M,Pack,Cleaning Supplies + Utensils,7,0,0,LUAR,True,Tbm,,True
+b106,Cup Sambal,Pack,Cleaning Supplies + Utensils,2,0,0,LUAR,True,CupS,,True
+b107,Plastik Bima uk24,Pack,Cleaning Supplies + Utensils,2,0,0,LUAR,True,Bm24,,True
+b108,Take Away Box S,Pack,Cleaning Supplies + Utensils,12,0,0,LUAR,True,Tbs,,True
+b109,Take Away Bocx L,Pack,Cleaning Supplies + Utensils,1,0,0,LUAR,True,TbL,,True
+b110,Plastik Bima uk.28,Pack,Cleaning Supplies + Utensils,2,0,0,LUAR,True,Bm28,,True
+b111,Sedotan,Pack,Cleaning Supplies + Utensils,2,0,0,LUAR,True,Sdt,,True
+b112,Plastik Bima uk.15,Pack,Cleaning Supplies + Utensils,1,0,0,LUAR,True,Bm15,,True
+b113,Sumpit,Pack,Cleaning Supplies + Utensils,3,0,0,LUAR,True,Sumpit,,True
+b114,Sendok Bebek,Pack,Cleaning Supplies + Utensils,3,0,0,LUAR,True,Sbb,,True
+b115,2in1 Sendok,Pack,Cleaning Supplies + Utensils,1,0,0,LUAR,True,2in1,,True
+b116,Cup Hot,Pack,Cleaning Supplies + Utensils,21,0,0,LUAR,True,Hot,,True
+b117,Plastik Soup M,Roll,Cleaning Supplies + Utensils,3,0,0,LUAR,True,SoupM,,True
+b118,Plastik Soup L,Pack,Cleaning Supplies + Utensils,0,0,0,LUAR,True,SoupL,,True
+b119,Lakban Segara,Roll,Cleaning Supplies + Utensils,132,0,0,LUAR,True,Lakban,,True
+b120,Bumbu Ungkep,Pack,Freezer Bumbu,0,0,0,LUAR,False,BU,Menu lama / diganti Bumbu Ungkep Lidah (BUL),False

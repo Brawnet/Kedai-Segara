@@ -4,126 +4,132 @@ import { createMock } from '../src/lib/mock.ts';
 import { createAppsScriptEnvironment } from './apps-script.test.ts';
 import { runInContext } from 'node:vm';
 
-describe('Opname & Rekap Visibility Feature (opname_rekap)', () => {
+describe('Rekap & Stok Luar Visibility driven directly by Alur', () => {
   const pin = '12345';
 
-  it('mock backend: defaults opname_rekap to true when creating new item', () => {
-    const mock = createMock();
-    mock.simpanBarang(pin, {
-      id: '',
-      nama: 'Kopi Susu Gula Aren',
-      satuan: 'Cup',
-      kategori: 'Minuman',
-      kode: 'KSGA',
-      catatan: '',
-      alur: 'LUAR',
-      ambang_min: 10,
-      aktif: true,
-      stok_awal: 50,
-    });
-
-    const items = mock.getTablet().barang;
-    const added = items.find((b) => b.nama === 'Kopi Susu Gula Aren');
-    assert.ok(added);
-    assert.equal(added.opname_rekap, true);
-  });
-
-  it('mock backend: excludes items with opname_rekap=false from rekapDraf and status.belumRekap', () => {
+  it('mock backend: item with alur LUAR appears in rekapDraf when taken, regardless of legacy opname_rekap', () => {
     const mock = createMock();
     const tabletData = mock.getTablet();
     const employee = tabletData.karyawan[0]!;
 
-    // 1. Tambah barang yang tidak dimunculkan di rekap & opname
+    // Tambah barang dengan alur LUAR
     mock.simpanBarang(pin, {
       id: '',
       nama: 'Sedotan Plastik',
       satuan: 'Pcs',
       kategori: 'Kemasan',
-      kode: 'SDT',
-      catatan: 'Tidak perlu di-opname closing',
+      kode: 'SDT-PLS',
+      catatan: '',
       alur: 'LUAR',
       ambang_min: 10,
       aktif: true,
       stok_awal: 100,
-      opname_rekap: false,
     });
 
     const items = mock.adminData(pin).barang;
     const sedotan = items.find((b) => b.nama === 'Sedotan Plastik');
     assert.ok(sedotan);
-    assert.equal(sedotan.opname_rekap, false);
-    // Stok barang tetap tercatat dan aktif
     assert.equal(sedotan.stok_dalam, 100);
 
-    // 2. Karyawan mengambil barang tersebut ke dapur
+    // Karyawan mengambil barang ke dapur
     const stBefore = mock.getTablet().status.belumRekap;
     mock.ambil(employee.id, sedotan.id, 20);
 
-    // 3. Verifikasi status: transaksi AMBIL barang non-rekap tidak menambah closing rekap tertunda
+    // Menambah status belumRekap
     const stAfter = mock.getTablet().status.belumRekap;
-    assert.equal(stAfter, stBefore);
-    // 4. Buka rekap draft: Sedotan TIDAK muncul di daftar rekap karyawan
+    assert.equal(stAfter, stBefore + 1);
+
+    // Buka rekap draft: Sedotan MUNCUL di daftar rekap
     const draf = mock.rekapDraf();
     const drafSedotan = draf.baris.find((r) => r.barang_id === sedotan.id);
-    assert.equal(drafSedotan, undefined);
+    assert.ok(drafSedotan, 'Sedotan harus muncul di rekap karena alurnya LUAR');
+    assert.equal(drafSedotan.diambil, 20);
   });
 
-  it('mock backend: supports toggling opname_rekap on existing item', () => {
+  it('mock backend: item with alur LANGSUNG_HABIS is excluded from rekapDraf and status.belumRekap', () => {
     const mock = createMock();
+    const tabletData = mock.getTablet();
+    const employee = tabletData.karyawan[0]!;
+
+    mock.simpanBarang(pin, {
+      id: '',
+      nama: 'Plastik Sampah Hitam',
+      satuan: 'Lbr',
+      kategori: 'Cleaning',
+      kode: 'PSH',
+      catatan: '',
+      alur: 'LANGSUNG_HABIS',
+      ambang_min: 5,
+      aktif: true,
+      stok_awal: 50,
+    });
+
     const items = mock.adminData(pin).barang;
-    const item = items[0]!;
+    const plastik = items.find((b) => b.nama === 'Plastik Sampah Hitam');
+    assert.ok(plastik);
 
-    // Ubah menjadi opname_rekap = false
-    mock.simpanBarang(pin, {
-      ...item,
-      opname_rekap: false,
-    });
+    const stBefore = mock.getTablet().status.belumRekap;
+    mock.ambil(employee.id, plastik.id, 5);
 
-    let updated = mock.adminData(pin).barang.find((b) => b.id === item.id);
-    assert.equal(updated?.opname_rekap, false);
+    // Alur LANGSUNG_HABIS tidak menambah belumRekap
+    const stAfter = mock.getTablet().status.belumRekap;
+    assert.equal(stAfter, stBefore);
 
-    // Kembalikan menjadi opname_rekap = true
-    mock.simpanBarang(pin, {
-      ...item,
-      opname_rekap: true,
-    });
-
-    updated = mock.adminData(pin).barang.find((b) => b.id === item.id);
-    assert.equal(updated?.opname_rekap, true);
+    // Buka rekap draft: Plastik LANGSUNG_HABIS TIDAK muncul di daftar rekap
+    const draf = mock.rekapDraf();
+    const drafPlastik = draf.baris.find((r) => r.barang_id === plastik.id);
+    assert.equal(drafPlastik, undefined, 'Item LANGSUNG_HABIS tidak boleh ada di rekap dapur');
   });
 
-  it('Google Apps Script engine: simpanBarang saves opname_rekap and hitungRekap_ excludes it', () => {
+  it('Google Apps Script engine: hitungRekap_ directly follows alur LUAR and excludes LANGSUNG_HABIS', () => {
     const { context } = createAppsScriptEnvironment();
     const simpanBarang = runInContext('simpanBarang', context);
     const adminData = runInContext('adminData', context);
     const ambil = runInContext('ambil', context);
     const rekapDraf = runInContext('rekapDraf', context);
 
-    // 1. Buat barang dengan opname_rekap = false
+    // 1. Buat barang alur LUAR (meskipun opname_rekap di legacy sheet sempat false)
     simpanBarang(pin, {
-      nama: 'Tissue Meja',
+      nama: 'Sedotan Bubble',
       satuan: 'Pack',
-      kategori: 'Operational',
+      kategori: 'Utensil',
       alur: 'LUAR',
       ambang_min: 5,
       stok_awal: 20,
-      kode: 'TSM',
+      kode: 'SDB',
       catatan: '',
-      opname_rekap: false,
+      opname_rekap: false, // simulasikan legacy value
+    });
+
+    // 2. Buat barang alur LANGSUNG_HABIS
+    simpanBarang(pin, {
+      nama: 'Kertas Thermal Struk',
+      satuan: 'Roll',
+      kategori: 'Utensil',
+      alur: 'LANGSUNG_HABIS',
+      ambang_min: 2,
+      stok_awal: 10,
+      kode: 'KTS',
+      catatan: '',
     });
 
     const barangList = adminData(pin).barang;
-    const tissue = barangList.find((b: { nama: string }) => b.nama === 'Tissue Meja');
-    assert.ok(tissue);
-    assert.equal(tissue.opname_rekap, false);
-    assert.equal(tissue.stok_dalam, 20);
+    const sedotan = barangList.find((b: { nama: string }) => b.nama === 'Sedotan Bubble');
+    const thermal = barangList.find((b: { nama: string }) => b.nama === 'Kertas Thermal Struk');
+    assert.ok(sedotan);
+    assert.ok(thermal);
 
-    // 2. Ambil barang
-    ambil('k1', tissue.id, 5);
+    // Ambil keduanya
+    ambil('k1', sedotan.id, 5);
+    ambil('k1', thermal.id, 2);
 
-    // 3. Rekap draft: Tissue tidak boleh muncul di baris rekap
+    // Rekap draft: Sedotan (alur LUAR) HARUS muncul, Thermal (LANGSUNG_HABIS) TIDAK muncul
     const draf = rekapDraf();
-    const drafTissue = draf.baris.find((r: { barang_id: string }) => r.barang_id === tissue.id);
-    assert.equal(drafTissue, undefined);
+    const drafSedotan = draf.baris.find((r: { barang_id: string }) => r.barang_id === sedotan.id);
+    const drafThermal = draf.baris.find((r: { barang_id: string }) => r.barang_id === thermal.id);
+
+    assert.ok(drafSedotan, 'Sedotan dengan alur LUAR harus muncul di rekap');
+    assert.equal(drafSedotan.diambil, 5);
+    assert.equal(drafThermal, undefined, 'Thermal dengan alur LANGSUNG_HABIS tidak boleh muncul di rekap');
   });
 });
