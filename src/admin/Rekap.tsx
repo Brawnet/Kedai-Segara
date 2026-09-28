@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { FunnelSimple } from '@phosphor-icons/react';
 import { nf, parseNum, ymd } from '../lib/format';
 import type { Rekap, RekapBaris } from '../lib/types';
-import { Button, Card, Empty, Field, Input, PageTitle, Tag } from '../components/ui';
+import { Button, Card, Empty, Field, Input, PageTitle, Tag, cx } from '../components/ui';
 import { DataTable, Section, useAdmin, type Col } from './shared';
 
 const hari = (a: number, b: number) => {
@@ -113,31 +113,55 @@ export function RekapPage() {
   ];
 
   const hisCols: Col<Rekap & { i: number }>[] = [
-    { label: 'Waktu', cell: (x) => <span class="num font-semibold">{x.waktu}</span> },
-    { label: 'Perekap', cell: (x) => x.karyawan },
+    {
+      label: 'Waktu',
+      w: 'w-[20%]',
+      cell: (x) => <span class="num font-semibold">{x.waktu}</span>,
+    },
+    {
+      label: 'Perekap',
+      w: 'w-[15%]',
+      cell: (x) => x.karyawan,
+    },
     {
       label: 'Terpakai',
       cell: (x) => (
-        <span class="text-sm">
-          {x.baris.length
-            ? x.baris.map((b, j) => (
-                <span key={b.barang_id}>
-                  {j > 0 && ' · '}
-                  {b.barang} <strong class="num">{nf(b.terpakai)}</strong>
+        <div class="flex flex-wrap items-center gap-1.5 justify-end md:justify-start py-0.5">
+          {x.baris.length ? (
+            x.baris.map((b) => (
+              <span
+                key={b.barang_id}
+                class="inline-flex items-center gap-2 rounded-lg border border-line bg-muted/60 px-2.5 py-1 text-xs text-fg"
+              >
+                <span class="font-medium text-fg">{b.barang}</span>
+                <span
+                  class={cx(
+                    'num font-bold px-1.5 py-0.5 rounded text-[11px] min-w-5 text-center',
+                    b.terpakai > 0
+                      ? 'bg-primary-soft text-primary'
+                      : 'bg-muted text-muted-fg border border-line/60',
+                  )}
+                >
+                  {nf(b.terpakai)}
                 </span>
-              ))
-            : '—'}
-        </span>
+              </span>
+            ))
+          ) : (
+            <span class="text-muted-fg text-sm">—</span>
+          )}
+        </div>
       ),
     },
     {
       label: 'Tanda',
+      align: 'center',
+      w: 'w-[15%]',
       cell: (x) => {
         const fullIndex = d.rekap.findIndex((item) => item.id === x.id);
         const p = fullIndex >= 0 ? d.rekap[fullIndex + 1] : undefined;
         const n = p ? hari(x.ts, p.ts) : 0;
         return (
-          <span class="inline-flex flex-wrap justify-end gap-1">
+          <span class="inline-flex flex-wrap justify-center gap-1">
             {n > 1 && <Tag tone="warning">gabungan {n} hari</Tag>}
             {x.diedit_admin && <Tag>diedit</Tag>}
             {n <= 1 && !x.diedit_admin && <span class="text-muted-fg">—</span>}
