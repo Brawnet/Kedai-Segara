@@ -1,19 +1,52 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { ArrowCounterClockwise, FolderPlus, MagnifyingGlass, PencilSimple, Plus, ShieldCheck, Trash } from '@phosphor-icons/react';
+import {
+  Archive,
+  ArrowCounterClockwise,
+  BowlFood,
+  CheckCircle,
+  FolderPlus,
+  FolderSimple,
+  MagnifyingGlass,
+  Package,
+  PencilSimple,
+  Plus,
+  ShieldCheck,
+  Trash,
+  Warning,
+  X,
+} from '@phosphor-icons/react';
 import { alurLabel, cocok, grupKat, katOf, nf, parseNum, urutKat } from '../lib/format';
-import { useApp } from '../lib/app';
 import type { Alur, Barang, BarangInput } from '../lib/types';
-import { Banner, Button, Confirm, Dialog, Field, Input, PageTitle, Select, Tag } from '../components/ui';
+import { Banner, Button, Confirm, Dialog, Field, Input, PageTitle, Select, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
+import { KelolaKategoriDialog } from './KelolaKategoriDialog';
 
-type Form = Required<Omit<BarangInput, 'ambang_min' | 'stok_awal'>> & { ambang_min: string; stok_awal: string };
+type Form = Required<Omit<BarangInput, 'ambang_min' | 'stok_awal' | 'opname_rekap'>> & {
+  ambang_min: string;
+  stok_awal: string;
+  opname_rekap: boolean;
+};
+type StatusFilter = 'semua' | 'porsi' | 'aktif' | 'menipis' | 'arsip';
 
-const kosong: Form = { id: '', nama: '', satuan: '', kategori: '', kode: '', catatan: '', alur: 'LUAR', ambang_min: '', aktif: true, stok_awal: '0' };
+const kosong: Form = {
+  id: '',
+  nama: '',
+  satuan: '',
+  kategori: '',
+  kode: '',
+  catatan: '',
+  alur: 'LUAR',
+  ambang_min: '',
+  aktif: true,
+  stok_awal: '0',
+  opname_rekap: true,
+};
 
 export function BarangPage() {
   const { d, A } = useAdmin();
   const [q, setQ] = useState('');
   const [kat, setKat] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('semua');
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -32,15 +65,19 @@ export function BarangPage() {
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
-  const { toast } = useApp();
   const [f, setF] = useState<Form | null>(null);
   const [err, setErr] = useState<Partial<Record<keyof Form, string>>>({});
   const [extraKat, setExtraKat] = useState<string[]>([]);
   const [modalKat, setModalKat] = useState(false);
-  const [katBaruInput, setKatBaruInput] = useState('');
-  const [errKatBaru, setErrKatBaru] = useState('');
 
   const [modalHapus, setModalHapus] = useState<Barang | null>(null);
+
+  const itemDiedit = useMemo(() => {
+    return f?.id ? d.barang.find((x) => x.id === f.id) || null : null;
+  }, [f?.id, d.barang]);
+
+  const totalStokDiedit = itemDiedit ? itemDiedit.stok_dalam + itemDiedit.stok_luar : 0;
+  const hasStockDiedit = totalStokDiedit > 0;
 
   const kats = useMemo(() => {
     const list = urutKat(d.barang, d.urutan);
@@ -50,34 +87,64 @@ export function BarangPage() {
     return list;
   }, [d, extraKat]);
 
-  const simpanKategoriBaru = (e: Event) => {
-    e.preventDefault();
-    const nm = katBaruInput.trim();
-    if (!nm) {
-      setErrKatBaru('Nama kategori tidak boleh kosong');
-      return;
-    }
-    const match = kats.find((k) => k.toLowerCase() === nm.toLowerCase());
-    if (match) {
-      up({ kategori: match });
-      toast(`Kategori "${match}" sudah ada dan dipilih`);
-      setModalKat(false);
-      setKatBaruInput('');
-      setErrKatBaru('');
-      return;
-    }
-    setExtraKat((prev) => [...prev, nm]);
-    up({ kategori: nm });
-    toast(`Kategori "${nm}" berhasil ditambahkan`);
-    setModalKat(false);
-    setKatBaruInput('');
-    setErrKatBaru('');
+  const isMenipis = (b: Barang) => b.aktif && b.stok_dalam + b.stok_luar < b.ambang_min;
+  const isPorsi = (b: Barang) => b.satuan.trim().toLowerCase() === 'porsi';
+
+  const counts = useMemo(() => {
+    const total = d.barang.length;
+    const aktif = d.barang.filter((b) => b.aktif).length;
+    const menipis = d.barang.filter(isMenipis).length;
+    const arsip = d.barang.filter((b) => !b.aktif).length;
+
+    const porsiItems = d.barang.filter((b) => b.aktif && isPorsi(b));
+    const porsiGudang = porsiItems.reduce((acc, b) => acc + b.stok_dalam, 0);
+    const porsiLuar = porsiItems.reduce((acc, b) => acc + b.stok_luar, 0);
+    const totalPorsi = porsiGudang + porsiLuar;
+    const porsiCount = porsiItems.length;
+
+    return { total, aktif, menipis, arsip, totalPorsi, porsiGudang, porsiLuar, porsiCount };
+  }, [d.barang]);
+
+
+  const list = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return d.barang.filter((b) => {
+      if (query && !cocok(b, query) && !b.kategori.toLowerCase().includes(query)) return false;
+      if (kat && katOf(b) !== kat) return false;
+      if (statusFilter === 'aktif' && !b.aktif) return false;
+      if (statusFilter === 'arsip' && b.aktif) return false;
+      if (statusFilter === 'porsi' && (!b.aktif || !isPorsi(b))) return false;
+      if (statusFilter === 'menipis' && !isMenipis(b)) return false;
+      return true;
+    });
+  }, [d.barang, q, kat, statusFilter]);
+
+  const listPorsi = useMemo(() => {
+    const items = list.filter((b) => b.aktif && isPorsi(b));
+    const gudang = items.reduce((acc, b) => acc + b.stok_dalam, 0);
+    const luar = items.reduce((acc, b) => acc + b.stok_luar, 0);
+    return { total: gudang + luar, gudang, luar, count: items.length };
+  }, [list]);
+
+  const hasActiveFilter = Boolean(q || kat || statusFilter !== 'semua');
+  const resetFilter = () => {
+    setQ('');
+    setKat('');
+    setStatusFilter('semua');
   };
-  const list = d.barang.filter((b) => (cocok(b, q) || b.kategori.toLowerCase().includes(q.toLowerCase().trim())) && (!kat || katOf(b) === kat));
 
   const buka = (b?: Barang) => {
     setErr({});
-    setF(b ? { ...b, ambang_min: String(b.ambang_min), stok_awal: '' } : { ...kosong });
+    setF(
+      b
+        ? {
+            ...b,
+            ambang_min: String(b.ambang_min),
+            stok_awal: '',
+            opname_rekap: b.opname_rekap !== false,
+          }
+        : { ...kosong },
+    );
   };
   const up = (p: Partial<Form>) => setF((x) => x && { ...x, ...p });
 
@@ -95,33 +162,115 @@ export function BarangPage() {
     }
     setErr(er);
     if (Object.keys(er).length) return;
-    const o: BarangInput = { ...f, id: f.id || '', stok_awal: f.id ? undefined : f.stok_awal };
+    const o: BarangInput = {
+      ...f,
+      id: f.id || '',
+      stok_awal: f.id ? undefined : f.stok_awal,
+      opname_rekap: f.opname_rekap !== false,
+    };
     if (await A('simpanBarang', [o], 'Barang disimpan')) setF(null);
   };
 
   const cols: Col<Barang>[] = [
     {
       label: 'Barang',
+      cell: (b) => {
+        const menipis = isMenipis(b);
+        return (
+          <div class="min-w-[180px] max-w-sm py-0.5">
+            <span class="flex flex-wrap items-center gap-1.5">
+              <span class="font-bold text-fg text-sm sm:text-base leading-snug">{b.nama}</span>
+              {b.kode && (
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-muted text-muted-fg border border-line">
+                  {b.kode}
+                </span>
+              )}
+              {!b.aktif && <Tag tone="danger">Arsip</Tag>}
+              {b.opname_rekap === false && <Tag tone="neutral">Tanpa Rekap/Opname</Tag>}
+              {menipis && (
+                <Tag tone="warning">
+                  <Warning size={12} weight="bold" class="mr-1 inline" aria-hidden /> Menipis
+                </Tag>
+              )}
+            </span>
+            {b.catatan && <p class="text-xs font-normal text-muted-fg mt-0.5 line-clamp-1">{b.catatan}</p>}
+          </div>
+        );
+      },
+    },
+    {
+      label: 'Satuan',
+      align: 'center',
       cell: (b) => (
-        <div>
-          <span class="flex flex-wrap items-center gap-2">
-            <span class="font-semibold">{b.nama}</span>
-            {b.kode && <Tag>{b.kode}</Tag>}
-            {!b.aktif && <Tag tone="danger">Arsip</Tag>}
-          </span>
-          {b.catatan && <p class="text-sm font-normal text-muted-fg">{b.catatan}</p>}
-        </div>
+        <span class="inline-flex items-center justify-center text-xs font-semibold text-muted-fg px-2.5 py-0.5 rounded-full bg-muted border border-line whitespace-nowrap">
+          {b.satuan}
+        </span>
       ),
     },
-    { label: 'Satuan', cell: (b) => b.satuan },
-    { label: 'Alur', cell: (b) => <span class="text-sm">{alurLabel(b.alur)}</span> },
-    { label: 'Min', align: 'right', cell: (b) => nf(b.ambang_min) },
+    {
+      label: 'Gudang',
+      align: 'center',
+      cell: (b) => (
+        <span class="num font-bold text-primary text-sm sm:text-[15px]">
+          {nf(b.stok_dalam)}
+        </span>
+      ),
+    },
+    {
+      label: 'Luar',
+      align: 'center',
+      cell: (b) => (
+        <span class="num font-semibold text-fg text-sm sm:text-[15px]">
+          {b.alur === 'LANGSUNG_HABIS' ? '—' : nf(b.stok_luar)}
+        </span>
+      ),
+    },
+    {
+      label: 'Total',
+      align: 'center',
+      cell: (b) => {
+        const menipis = isMenipis(b);
+        const total = b.stok_dalam + b.stok_luar;
+        return (
+          <span
+            class={cx(
+              'inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold num border whitespace-nowrap',
+              menipis
+                ? 'bg-warning-soft text-warning border-warning/40'
+                : 'bg-muted text-fg border-line'
+            )}
+          >
+            {menipis && <Warning size={12} weight="bold" class="shrink-0" aria-hidden />}
+            <span>{nf(total)}</span>
+            <span class={menipis ? 'text-warning/80 font-normal' : 'text-muted-fg font-normal'}>{b.satuan}</span>
+          </span>
+        );
+      },
+    },
+    {
+      label: 'Min',
+      align: 'center',
+      cell: (b) => (
+        <span class="num text-sm text-muted-fg font-medium">
+          {nf(b.ambang_min)}
+        </span>
+      ),
+    },
+    {
+      label: 'Alur',
+      align: 'center',
+      cell: (b) => (
+        <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted border border-line text-muted-fg whitespace-nowrap">
+          {alurLabel(b.alur)}
+        </span>
+      ),
+    },
     {
       label: ' ',
       bare: true,
       align: 'right',
       cell: (b) => (
-        <div class="flex items-center justify-end gap-1.5">
+        <div class="flex items-center justify-end gap-1.5 whitespace-nowrap">
           {!b.aktif && (
             <Button
               size="sm"
@@ -131,11 +280,11 @@ export function BarangPage() {
               title="Aktifkan kembali"
             >
               <ArrowCounterClockwise size={16} aria-hidden />
-              <span class="hidden sm:inline">Aktifkan</span>
+              <span class="hidden xl:inline">Aktifkan</span>
             </Button>
           )}
           <Button size="sm" onClick={() => buka(b)} aria-label={`Edit ${b.nama}`}>
-            <PencilSimple size={18} aria-hidden /> Edit
+            <PencilSimple size={16} aria-hidden /> Edit
           </Button>
           <Button
             size="sm"
@@ -144,55 +293,423 @@ export function BarangPage() {
             aria-label={`Hapus ${b.nama}`}
             title="Hapus barang"
           >
-            <Trash size={18} aria-hidden />
+            <Trash size={16} aria-hidden />
           </Button>
         </div>
       ),
     },
   ];
 
-  return (
-    <div class="flex flex-col gap-6">
-      <PageTitle
-        kicker="Master"
-        title="Barang"
-        sub={`${d.barang.filter((b) => b.aktif).length} aktif · ${d.barang.filter((b) => !b.aktif).length} diarsipkan`}
-        actions={
-          <Button variant="primary" onClick={() => buka()}>
-            <Plus size={20} weight="bold" aria-hidden /> Tambah barang
-          </Button>
-        }
-      />
-      <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-        <label class="relative block flex-1">
-          <span class="sr-only">Cari barang</span>
-          <MagnifyingGlass size={20} class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg" aria-hidden />
-          <Input
-            ref={searchRef}
-            type="search"
-            value={q}
-            onInput={(e) => setQ(e.currentTarget.value)}
-            placeholder="Cari nama, kode, atau kategori… (tekan /)"
-            class="pl-10"
-          />
-        </label>
-        <div class="w-full sm:w-56 shrink-0">
-          <label class="sr-only" for="barang-kat-filter">Filter Kategori</label>
-          <Select
-            id="barang-kat-filter"
-            value={kat}
-            onChange={(e) => setKat(e.currentTarget.value)}
-            class="min-h-11 font-medium text-sm"
+  const renderCardMobile = (b: Barang) => {
+    const menipis = isMenipis(b);
+    const porsi = isPorsi(b);
+    const total = b.stok_dalam + b.stok_luar;
+    return (
+      <div
+        class={`rounded-card border transition-all duration-150 p-3.5 sm:p-4 flex flex-col gap-3 shadow-xs ${
+          !b.aktif
+            ? 'border-line/70 bg-muted/40 opacity-75'
+            : menipis
+              ? 'border-warning/60 bg-warning-soft/10'
+              : 'border-line bg-card'
+        }`}
+      >
+        {/* Baris 1: Judul Barang, Tag & Kategori */}
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h3 class="font-bold text-[15px] sm:text-base text-fg leading-snug break-words">
+                {b.nama}
+              </h3>
+              {b.kode && (
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-muted text-muted-fg border border-line">
+                  {b.kode}
+                </span>
+              )}
+              {porsi && (
+                <Tag tone="primary">
+                  <BowlFood size={13} weight="bold" class="mr-1 inline" aria-hidden />
+                  {nf(total)} Porsi
+                </Tag>
+              )}
+              {!b.aktif && <Tag tone="danger">Arsip</Tag>}
+              {b.opname_rekap === false && <Tag tone="neutral">Tanpa Rekap/Opname</Tag>}
+              {menipis && (
+                <Tag tone="warning">
+                  <Warning size={12} weight="bold" class="mr-1 inline" aria-hidden /> Menipis
+                </Tag>
+              )}
+            </div>
+            {b.catatan && (
+              <p class="text-xs text-muted-fg mt-1 line-clamp-2">
+                {b.catatan}
+              </p>
+            )}
+          </div>
+
+          {/* Kategori Badge */}
+          <span
+            class="shrink-0 inline-flex items-center rounded-full bg-primary-soft/80 border border-primary/20 px-2.5 py-0.5 text-xs font-semibold text-primary max-w-[130px] truncate"
+            title={b.kategori}
           >
-            <option value="">Semua Kategori ({d.barang.length})</option>
-            {urutKat(d.barang, d.urutan).map((k) => (
-              <option key={k} value={k}>
-                {k} ({d.barang.filter((b) => katOf(b) === k).length})
-              </option>
-            ))}
-          </Select>
+            {katOf(b)}
+          </span>
+        </div>
+
+        {/* Baris 2: Context Stock Mini-Grid (3 Kolom Ergonomis) */}
+        <div class="grid grid-cols-3 gap-2 bg-muted/60 p-2.5 rounded-ctl border border-line/70 text-center text-xs">
+          <div class="flex flex-col">
+            <span class="text-[11px] text-muted-fg font-medium">Gudang</span>
+            <span class="font-extrabold text-sm text-fg num">{nf(b.stok_dalam)}</span>
+            <span class="text-[10px] text-muted-fg">{b.satuan}</span>
+          </div>
+          <div class="flex flex-col border-x border-line/60">
+            <span class="text-[11px] text-muted-fg font-medium">Luar / Dapur</span>
+            <span class="font-semibold text-sm text-fg num">
+              {b.alur === 'LANGSUNG_HABIS' ? '—' : nf(b.stok_luar)}
+            </span>
+            <span class="text-[10px] text-muted-fg">{b.alur === 'LANGSUNG_HABIS' ? 'Langsung' : b.satuan}</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[11px] text-muted-fg font-medium">{porsi ? 'Total Porsi' : 'Min. Ambang'}</span>
+            <span class={cx('font-bold text-sm num', menipis ? 'text-warning font-extrabold' : 'text-fg')}>
+              {porsi ? nf(total) : nf(b.ambang_min)}
+            </span>
+            <span class="text-[10px] text-muted-fg">{b.satuan}</span>
+          </div>
+        </div>
+
+        {/* Total & Ambang Info Bar */}
+        <div class="flex items-center justify-between rounded-ctl px-2.5 py-1 text-[11px] font-semibold bg-muted border border-line">
+          <span class="inline-flex items-center gap-1 text-fg">
+            Total stok: <strong class="num text-primary font-extrabold">{nf(total)} {b.satuan}</strong>
+          </span>
+          <span class={menipis ? 'text-warning font-bold' : 'text-muted-fg'}>
+            Ambang min: {nf(b.ambang_min)} {b.satuan}
+          </span>
+        </div>
+        {/* Baris 3: Tombol Aksi Thumb-Friendly (Apple HIG min-h-11) */}
+        <div class="flex items-center gap-2 pt-2 border-t border-line/60">
+          {!b.aktif && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => A('simpanBarang', [{ ...b, aktif: true }], `Barang "${b.nama}" diaktifkan kembali`)}
+              aria-label={`Aktifkan kembali ${b.nama}`}
+              title="Aktifkan kembali"
+              class="flex-1 min-h-11 text-xs sm:text-sm font-semibold"
+            >
+              <ArrowCounterClockwise size={18} weight="bold" aria-hidden />
+              <span>Aktifkan</span>
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => buka(b)}
+            aria-label={`Edit ${b.nama}`}
+            class="flex-1 min-h-11 text-xs sm:text-sm font-semibold"
+          >
+            <PencilSimple size={18} weight="bold" aria-hidden />
+            <span>Edit</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="danger-ghost"
+            onClick={() => setModalHapus(b)}
+            aria-label={`Hapus ${b.nama}`}
+            title="Hapus barang"
+            class="size-11 min-h-11 min-w-11 p-0 shrink-0 text-danger hover:bg-danger-soft flex items-center justify-center rounded-ctl"
+          >
+            <Trash size={18} weight="bold" aria-hidden />
+          </Button>
         </div>
       </div>
+    );
+  };
+
+  return (
+    <div class="flex flex-col gap-5 sm:gap-6">
+      {/* Header Utama & CTA Tambah Barang */}
+      <PageTitle
+        kicker="Master Data"
+        title="Barang"
+        sub={
+          <span>
+            {counts.aktif} aktif · {counts.arsip} diarsipkan ·{' '}
+            <strong class="text-primary font-bold">{nf(counts.totalPorsi)} total porsi</strong>
+            <span class="hidden sm:inline text-muted-fg"> ({nf(counts.porsiGudang)} gudang · {nf(counts.porsiLuar)} dapur)</span>
+          </span>
+        }
+        actions={
+          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setModalKat(true)}
+              class="flex-1 sm:flex-initial min-h-11 font-semibold"
+              title="Kelola & hapus kategori"
+            >
+              <FolderSimple size={20} weight="bold" aria-hidden />
+              <span>Kelola Kategori</span>
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => buka()}
+              class="flex-1 sm:flex-initial min-h-11 font-semibold"
+            >
+              <Plus size={20} weight="bold" aria-hidden />
+              <span>Tambah barang</span>
+            </Button>
+          </div>
+        }
+      />
+
+      {/* Bento Metric Cards (Filter Status Instan untuk Layar Mobile) */}
+      <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5 sm:gap-3" role="group" aria-label="Ringkasan dan filter status barang">
+        {/* Card 1: Total Porsi (Hero Card di Mobile) */}
+        <button
+          type="button"
+          onClick={() => setStatusFilter((curr) => (curr === 'porsi' ? 'semua' : 'porsi'))}
+          class={cx(
+            'col-span-2 sm:col-span-1 flex items-center gap-3 p-3 sm:p-3.5 rounded-card border transition-all text-left cursor-pointer select-none',
+            statusFilter === 'porsi'
+              ? 'border-primary ring-2 ring-primary/20 bg-primary-soft/60'
+              : 'border-primary/30 bg-primary-soft/20 hover:border-primary/60 hover:bg-primary-soft/40'
+          )}
+          aria-pressed={statusFilter === 'porsi'}
+        >
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-ctl bg-primary text-white shadow-xs">
+            <BowlFood size={20} weight="bold" aria-hidden />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-baseline gap-1.5">
+              <span class="num text-xl sm:text-2xl font-extrabold tracking-tight text-primary">{nf(counts.totalPorsi)}</span>
+              <span class="text-xs font-bold text-primary">Porsi</span>
+            </div>
+            <div class="truncate text-[11px] font-semibold text-muted-fg">
+              {nf(counts.porsiGudang)} gudang · {nf(counts.porsiLuar)} dapur
+            </div>
+          </div>
+        </button>
+
+        {/* Card 2: Semua Barang */}
+        <button
+          type="button"
+          onClick={() => setStatusFilter('semua')}
+          class={cx(
+            'flex items-center gap-3 p-3 sm:p-3.5 rounded-card border transition-all text-left cursor-pointer select-none',
+            statusFilter === 'semua'
+              ? 'border-primary ring-2 ring-primary/20 bg-primary-soft/30'
+              : 'border-line bg-card hover:border-line-strong'
+          )}
+          aria-pressed={statusFilter === 'semua'}
+        >
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-ctl bg-muted text-fg">
+            <Package size={20} weight="bold" aria-hidden />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="num text-xl font-extrabold tracking-tight text-fg">{counts.total}</div>
+            <div class="truncate text-xs font-semibold text-muted-fg">Semua Barang</div>
+          </div>
+        </button>
+
+        {/* Card 3: Aktif */}
+        <button
+          type="button"
+          onClick={() => setStatusFilter((curr) => (curr === 'aktif' ? 'semua' : 'aktif'))}
+          class={cx(
+            'flex items-center gap-3 p-3 sm:p-3.5 rounded-card border transition-all text-left cursor-pointer select-none',
+            statusFilter === 'aktif'
+              ? 'border-primary ring-2 ring-primary/20 bg-primary-soft/30'
+              : 'border-line bg-card hover:border-line-strong'
+          )}
+          aria-pressed={statusFilter === 'aktif'}
+        >
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-ctl bg-primary-soft text-primary">
+            <CheckCircle size={20} weight="bold" aria-hidden />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="num text-xl font-extrabold tracking-tight text-fg">{counts.aktif}</div>
+            <div class="truncate text-xs font-semibold text-muted-fg">Aktif</div>
+          </div>
+        </button>
+
+        {/* Card 4: Menipis */}
+        <button
+          type="button"
+          onClick={() => setStatusFilter((curr) => (curr === 'menipis' ? 'semua' : 'menipis'))}
+          class={cx(
+            'flex items-center gap-3 p-3 sm:p-3.5 rounded-card border transition-all text-left cursor-pointer select-none',
+            statusFilter === 'menipis'
+              ? 'border-warning ring-2 ring-warning/25 bg-warning-soft/40'
+              : counts.menipis > 0
+                ? 'border-warning/50 bg-warning-soft/10 hover:border-warning'
+                : 'border-line bg-card hover:border-line-strong'
+          )}
+          aria-pressed={statusFilter === 'menipis'}
+        >
+          <div class={cx('flex size-10 shrink-0 items-center justify-center rounded-ctl', counts.menipis > 0 ? 'bg-warning-soft text-warning' : 'bg-muted text-muted-fg')}>
+            <Warning size={20} weight="bold" aria-hidden />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class={cx('num text-xl font-extrabold tracking-tight', counts.menipis > 0 ? 'text-warning' : 'text-fg')}>
+               {counts.menipis}
+            </div>
+            <div class="truncate text-xs font-semibold text-muted-fg">Stok Menipis</div>
+          </div>
+        </button>
+
+        {/* Card 5: Diarsipkan */}
+        <button
+          type="button"
+          onClick={() => setStatusFilter((curr) => (curr === 'arsip' ? 'semua' : 'arsip'))}
+          class={cx(
+            'flex items-center gap-3 p-3 sm:p-3.5 rounded-card border transition-all text-left cursor-pointer select-none',
+            statusFilter === 'arsip'
+              ? 'border-line-strong ring-2 ring-line-strong/20 bg-muted'
+              : 'border-line bg-card hover:border-line-strong'
+          )}
+          aria-pressed={statusFilter === 'arsip'}
+        >
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-ctl bg-muted text-muted-fg">
+            <Archive size={20} weight="bold" aria-hidden />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="num text-xl font-extrabold tracking-tight text-fg">{counts.arsip}</div>
+            <div class="truncate text-xs font-semibold text-muted-fg">Diarsipkan</div>
+          </div>
+        </button>
+      </div>
+
+      {/* Toolbar Pencarian & Filter Kategori */}
+      <div class="flex flex-col gap-2.5">
+        <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+          <div class="relative flex-1">
+            <label class="sr-only" for="search-barang">Cari barang</label>
+            <MagnifyingGlass size={20} class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg" aria-hidden />
+            <Input
+              id="search-barang"
+              ref={searchRef}
+              type="search"
+              inputmode="search"
+              autocomplete="off"
+              value={q}
+              onInput={(e) => setQ(e.currentTarget.value)}
+              placeholder="Cari nama, kode, atau kategori…"
+              class="pl-10 pr-9 min-h-11 text-base"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQ('');
+                  searchRef.current?.focus();
+                }}
+                class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex size-9 items-center justify-center rounded-ctl text-muted-fg hover:bg-black/5 hover:text-fg dark:hover:bg-white/10"
+                aria-label="Bersihkan pencarian"
+              >
+                <X size={17} weight="bold" aria-hidden />
+              </button>
+            )}
+          </div>
+          <div class="hidden sm:block w-56 shrink-0">
+            <label class="sr-only" for="barang-kat-filter">Filter Kategori</label>
+            <Select
+              id="barang-kat-filter"
+              value={kat}
+              onChange={(e) => setKat(e.currentTarget.value)}
+              class="min-h-11 font-medium text-sm"
+            >
+              <option value="">Semua Kategori ({d.barang.length})</option>
+              {urutKat(d.barang, d.urutan).map((k) => (
+                <option key={k} value={k}>
+                  {k} ({d.barang.filter((b) => katOf(b) === k).length})
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        {/* Horizontal Scrolling Category Carousel untuk Sentuhan Jempol Cepat */}
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1" role="tablist" aria-label="Filter kategori barang">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!kat}
+            onClick={() => setKat('')}
+            class={cx(
+              'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 min-h-9 select-none cursor-pointer',
+              !kat
+                ? 'bg-primary text-white shadow-xs'
+                : 'bg-muted text-muted-fg hover:bg-line hover:text-fg'
+            )}
+          >
+            <span>Semua</span>
+            <span class={cx('rounded-full px-1.5 py-0.5 text-[10px] font-bold', !kat ? 'bg-white/20 text-white' : 'bg-line/70 text-fg')}>
+              {d.barang.length}
+            </span>
+          </button>
+          {urutKat(d.barang, d.urutan).map((k) => {
+            const count = d.barang.filter((b) => katOf(b) === k).length;
+            const active = kat === k;
+            return (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setKat(active ? '' : k)}
+                class={cx(
+                  'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 min-h-9 select-none cursor-pointer',
+                  active
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'bg-muted text-muted-fg hover:bg-line hover:text-fg'
+                )}
+              >
+                <span>{k}</span>
+                <span class={cx('rounded-full px-1.5 py-0.5 text-[10px] font-bold', active ? 'bg-white/20 text-white' : 'bg-line/70 text-fg')}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setModalKat(true)}
+            class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-muted-fg border border-dashed border-line hover:border-primary hover:text-primary transition-colors min-h-9 select-none cursor-pointer"
+            title="Kelola & hapus kategori"
+            aria-label="Kelola dan hapus kategori"
+          >
+            <FolderSimple size={14} weight="bold" aria-hidden />
+            <span>Kelola</span>
+          </button>
+        </div>
+
+        {/* Filter Summary & Quick Reset */}
+        {hasActiveFilter && (
+          <div class="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-fg">
+            <span>
+              Menampilkan <strong>{list.length}</strong> dari {d.barang.length} barang
+              {listPorsi.total > 0 && (
+                <span class="font-semibold text-primary"> · {nf(listPorsi.total)} porsi ({nf(listPorsi.gudang)} gudang · {nf(listPorsi.luar)} dapur)</span>
+              )}
+              {statusFilter !== 'semua' && <span class="capitalize font-semibold text-fg"> · Status: {statusFilter}</span>}
+              {kat && <span> · Kategori: <strong class="text-fg">{kat}</strong></span>}
+            </span>
+            <button
+              type="button"
+              onClick={resetFilter}
+              class="inline-flex items-center gap-1 font-semibold text-primary hover:text-primary-hover underline underline-offset-2 cursor-pointer ml-auto"
+            >
+              <X size={13} weight="bold" aria-hidden /> Reset filter
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Tabel Desktop & Kartu Mobile */}
       <DataTable
         compact
         cols={cols}
@@ -200,16 +717,38 @@ export function BarangPage() {
         rowKey={(b) => b.id}
         rowClass={(b) => (b.aktif ? '' : 'opacity-70')}
         searchQuery={q}
-        empty="Tidak ada barang."
+        groupBadge={(g) => {
+          const low = g.l.filter(isMenipis).length;
+          const porsiItems = g.l.filter((b) => b.aktif && isPorsi(b));
+          const totalPorsiGroup = porsiItems.reduce((acc, b) => acc + b.stok_dalam + b.stok_luar, 0);
+          return (
+            <div class="flex items-center gap-1.5">
+              {totalPorsiGroup > 0 && (
+                <Tag tone="primary">
+                  <BowlFood size={13} weight="bold" class="mr-1 inline" aria-hidden />
+                  {nf(totalPorsiGroup)} porsi
+                </Tag>
+              )}
+              {low > 0 && (
+                <Tag tone="warning">
+                  {low} menipis
+                </Tag>
+              )}
+            </div>
+          );
+        }}
+        renderCard={renderCardMobile}
+        empty={hasActiveFilter ? 'Tidak ada barang yang cocok dengan filter saat ini.' : 'Tidak ada barang.'}
       />
 
+      {/* Dialog Tambah / Edit Barang */}
       <Dialog
         open={!!f}
         onClose={() => setF(null)}
-        title={f?.id ? `Edit: ${f.nama}` : 'Tambah barang'}
+        title={f?.id ? `Edit: ${f.nama || itemDiedit?.nama || 'Barang'}` : 'Tambah Barang Baru'}
         wide
         footer={
-          <div class="flex w-full flex-wrap items-center justify-between gap-2">
+          <div class="flex w-full flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             {f?.id ? (
               <Button
                 variant="danger-ghost"
@@ -218,176 +757,327 @@ export function BarangPage() {
                   const target = d.barang.find((x) => x.id === f.id);
                   if (target) setModalHapus(target);
                 }}
-                class="text-danger hover:bg-danger-soft"
+                class="w-full sm:w-auto text-danger hover:bg-danger-soft justify-center min-h-11"
               >
                 <Trash size={18} aria-hidden /> Hapus barang
               </Button>
             ) : (
-              <span />
+              <div class="hidden sm:block" />
             )}
-            <div class="flex items-center gap-2">
-              <Button type="button" onClick={() => setF(null)}>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <Button type="button" onClick={() => setF(null)} class="flex-1 sm:flex-initial min-h-11">
                 Batal
               </Button>
-              <Button variant="primary" guard type="submit" form="form-barang">
-                Simpan
+              <Button variant="primary" guard type="submit" form="form-barang" class="flex-1 sm:flex-initial min-h-11 px-5">
+                <CheckCircle size={18} weight="bold" aria-hidden />
+                <span>{f?.id ? 'Simpan Perubahan' : 'Tambah Barang'}</span>
               </Button>
             </div>
           </div>
         }
       >
         {f && (
-          <form id="form-barang" onSubmit={simpan} class="grid gap-4 sm:grid-cols-2" noValidate>
-            <Field label="Nama" error={err.nama} class="sm:col-span-2">
-              {(id, dId) => <Input id={id} value={f.nama} onInput={(e) => up({ nama: e.currentTarget.value })} aria-invalid={!!err.nama} aria-describedby={dId} />}
-            </Field>
-            <Field label="Kode" hint="Singkatan untuk pencarian cepat, mis. AS">
-              {(id, dId) => <Input id={id} value={f.kode} onInput={(e) => up({ kode: e.currentTarget.value })} aria-describedby={dId} autocomplete="off" />}
-            </Field>
-            <Field label="Satuan" error={err.satuan}>
-              {(id, dId) => (
-                <Input id={id} value={f.satuan} onInput={(e) => up({ satuan: e.currentTarget.value })} placeholder="kg, liter, pcs" aria-invalid={!!err.satuan} aria-describedby={dId} />
-              )}
-            </Field>
-            <Field label="Kategori" hint="Pilih dari daftar atau buat kategori baru">
-              {(id, dId) => (
-                <div class="flex gap-2">
-                  <div class="relative min-w-0 flex-1">
-                    <Input
-                      id={id}
-                      list="dl-kat"
-                      value={f.kategori}
-                      onInput={(e) => up({ kategori: e.currentTarget.value })}
-                      placeholder="Pilih atau ketik kategori…"
-                      aria-describedby={dId}
-                      autocomplete="off"
-                    />
-                    <datalist id="dl-kat">
-                      {kats.map((k) => (
-                        <option key={k} value={k} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      setKatBaruInput('');
-                      setErrKatBaru('');
-                      setModalKat(true);
-                    }}
-                    class="shrink-0 px-3 whitespace-nowrap"
-                    title="Buat kategori baru"
-                  >
-                    <FolderPlus size={18} weight="bold" class="text-primary" aria-hidden />
-                    <span class="hidden sm:inline">Kategori baru</span>
-                    <span class="sm:hidden">+ Baru</span>
-                  </Button>
+          <form id="form-barang" onSubmit={simpan} class="flex flex-col gap-3.5" noValidate>
+            {/* Ringkasan Konteks Stok Saat Ini (Edit Mode) */}
+            {f.id && itemDiedit && (
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 rounded-xl border border-line bg-muted/60 px-3 py-2 text-xs">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-fg text-sm">{itemDiedit.nama}</span>
+                  {itemDiedit.kode && (
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-bold bg-card text-muted-fg border border-line">
+                      {itemDiedit.kode}
+                    </span>
+                  )}
+                  <Tag tone={f.aktif ? 'success' : 'neutral'}>
+                    {f.aktif ? 'Aktif' : 'Arsip'}
+                  </Tag>
                 </div>
-              )}
-            </Field>
-            <Field label="Alur">
-              {(id) => (
-                <Select id={id} value={f.alur} onChange={(e) => up({ alur: e.currentTarget.value as Alur })}>
-                  <option value="LUAR">Lewat Stock Luar (direkap)</option>
-                  <option value="LANGSUNG_HABIS">Langsung habis</option>
-                </Select>
-              )}
-            </Field>
-            <Field label="Ambang minimum" hint="Muncul peringatan jika total stok di bawah angka ini" error={err.ambang_min}>
-              {(id, dId) => <Input id={id} inputmode="decimal" value={f.ambang_min} onInput={(e) => up({ ambang_min: e.currentTarget.value })} aria-invalid={!!err.ambang_min} aria-describedby={dId} class="num" />}
-            </Field>
-            {f.id ? (
-              <Field label="Status" hint="Arsip hanya bisa jika stok dalam dan luar = 0">
+                <div class="flex items-center gap-1.5 text-muted-fg font-medium flex-wrap">
+                  <span>Stok tercatat:</span>
+                  <span class="font-bold text-fg num">{nf(itemDiedit.stok_dalam)}</span> gudang
+                  <span>·</span>
+                  <span class="font-bold text-fg num">
+                    {itemDiedit.alur === 'LANGSUNG_HABIS' ? '—' : `${nf(itemDiedit.stok_luar)} luar`}
+                  </span>
+                  <span>·</span>
+                  <span>
+                    Total: <strong class="text-primary font-bold num">{nf(totalStokDiedit)} {itemDiedit.satuan}</strong>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Bagian 1: Identitas Barang */}
+            <div class="grid gap-3 sm:grid-cols-2">
+              <Field label="Nama Barang" error={err.nama} class="sm:col-span-2">
                 {(id, dId) => (
-                  <Select id={id} value={f.aktif ? '1' : '0'} onChange={(e) => up({ aktif: e.currentTarget.value === '1' })} aria-describedby={dId}>
-                    <option value="1">Aktif</option>
-                    <option value="0">Diarsipkan</option>
-                  </Select>
+                  <Input
+                    id={id}
+                    value={f.nama}
+                    onInput={(e) => up({ nama: e.currentTarget.value })}
+                    aria-invalid={!!err.nama}
+                    aria-describedby={dId}
+                    placeholder="Contoh: Ayam Suwir, Daging Sapi Slice 500g"
+                    class="min-h-11 text-base font-medium"
+                  />
                 )}
               </Field>
-            ) : (
-              <Field label="Stok awal gudang" error={err.stok_awal}>
-                {(id, dId) => <Input id={id} inputmode="decimal" value={f.stok_awal} onInput={(e) => up({ stok_awal: e.currentTarget.value })} aria-invalid={!!err.stok_awal} aria-describedby={dId} class="num" />}
+              <Field label="Kode Barang (Opsional)" hint="Singkatan pencarian cepat">
+                {(id, dId) => (
+                  <Input
+                    id={id}
+                    value={f.kode}
+                    onInput={(e) => up({ kode: e.currentTarget.value.toUpperCase() })}
+                    aria-describedby={dId}
+                    autocomplete="off"
+                    placeholder="mis. AS"
+                    class="min-h-11 text-base uppercase font-mono"
+                  />
+                )}
               </Field>
-            )}
-            <Field label="Catatan" class="sm:col-span-2">
-              {(id) => <Input id={id} value={f.catatan} onInput={(e) => up({ catatan: e.currentTarget.value })} placeholder="mis. 1 Pack isi 10 pcs" />}
-            </Field>
+              <Field label="Satuan" error={err.satuan} hint="Satuan hitung stok">
+                {(id, dId) => (
+                  <Input
+                    id={id}
+                    value={f.satuan}
+                    onInput={(e) => up({ satuan: e.currentTarget.value })}
+                    placeholder="mis. Porsi, Pack, Kg, Pcs"
+                    aria-invalid={!!err.satuan}
+                    aria-describedby={dId}
+                    class="min-h-11 text-base"
+                  />
+                )}
+              </Field>
+              <Field label="Kategori" class="sm:col-span-2">
+                {(id) => (
+                  <div class="flex flex-col gap-2">
+                    <div class="flex gap-2">
+                      <div class="relative min-w-0 flex-1">
+                        <Select
+                          id={id}
+                          value={f.kategori}
+                          onChange={(e) => {
+                            const val = e.currentTarget.value;
+                            if (val === '__KELOLA__') {
+                              setModalKat(true);
+                            } else {
+                              up({ kategori: val });
+                            }
+                          }}
+                          class="min-h-11 text-base w-full"
+                        >
+                          <option value="">-- Pilih Kategori --</option>
+                          {kats.map((k) => (
+                            <option key={k} value={k}>
+                              {k}
+                            </option>
+                          ))}
+                          {f.kategori && !kats.includes(f.kategori) && (
+                            <option value={f.kategori}>{f.kategori} (Kustom)</option>
+                          )}
+                          <option value="__KELOLA__">+ Kelola / Buat Kategori Baru...</option>
+                        </Select>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setModalKat(true)}
+                        class="shrink-0 px-3 whitespace-nowrap min-h-11"
+                        title="Kelola Kategori"
+                      >
+                        <FolderPlus size={18} weight="bold" class="text-primary" aria-hidden />
+                        <span class="hidden sm:inline">Kelola Kategori</span>
+                        <span class="sm:hidden">Kelola</span>
+                      </Button>
+                    </div>
+
+                    {/* Quick Category Chips: sleek single-line horizontal scroll */}
+                    {kats.length > 0 && (
+                      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                        <span class="text-[11px] font-semibold text-muted-fg shrink-0 mr-0.5">Pilih cepat:</span>
+                        {kats.map((k) => {
+                          const sel = f.kategori === k;
+                          return (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => up({ kategori: k })}
+                              class={cx(
+                                'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer select-none',
+                                sel
+                                  ? 'bg-primary text-white font-bold shadow-xs'
+                                  : 'bg-muted text-fg hover:bg-primary-soft hover:text-primary'
+                              )}
+                            >
+                              {k}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Field>
+            </div>
+
+            {/* Bagian 2: Pengaturan Alur & Stok */}
+            <div class="pt-2.5 border-t border-line">
+              <div class="grid gap-3 sm:grid-cols-2">
+                <Field label="Alur Stok" hint="Sistem pergerakan barang saat diambil">
+                  {(id) => (
+                    <Select
+                      id={id}
+                      value={f.alur}
+                      onChange={(e) => up({ alur: e.currentTarget.value as Alur })}
+                      class="min-h-11 text-base"
+                    >
+                      <option value="LUAR">Lewat Stock Luar (direkap)</option>
+                      <option value="LANGSUNG_HABIS">Langsung habis</option>
+                    </Select>
+                  )}
+                </Field>
+                <Field
+                  label="Ambang Minimum"
+                  hint="Peringatan jika total stok di bawah angka ini"
+                  error={err.ambang_min}
+                >
+                  {(id, dId) => (
+                    <Input
+                      id={id}
+                      inputmode="decimal"
+                      value={f.ambang_min}
+                      onInput={(e) => up({ ambang_min: e.currentTarget.value })}
+                      aria-invalid={!!err.ambang_min}
+                      aria-describedby={dId}
+                      placeholder="0"
+                      class="num min-h-11 text-base"
+                    />
+                  )}
+                </Field>
+                {f.id ? (
+                  <Field
+                    label="Status Barang"
+                    hint={
+                      hasStockDiedit
+                        ? `Nolkan stok (${nf(totalStokDiedit)} ${itemDiedit?.satuan || ''}) untuk mengarsipkan.`
+                        : 'Arsip menyembunyikan barang dari operasional.'
+                    }
+                  >
+                    {(id, dId) => (
+                      <Select
+                        id={id}
+                        value={f.aktif ? '1' : '0'}
+                        onChange={(e) => up({ aktif: e.currentTarget.value === '1' })}
+                        aria-describedby={dId}
+                        class="min-h-11 text-base"
+                      >
+                        <option value="1">Aktif</option>
+                        <option value="0" disabled={hasStockDiedit}>
+                          Diarsipkan {hasStockDiedit ? '(Stok masih ada)' : ''}
+                        </option>
+                      </Select>
+                    )}
+                  </Field>
+                ) : (
+                  <Field
+                    label="Stok Awal Gudang"
+                    hint="Jumlah stok awal saat item baru dicatat"
+                    error={err.stok_awal}
+                  >
+                    {(id, dId) => (
+                      <Input
+                        id={id}
+                        inputmode="decimal"
+                        value={f.stok_awal}
+                        onInput={(e) => up({ stok_awal: e.currentTarget.value })}
+                        aria-invalid={!!err.stok_awal}
+                        aria-describedby={dId}
+                        placeholder="0"
+                        class="num min-h-11 text-base"
+                      />
+                    )}
+                  </Field>
+                )}
+                <Field label="Catatan" hint="Keterangan tambahan kemasan/penyimpanan">
+                  {(id) => (
+                    <Input
+                      id={id}
+                      value={f.catatan}
+                      onInput={(e) => up({ catatan: e.currentTarget.value })}
+                      placeholder="mis. 1 Pack isi 10 pcs"
+                      class="min-h-11 text-base"
+                    />
+                  )}
+                </Field>
+              </div>
+            </div>
+
+            {/* Bagian 3: Visibilitas Rekap & Opname */}
+            <div class="pt-2.5 border-t border-line">
+              <label
+                class={cx(
+                  'flex items-center justify-between gap-4 rounded-xl border p-3 transition-colors cursor-pointer select-none',
+                  f.opname_rekap !== false
+                    ? 'border-primary/40 bg-primary-soft/40 hover:bg-primary-soft/60'
+                    : 'border-line bg-muted/40 hover:bg-muted/70'
+                )}
+              >
+                <div class="flex flex-col gap-0.5 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-fg">Munculkan di Rekap Closing & Opname</span>
+                    {f.opname_rekap !== false ? (
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-success-soft text-success border border-success/30">
+                        Aktif
+                      </span>
+                    ) : (
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-fg border border-line">
+                        Nonaktif
+                      </span>
+                    )}
+                  </div>
+                  <span class="text-xs text-muted-fg leading-relaxed">
+                    Jika aktif, barang ini akan muncul di lembar rekap harian staf dapur dan proses stock opname fisik.
+                  </span>
+                </div>
+                <div class="relative shrink-0 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={f.opname_rekap !== false}
+                    onChange={(e) => up({ opname_rekap: e.currentTarget.checked })}
+                    class="sr-only"
+                  />
+                  <div
+                    class={cx(
+                      'w-11 h-6 rounded-full transition-colors duration-200 ease-in-out relative',
+                      f.opname_rekap !== false ? 'bg-primary' : 'bg-line-strong/40'
+                    )}
+                  >
+                    <span
+                      class={cx(
+                        'absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out',
+                        f.opname_rekap !== false ? 'translate-x-5' : 'translate-x-0'
+                      )}
+                    />
+                  </div>
+                </div>
+              </label>
+            </div>
           </form>
         )}
       </Dialog>
 
-      {/* Dialog Buat Kategori Baru */}
-      <Dialog
+      {/* Dialog Kelola & Hapus Kategori */}
+      <KelolaKategoriDialog
         open={modalKat}
         onClose={() => setModalKat(false)}
-        title="Buat Kategori Baru"
-        footer={
-          <>
-            <Button type="button" onClick={() => setModalKat(false)}>
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              form="form-kat-baru"
-              disabled={!katBaruInput.trim()}
-            >
-              Gunakan Kategori
-            </Button>
-          </>
-        }
-      >
-        <form id="form-kat-baru" onSubmit={simpanKategoriBaru} class="flex flex-col gap-4">
-          <p class="text-sm text-muted-fg">
-            Masukkan nama kategori baru untuk mengelompokkan barang pada daftar stok dan laporan.
-          </p>
-
-          <Field label="Nama Kategori Baru" error={errKatBaru}>
-            {(id, dId) => (
-              <Input
-                id={id}
-                placeholder="Contoh: Saus & Condiment"
-                value={katBaruInput}
-                onInput={(e) => {
-                  setKatBaruInput(e.currentTarget.value);
-                  if (errKatBaru) setErrKatBaru('');
-                }}
-                autoFocus
-                autocomplete="off"
-                aria-invalid={!!errKatBaru}
-                aria-describedby={dId}
-              />
-            )}
-          </Field>
-
-          {kats.length > 0 && (
-            <div>
-              <span class="block text-xs font-semibold uppercase tracking-wider text-muted-fg mb-1.5">
-                Kategori yang sudah ada:
-              </span>
-              <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-                {kats.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => {
-                      up({ kategori: k });
-                      toast(`Kategori "${k}" dipilih`);
-                      setModalKat(false);
-                      setKatBaruInput('');
-                    }}
-                    class="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-fg hover:bg-primary-soft hover:text-primary transition-colors cursor-pointer"
-                  >
-                    {k}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </form>
-      </Dialog>
+        selectedKategori={f?.kategori}
+        onSelect={f ? (k) => up({ kategori: k }) : undefined}
+        onKategoriDeleted={(k) => {
+          if (kat.toLowerCase() === k.toLowerCase()) setKat('');
+          if (f && f.kategori.toLowerCase() === k.toLowerCase()) up({ kategori: '' });
+          setExtraKat((prev) => prev.filter((x) => x.toLowerCase() !== k.toLowerCase()));
+        }}
+      />
 
       {/* Dialog Konfirmasi Hapus Barang */}
       {modalHapus && (

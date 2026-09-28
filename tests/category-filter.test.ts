@@ -59,4 +59,51 @@ describe('Category Filtering & Stock Aggregation Logic', () => {
       { label: 'Freezer Bumbu', count: 2 },
     ]);
   });
+
+  it('computes stock opname values: di dalam, di luar, and total', () => {
+    const ayamSuwir = mockBarang[0]!;
+    assert.equal(ayamSuwir.stok_dalam, 5);
+    assert.equal(ayamSuwir.stok_luar, 3);
+    assert.equal(total(ayamSuwir), 8);
+
+    const cumi = mockBarang[2]!;
+    assert.equal(cumi.stok_dalam, 4);
+    assert.equal(cumi.stok_luar, 2);
+    assert.equal(total(cumi), 6);
+  });
+
+  it('filters accurately by status filter: aktif, menipis, and arsip', () => {
+    const sample: Barang[] = [
+      ...mockBarang,
+      { id: '6', nama: 'Barang Arsip', kategori: 'Lainnya', stok_dalam: 0, stok_luar: 0, ambang_min: 0, satuan: 'Pcs', alur: 'LUAR', aktif: false, kode: 'BA' },
+    ];
+
+    const isMenipis = (b: Barang) => b.aktif && b.stok_dalam + b.stok_luar < b.ambang_min;
+
+    const aktifOnly = sample.filter((b) => b.aktif);
+    assert.equal(aktifOnly.length, 5);
+
+    const arsipOnly = sample.filter((b) => !b.aktif);
+    assert.equal(arsipOnly.length, 1);
+    assert.equal(arsipOnly[0]?.nama, 'Barang Arsip');
+
+    const menipisOnly = sample.filter(isMenipis);
+    assert.equal(menipisOnly.length, 2);
+    assert.deepEqual(menipisOnly.map((b) => b.nama), ['Cumi', 'Bumbu Merah']);
+  });
+
+  it('calculates total porsi, gudang, and luar correctly for items with satuan porsi', () => {
+    const isPorsi = (b: Barang) => b.satuan.trim().toLowerCase() === 'porsi';
+    const porsiItems = mockBarang.filter((b) => b.aktif && isPorsi(b));
+
+    assert.equal(porsiItems.length, 3);
+
+    const gudang = porsiItems.reduce((acc, b) => acc + b.stok_dalam, 0);
+    const luar = porsiItems.reduce((acc, b) => acc + b.stok_luar, 0);
+    const totalPorsi = gudang + luar;
+
+    assert.equal(gudang, 21); // 5 + 12 + 4
+    assert.equal(luar, 5);    // 3 + 0 + 2
+    assert.equal(totalPorsi, 26);
+  });
 });

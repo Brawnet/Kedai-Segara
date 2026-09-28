@@ -13,10 +13,27 @@ export const ymd = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 6
 /** Tanggal+jam lokal untuk input type=datetime-local. */
 export const ymdhm = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
-/** Parse angka dari input (menerima koma). NaN jika kosong/tidak valid. */
+/** Parse angka dari input (menerima format Indonesia 1.000 atau desimal 1,5 / 1.5). NaN jika kosong/tidak valid. */
 export const parseNum = (v: string | number | undefined | null) => {
   if (v === '' || v === null || v === undefined) return NaN;
-  return Number(String(v).replace(',', '.'));
+  if (typeof v === 'number') return Number.isFinite(v) ? v : NaN;
+  let s = String(v).trim();
+  if (!s) return NaN;
+  if (s.indexOf('.') >= 0 && s.indexOf(',') >= 0) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (s.indexOf(',') >= 0) {
+    s = s.replace(',', '.');
+  } else if (s.indexOf('.') >= 0) {
+    if (/^\d{1,3}(\.\d{3})+$/.test(s)) {
+      s = s.replace(/\./g, '');
+    }
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
 };
 
 export const r3 = (n: number) => {
@@ -63,3 +80,41 @@ export const inisial = (nama: string) =>
     .join('');
 
 export const alurLabel = (a: string) => (a === 'LANGSUNG_HABIS' ? 'Langsung habis' : 'Lewat Stock Luar');
+
+/** Hanya menyisakan digit angka (0-9) dan maksimal satu tanda desimal (, atau .). */
+export const hanyaAngka = (v: string) => {
+  if (!v) return '';
+  let clean = v.replace(/[^0-9.,]/g, '');
+  const firstSep = clean.search(/[.,]/);
+  if (firstSep !== -1) {
+    const head = clean.slice(0, firstSep + 1);
+    const tail = clean.slice(firstSep + 1).replace(/[.,]/g, '');
+    clean = head + tail;
+  }
+  return clean;
+};
+
+/** Mencegah ketikan karakter selain angka, koma/titik desimal, tombol navigasi, dan shortcut edit. */
+export const cegahBukanAngka = (e: KeyboardEvent, currVal = '') => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (
+    [
+      'Backspace',
+      'Tab',
+      'Enter',
+      'Delete',
+      'Escape',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+    ].includes(e.key)
+  ) {
+    return;
+  }
+  if (/^[0-9]$/.test(e.key)) return;
+  if ((e.key === ',' || e.key === '.') && !/[.,]/.test(currVal)) return;
+  e.preventDefault();
+};

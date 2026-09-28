@@ -1,9 +1,9 @@
 import type { ComponentChildren, JSX } from 'preact';
-import { useEffect, useId, useRef } from 'preact/hooks';
+import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { CircleNotch, Info, Warning, WarningOctagon, X } from '@phosphor-icons/react';
 import { useApp } from '../lib/app';
 
-const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
+export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
 /* ---------- Button ---------- */
 type Variant = 'primary' | 'success' | 'danger' | 'secondary' | 'ghost' | 'danger-ghost';
@@ -111,19 +111,51 @@ const BANNER = {
   danger: ['bg-danger-soft border-danger/30 text-fg', WarningOctagon, 'text-danger'],
 } as const;
 
-export function Banner({ tone = 'info', children, action }: { tone?: keyof typeof BANNER; children: ComponentChildren; action?: ComponentChildren }) {
+export function Banner({
+  tone = 'info',
+  children,
+  action,
+  dismissible = true,
+  onClose,
+}: {
+  tone?: keyof typeof BANNER;
+  children: ComponentChildren;
+  action?: ComponentChildren;
+  dismissible?: boolean;
+  onClose?: () => void;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+
   const [cls, Icon, ic] = BANNER[tone];
+
+  const handleClose = () => {
+    setDismissed(true);
+    onClose?.();
+  };
+
   return (
     <div
-      class={cx('flex flex-col gap-3 rounded-card border p-3 sm:flex-row sm:items-center sm:p-4', cls)}
+      class={cx('relative flex flex-col gap-3 rounded-card border p-3 sm:flex-row sm:items-center sm:p-4', cls)}
       role={tone === 'info' ? 'status' : 'alert'}
     >
-      <div class="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+      <div class={cx('flex min-w-0 flex-1 items-start gap-3 sm:items-center', dismissible && 'pr-8 sm:pr-0')}>
         <Icon size={22} weight="fill" class={cx('mt-0.5 shrink-0 sm:mt-0', ic)} aria-hidden />
         <div class="min-w-0 flex-1 font-medium">{children}</div>
       </div>
       {/* Di ponsel tombol aksi selebar kartu agar teks tidak terjepit. */}
       {action && <div class="flex shrink-0 flex-col sm:block">{action}</div>}
+      {dismissible && (
+        <button
+          type="button"
+          onClick={handleClose}
+          class="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-ctl text-muted-fg transition-colors hover:bg-black/5 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:hover:bg-white/10 sm:relative sm:top-auto sm:right-auto sm:shrink-0"
+          aria-label="Tutup"
+          title="Tutup"
+        >
+          <X size={18} weight="bold" aria-hidden />
+        </button>
+      )}
     </div>
   );
 }
@@ -201,15 +233,15 @@ export function SyncStatusBadge({ busy, class: c }: { busy: boolean; class?: str
   return (
     <div
       class={cx(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold select-none border transition-colors duration-150',
+        'inline-flex items-center gap-1.5 rounded-full px-2 py-1 sm:px-2.5 text-xs font-semibold select-none border transition-colors duration-150 shrink-0',
         busy ? 'bg-warning-soft border-warning/30 text-warning' : 'bg-success-soft border-success/30 text-success',
         c,
       )}
       role="status"
       title={busy ? 'Sedang mengirim data ke Google Sheets…' : 'Tersambung ke Google Sheets'}
     >
-      <span class={cx('size-2 rounded-full', busy ? 'bg-warning animate-ping' : 'bg-success')} aria-hidden />
-      <span>{busy ? 'Menyimpan…' : 'Tersinkron'}</span>
+      <span class={cx('size-2 rounded-full shrink-0', busy ? 'bg-warning animate-ping' : 'bg-success')} aria-hidden />
+      <span class="hidden sm:inline">{busy ? 'Menyimpan…' : 'Tersinkron'}</span>
     </div>
   );
 }

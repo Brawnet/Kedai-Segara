@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panduan Pemasangan Stok Segara ke Google Spreadsheet Kosong</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-soft: #f0f9ff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --warning: #ca8a04;
+      --warning-bg: #fefce8;
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background-color: var(--bg);
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 14px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .subtitle { font-size: 14.5px; color: var(--text-muted); }
+
+    .file-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .file-box-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .file-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .file-list li {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13.5px;
+      padding: 4px 0;
+      color: #334155;
+    }
+
+    .file-list li strong {
+      color: var(--primary-dark);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 36px;
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #334155;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    p, li { font-size: 14.5px; color: #334155; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin-bottom: 14px; padding-left: 24px; }
+    li { margin-bottom: 6px; }
+
+    .step-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin: 16px 0;
+      background: #ffffff;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      margin-right: 8px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: var(--primary-soft);
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 18px 0;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 4px;
+      font-size: 13.5px;
+    }
+
+    .callout-success {
+      border-left-color: var(--success);
+      background: var(--success-bg);
+    }
+    .callout-success .callout-title { color: var(--success); }
+
+    .callout-warning {
+      border-left-color: var(--warning);
+      background: var(--warning-bg);
+    }
+    .callout-warning .callout-title { color: var(--warning); }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0 24px 0;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { background: #f8fafc; font-weight: 600; color: #0f172a; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge">Panduan Praktis</div>
+    <h1>Panduan Pemasangan Stok Segara ke Spreadsheet Kosong</h1>
+    <div class="subtitle">Mulai langsung dari pembuatan spreadsheet dan penyalinan 3 file utama</div>
+  </header>
+
+  <div class="file-box">
+    <div class="file-box-title">📦 Lokasi Berkas yang Digunakan:</div>
+    <p style="font-size: 13.5px; margin-bottom: 8px;">Folder: <code>E:\Kerja\Segara\apps-script</code> (Hanya 3 file ini yang Anda butuhkan):</p>
+    <ul class="file-list">
+      <li>📁 <strong>Kode.gs</strong> — Seluruh logika backend & sistem database Google Sheets</li>
+      <li>📁 <strong>index.html</strong> — Tampilan web app mandiri untuk tablet & admin (siap pakai)</li>
+      <li>📁 <strong>appsscript.json</strong> — Setelan manifes Apps Script (zona waktu Makassar / WITA & hak akses)</li>
+    </ul>
+  </div>
+
+  <h2>🚀 Langkah Demi Langkah Pemasangan</h2>
+
+  <div class="step-box">
+    <div class="step-header">
+      <span class="step-number">1</span>
+      <span>Buka Google Spreadsheet Baru (Kosong)</span>
+    </div>
+    <ol>
+      <li>Buka tautan <strong><a href="https://sheets.new" target="_blank" rel="noopener">sheets.new</a></strong> di browser Anda (atau buat spreadsheet baru di Google Drive).</li>
+      <li>Ganti judul spreadsheet di kiri atas, contoh: <strong>Database Stok Kedai Segara</strong>.</li>
+      <li>Biarkan lembar kerja dalam kondisi kosong.</li>
+    </ol>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header">
+      <span class="step-number">2</span>
+      <span>Buka Menu Apps Script</span>
+    </div>
+    <ol>
+      <li>Pada bilah menu atas Google Sheets, klik: <strong>Ekstensi (Extensions)</strong> &rarr; <strong>Apps Script</strong>.</li>
+      <li>Tab editor baru akan terbuka. Ganti nama proyek di kiri atas (tulisan "Untitled project") menjadi <strong>Stok Segara Backend</strong>, lalu klik <strong>Rename</strong>.</li>
+    </ol>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header">
+      <span class="step-number">3</span>
+      <span>Salin 3 Berkas ke Apps Script</span>
+    </div>
+
+    <h3>A. File Kode.gs</h3>
+    <ol>
+      <li>Klik file default <code>Code.gs</code> di panel sebelah kiri editor.</li>
+      <li>Hapus semua isinya (tekan <code>Ctrl + A</code> lalu <code>Delete</code>).</li>
+      <li>Buka file <strong><code>apps-script/Kode.gs</code></strong> dari komputer Anda (bisa dengan Notepad). Salin semua isinya (<code>Ctrl + A</code> &rarr; <code>Ctrl + C</code>) lalu tempel ke editor (<code>Ctrl + V</code>).</li>
+    </ol>
+
+    <h3>B. File index.html</h3>
+    <ol>
+      <li>Di samping tulisan <em>Files</em> di panel kiri, klik tombol <strong>+</strong> &rarr; pilih <strong>HTML</strong>.</li>
+      <li>Beri nama file: <code>index</code> (cukup tulis <code>index</code> tanpa ekstensi .html) lalu tekan Enter.</li>
+      <li>Hapus isi bawaannya. Buka file <strong><code>apps-script/index.html</code></strong> di komputer, salin semua isinya, lalu tempel ke editor.</li>
+    </ol>
+
+    <h3>C. File appsscript.json (Manifes)</h3>
+    <ol>
+      <li>Klik ikon gerigi ⚙️ (<strong>Project Settings / Setelan Proyek</strong>) di bilah navigasi paling kiri.</li>
+      <li>Beri centang pada: <strong>Show "appsscript.json" manifest file in editor</strong>.</li>
+      <li>Kembali ke Editor dengan klik ikon <code>&lt; &gt;</code> di kiri atas.</li>
+      <li>Klik file <code>appsscript.json</code> yang sekarang muncul di daftar file.</li>
+      <li>Hapus isinya dan ganti dengan isi dari file <strong><code>apps-script/appsscript.json</code></strong>.</li>
+      <li>Tekan <strong>Ctrl + S</strong> untuk menyimpan semua berkas.</li>
+    </ol>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header">
+      <span class="step-number">4</span>
+      <span>Jalankan Fungsi Setup (Membangun Database)</span>
+    </div>
+    <ol>
+      <li>Di bilah atas editor Apps Script (sebelah tombol Run/Jalankan), klik dropdown pilihan fungsi dan pilih: <strong><code>setup</code></strong>.</li>
+      <li>Klik tombol <strong>Run (Jalankan)</strong>.</li>
+      <li>Muncul pop-up otorisasi izin (<strong>Authorization required</strong>):
+        <ul>
+          <li>Klik <strong>Review permissions</strong>.</li>
+          <li>Pilih akun Google Anda.</li>
+          <li>Jika muncul peringatan <em>Google hasn't verified this app</em>, klik <strong>Advanced (Lanjutan)</strong> di kiri bawah.</li>
+          <li>Klik tautan <strong>Go to Stok Segara Backend (unsafe)</strong>.</li>
+          <li>Klik tombol <strong>Allow (Izinkan)</strong>.</li>
+        </ul>
+      </li>
+      <li>Tunggu beberapa saat sampai muncul notifikasi <em>"Execution completed"</em>.</li>
+    </ol>
+
+    <div class="callout callout-success">
+      <div class="callout-title">✅ Spreadsheet Otomatis Terbentuk!</div>
+      Buka kembali spreadsheet Anda. Seluruh sheet database kini sudah lengkap terbentuk otomatis:
+      <strong>Barang</strong>, <strong>Karyawan</strong>, <strong>Transaksi</strong>, <strong>Rekap</strong>, <strong>RekapBaris</strong>, <strong>Opname</strong>, <strong>Pengaturan</strong>, dan <strong>Log_Login</strong>.
+    </div>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header">
+      <span class="step-number">5</span>
+      <span>(Opsional) Impor Master Barang Kedai Segara</span>
+    </div>
+    <p>Jika ingin langsung memasukkan daftar 100+ master bahan Segara (kopi, susu, sirup, cup, dll.):</p>
+    <ol>
+      <li>Pada dropdown fungsi, pilih: <strong><code>imporDataSegara</code></strong>.</li>
+      <li>Klik tombol <strong>Run</strong> dan tunggu hingga selesai. Seluruh barang akan otomatis masuk ke tabel <em>Barang</em> dengan stok awal 0.</li>
+    </ol>
+  </div>
+
+  <div class="step-box">
+    <div class="step-header">
+      <span class="step-number">6</span>
+      <span>Deploy Menjadi Web App (Link Aplikasi)</span>
+    </div>
+    <ol>
+      <li>Di pojok kanan atas, klik tombol biru <strong>Deploy</strong> &rarr; <strong>New deployment</strong>.</li>
+      <li>Klik ikon gerigi ⚙️ di samping <em>Select type</em> &rarr; pilih <strong>Web app</strong>.</li>
+      <li>Atur kolomnya:
+        <ul>
+          <li><strong>Description</strong>: <code>Stok Segara Final</code></li>
+          <li><strong>Execute as</strong>: <strong>Me (email Anda)</strong></li>
+          <li><strong>Who has access</strong>: <strong>Anyone (Siapa saja)</strong></li>
+        </ul>
+      </li>
+      <li>Klik tombol <strong>Deploy</strong>.</li>
+      <li>Salin <strong>Web app URL</strong> yang muncul (berakhiran <code>/exec</code>).</li>
+    </ol>
+  </div>
+
+  <h2>📱 Penggunaan Aplikasi</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Mode</th>
+        <th>URL Akses</th>
+        <th>Fungsi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mode Tablet</strong> (Dapur / Kasir)</td>
+        <td><code>https://script.google.com/macros/s/.../exec</code></td>
+        <td>Karyawan input ambil bahan, terima barang supplier, dan rekap closing sisa dapur.</td>
+      </tr>
+      <tr>
+        <td><strong>Mode Admin</strong> (Owner / Manager)</td>
+        <td><code>https://script.google.com/macros/s/.../exec?mode=admin</code><br><em>(atau tekan tombol Admin di pojok kanan atas)</em></td>
+        <td>Login OTP email & buat PIN pribadi. Mengelola stok, opname fisik, barang, staf, dan laporan.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>🔄 Cara Update di Kemudian Hari</h2>
+  <ol>
+    <li>Salin isi file terbaru ke Apps Script lalu simpan (<strong>Ctrl + S</strong>).</li>
+    <li>Klik menu <strong>Deploy</strong> &rarr; <strong>Manage deployments</strong>.</li>
+    <li>Klik ikon pensil ✏️ (<strong>Edit</strong>) &rarr; ubah <strong>Version</strong> menjadi <strong>New version</strong> &rarr; klik <strong>Deploy</strong>.</li>
+    <li>Link URL Web App tidak berubah dan seluruh perangkat langsung terupdate.</li>
+  </ol>
+
+  <footer>
+    &copy; Kedai Segara — Sistem Manajemen Stok Terpadu.
+  </footer>
+</div>
+
+</body>
+</html>

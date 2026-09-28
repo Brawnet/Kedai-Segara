@@ -3,16 +3,17 @@
 import type {
   AdminData,
   Api,
+  AuthAccount,
   Barang,
   BarangTablet,
   KaryawanAdmin,
+  LoginLog,
   Opname,
   Rekap,
   RekapBaris,
   RekapRow,
   Transaksi,
 } from './types';
-
 type Impl = { [K in keyof Api]: (...a: Parameters<Api[K]>) => ReturnType<Api[K]> };
 
 const r_ = (x: number) => Math.round(x * 1000) / 1000;
@@ -42,9 +43,46 @@ const DATA: [string, [string, string, string, string?][]][] = [
   ['Cleaning Supplies + Utensils', [['Ps.ukS', 'Plastik Sampah S', 'Lbr', '1 Pack Isi 10 pcs'], ['Paper', 'Thermal Paper', 'Roll'], ['Tmeja', 'Tissue Meja', 'Pack'], ['Sdt', 'Sedotan', 'Pack']]],
 ];
 
+function mockHash(val: string, salt: string) {
+  let h = 0x811c9dc5;
+  const s = `${val}:${salt}`;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return `hash_${(h >>> 0).toString(16)}`;
+}
+
 export function createMock(): Impl {
   let PIN = '12345';
   let jamTutup = '21:00';
+  let googleClientId = '';
+  const authWhitelist: (AuthAccount & { pinHash?: string; salt?: string })[] = [
+    { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() - 86400000, pinHash: mockHash('12345', 'admin_salt'), salt: 'admin_salt' },
+    { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() - 86400000 },
+  ];
+  const loginLogs: LoginLog[] = [];
+  const otpStore: Record<string, { code: string; exp: number }> = {};
+  const idempotencyStore: Record<string, unknown> = {};
+  const withIdem = <T>(key: string | undefined, fn: () => T): T => {
+    if (!key) return fn();
+    if (key in idempotencyStore) return idempotencyStore[key] as T;
+    const res = fn();
+    idempotencyStore[key] = res;
+    return res;
+  };
+  const catatLog = (email: string, metode: string, role: string, status: string, userAgent = '') => {
+    loginLogs.unshift({
+      id: uid(),
+      ts: Date.now(),
+      waktu: fmt(Date.now()),
+      email: email.toLowerCase().trim(),
+      metode,
+      role,
+      status,
+      user_agent: userAgent,
+    });
+  };
   const urutan = DATA.map((d) => d[0]);
   const barang: Barang[] = [];
   DATA.forEach(([kat, items], gi) =>
@@ -76,15 +114,6 @@ export function createMock(): Impl {
     delete fails[key];
   };
 
-  const mockHash = (val: string, salt: string) => {
-    let h = 0x811c9dc5;
-    const s = `${val}:${salt}`;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 0x01000193);
-    }
-    return `hash_${(h >>> 0).toString(16)}`;
-  };
 
   const karyawan: KaryawanAdmin[] = ['Budi Santoso', 'Sari', 'Andi Wijaya', 'Rina'].map((nama, i) => {
     const id = uid();
@@ -101,21 +130,52 @@ export function createMock(): Impl {
   const rekapBaris: RekapBaris[] = [];
   const opname: Opname[] = [];
 
-  const auth = (pin: string) => {
-    rateLimitGuard('admin');
+  const verifySession = (tok?: string, allowedRole?: 'admin' | 'tablet') => {
+    if (!tok) return;
+    if (!tok.startsWith('mock_tok_')) throw new Error('Akses ditolak: sesi login tidak valid.');
+    const parts = tok.split('_');
+    const email = parts[3] || '';
+    const exp = Number(parts[4] || 0);
+    if (Date.now() > exp) throw new Error('Sesi telah berakhir. Silakan login kembali.');
+    const acc = authWhitelist.find((a) => a.email.toLowerCase() === email.toLowerCase());
+    if (!acc || !acc.aktif) throw new Error('Akses akun telah dicabut atau dinonaktifkan.');
+    if (allowedRole && acc.role !== allowedRole && acc.role !== 'admin') {
+      throw new Error('Akses ditolak: peran "' + acc.role + '" tidak memiliki izin untuk operasi ini.');
+    }
+  };
+
+  const auth = (pin: string, token?: string) => {
+    let email = 'admin';
+    if (token) {
+      verifySession(token, 'admin');
+      const parts = token.split('_');
+      email = parts[3] || 'admin';
+    }
+    const rateKey = `admin_${email}`;
+    rateLimitGuard(rateKey);
     const input = String(pin).trim();
-    const valid = input === PIN || mockHash(input, 'admin_salt') === PIN;
+    const acc = authWhitelist.find((a) => a.email.toLowerCase() === email.toLowerCase());
+    let valid = false;
+    if (acc && acc.pinHash) {
+      const salt = acc.salt || 'admin_salt';
+      valid = mockHash(input, salt) === acc.pinHash || input === acc.pinHash;
+    } else if (input === PIN || mockHash(input, 'admin_salt') === PIN) {
+      valid = true;
+    }
     if (!valid) {
-      rateLimitFail('admin');
+      rateLimitFail(rateKey);
       throw new Error('PIN salah');
     }
-    rateLimitReset('admin');
+    rateLimitReset(rateKey);
   };
   const find = (id: string) => barang.find((b) => b.id === id);
   const findK = (id: string) => karyawan.find((k) => k.id === id);
-  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan });
+  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar, opname_rekap: b.opname_rekap !== false });
   const lastRekapTs = () => rekap.reduce((m, r) => Math.max(m, r.ts), 0);
-  const openTx = (last: number) => transaksi.filter((t) => t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && t.ts > last);
+  const openTx = (last: number) => {
+    const rekapIds = new Set(barang.filter((b) => b.opname_rekap !== false).map((b) => b.id));
+    return transaksi.filter((t) => t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && t.ts > last && rekapIds.has(t.barang_id));
+  };
   const status = () => {
     const last = lastRekapTs();
     const tx = openTx(last);
@@ -125,14 +185,14 @@ export function createMock(): Impl {
       belumRekap: tx.length,
       lewatHari: tx.some((t) => t.ts < d.getTime()),
       lastRekap: last ? fmt(last) : null,
-      barangLuar: barang.filter((b) => b.stok_luar > 0).length,
+      barangLuar: barang.filter((b) => b.opname_rekap !== false && b.stok_luar > 0).length,
     };
   };
   const tx = (o: Partial<Transaksi>): Transaksi => {
     const ts = o.ts ?? Date.now();
     const t: Transaksi = {
       id: uid(), ts, waktu: fmt(ts), jenis: 'MASUK', barang_id: '', barang: '', jumlah: 0, karyawan_id: '', karyawan: '',
-      alur: '', supplier: '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: '', kategori: '', satuan: '', ...o,
+      alur: 'DALAM', supplier: '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: '', kategori: '', satuan: '', ...o,
     };
     transaksi.push(t);
     return t;
@@ -157,6 +217,7 @@ export function createMock(): Impl {
       m[t.barang_id] = r_((m[t.barang_id] || 0) + t.jumlah);
     });
     return barang
+      .filter((b) => b.opname_rekap !== false)
       .map((b) => {
         const d = before[b.id] || 0, a = after[b.id] || 0;
         const awal = Math.max(0, r_(b.stok_luar - d - a));
@@ -165,13 +226,192 @@ export function createMock(): Impl {
       .filter((x) => x.maks > 0);
   };
 
-  // Data contoh: beberapa pengambilan hari ini.
-  const now = Date.now();
-  [[0, 0, 3], [1, 4, 2], [2, 8, 1]].forEach(([k, b, j], i) => {
-    const bb = barang[b]!;
-    bb.stok_dalam += j!;
-    ambil_(karyawan[k]!.id, bb.id, j!, now - (i + 1) * 3600e3, 'karyawan');
-  });
+  const generateDummyRekap = () => {
+    const karyawanList = karyawan.filter((k) => k.aktif);
+    const p1 = karyawanList[0] || { id: uid(), nama: 'Budi Santoso' };
+    const p2 = karyawanList[1] || { id: uid(), nama: 'Sari' };
+    const p3 = karyawanList[2] || { id: uid(), nama: 'Andi Wijaya' };
+
+    const luarItems = barang.filter((b) => b.alur === 'LUAR' && b.aktif);
+    if (luarItems.length === 0) return 0;
+
+    const dayMs = 86400000;
+    const nowTime = Date.now();
+
+    // H-3 jam 21:00
+    const t3 = new Date(nowTime - 3 * dayMs);
+    t3.setHours(21, 0, 0, 0);
+    const ts3 = t3.getTime();
+
+    // H-2 jam 21:00
+    const t2 = new Date(nowTime - 2 * dayMs);
+    t2.setHours(21, 0, 0, 0);
+    const ts2 = t2.getTime();
+
+    // H-1 (kemarin) jam 21:00
+    const t1 = new Date(nowTime - 1 * dayMs);
+    t1.setHours(21, 0, 0, 0);
+    const ts1 = t1.getTime();
+
+    const sisaMap: Record<string, number> = {};
+
+    // 1. Rekap H-3
+    const id3 = uid();
+    rekap.push({
+      id: id3,
+      ts: ts3,
+      waktu: fmt(ts3),
+      karyawan_id: p3.id,
+      karyawan: p3.nama,
+      diedit_admin: false,
+    });
+
+    luarItems.forEach((b, idx) => {
+      const sa = 0;
+      const ambilJml = 10 + ((idx * 3) % 15);
+      const sisa = Math.max(1, Math.round(ambilJml * 0.2));
+      const terpakai = sa + ambilJml - sisa;
+
+      tx({
+        ts: ts3 - 9 * 3600000,
+        jenis: 'AMBIL',
+        barang_id: b.id,
+        barang: b.nama,
+        jumlah: ambilJml,
+        karyawan_id: p3.id,
+        karyawan: p3.nama,
+        alur: b.alur,
+        dicatat_oleh: 'karyawan',
+        kategori: b.kategori,
+        satuan: b.satuan,
+      });
+
+      rekapBaris.push({
+        rekap_id: id3,
+        barang_id: b.id,
+        barang: b.nama,
+        saldo_awal: sa,
+        diambil: ambilJml,
+        sisa,
+        terpakai,
+        catatan: '',
+      });
+      sisaMap[b.id] = sisa;
+    });
+
+    // 2. Rekap H-2
+    const id2 = uid();
+    rekap.push({
+      id: id2,
+      ts: ts2,
+      waktu: fmt(ts2),
+      karyawan_id: p2.id,
+      karyawan: p2.nama,
+      diedit_admin: false,
+    });
+
+    luarItems.forEach((b, idx) => {
+      const sa = sisaMap[b.id] || 0;
+      const ambilJml = 12 + ((idx * 4) % 18);
+      const sisa = Math.max(1, Math.round((sa + ambilJml) * 0.25));
+      const terpakai = sa + ambilJml - sisa;
+
+      tx({
+        ts: ts2 - 9 * 3600000,
+        jenis: 'AMBIL',
+        barang_id: b.id,
+        barang: b.nama,
+        jumlah: ambilJml,
+        karyawan_id: p2.id,
+        karyawan: p2.nama,
+        alur: b.alur,
+        dicatat_oleh: 'karyawan',
+        kategori: b.kategori,
+        satuan: b.satuan,
+      });
+
+      rekapBaris.push({
+        rekap_id: id2,
+        barang_id: b.id,
+        barang: b.nama,
+        saldo_awal: sa,
+        diambil: ambilJml,
+        sisa,
+        terpakai,
+        catatan: '',
+      });
+      sisaMap[b.id] = sisa;
+    });
+
+    // 3. Rekap H-1 (Kemarin)
+    const id1 = uid();
+    rekap.push({
+      id: id1,
+      ts: ts1,
+      waktu: fmt(ts1),
+      karyawan_id: p1.id,
+      karyawan: p1.nama,
+      diedit_admin: false,
+    });
+
+    luarItems.forEach((b, idx) => {
+      const sa = sisaMap[b.id] || 0;
+      const ambilJml = 15 + ((idx * 5) % 20);
+      const sisa = Math.max(2, Math.round((sa + ambilJml) * 0.3));
+      const terpakai = sa + ambilJml - sisa;
+
+      tx({
+        ts: ts1 - 9 * 3600000,
+        jenis: 'AMBIL',
+        barang_id: b.id,
+        barang: b.nama,
+        jumlah: ambilJml,
+        karyawan_id: p1.id,
+        karyawan: p1.nama,
+        alur: b.alur,
+        dicatat_oleh: 'karyawan',
+        kategori: b.kategori,
+        satuan: b.satuan,
+      });
+
+      rekapBaris.push({
+        rekap_id: id1,
+        barang_id: b.id,
+        barang: b.nama,
+        saldo_awal: sa,
+        diambil: ambilJml,
+        sisa,
+        terpakai,
+        catatan: '',
+      });
+      b.stok_luar = sisa;
+      sisaMap[b.id] = sisa;
+    });
+
+    // 4. Catat transaksi ambil untuk hari ini agar rekap dapur tablet ada draf aktif
+    const jamAmbilHariIni = nowTime - 2 * 3600000;
+    luarItems.slice(0, 4).forEach((b, idx) => {
+      const j = 5 + idx * 2;
+      b.stok_luar = r_(b.stok_luar + j);
+      tx({
+        ts: jamAmbilHariIni,
+        jenis: 'AMBIL',
+        barang_id: b.id,
+        barang: b.nama,
+        jumlah: j,
+        karyawan_id: p1.id,
+        karyawan: p1.nama,
+        alur: b.alur,
+        dicatat_oleh: 'karyawan',
+        kategori: b.kategori,
+        satuan: b.satuan,
+      });
+    });
+
+    return 3;
+  };
+
+  generateDummyRekap();
 
   const setelahDesc = <T extends { ts: number }>(a: T, b: T) => b.ts - a.ts;
 
@@ -183,61 +423,79 @@ export function createMock(): Impl {
       urutan,
       jamTutup,
     }),
-    ambil: (k, b, j) => ambil_(k, b, j, Date.now(), 'karyawan'),
-    masukKaryawan: (kid, bid, j, supplier) => {
-      j = r_(num(j));
-      if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
-      const b = find(bid), k = findK(kid);
-      if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
-      if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
-      b.stok_dalam = r_(b.stok_dalam + j);
-      tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: '', supplier, dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
-      return true;
-    },
-    batalAmbil: (txId, pin) => {
+    ambil: (k, b, j, clientTxId) => withIdem(clientTxId, () => ambil_(k, b, j, Date.now(), 'karyawan')),
+    masukKaryawan: (kid, bid, j, supplier, clientTxId) =>
+      withIdem(clientTxId, () => {
+        j = r_(num(j));
+        if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
+        const b = find(bid), k = findK(kid);
+        if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
+        if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+        b.stok_dalam = r_(b.stok_dalam + j);
+        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier, dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
+        return true;
+      }),
+    batalAmbil: (txId, pin, _token) => {
       const t = transaksi.find((x) => x.id === txId);
       if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-      const admin = pin && pin === PIN;
-      if (!admin && Date.now() - t.ts > 65000) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
+      let adminEmail: string | null = null;
+      if (pin) {
+        const input = String(pin).trim();
+        const matched = authWhitelist.find(
+          (a) => a.role === 'admin' && a.aktif && a.pinHash && (mockHash(input, a.salt || 'admin_salt') === a.pinHash || input === a.pinHash)
+        );
+        if (matched) adminEmail = matched.email;
+        else if (input === PIN) adminEmail = 'admin@segara.com';
+      }
+      const isOverTime = Date.now() - t.ts > 65000;
+      if (isOverTime) {
+        if (!adminEmail) {
+          if (!pin) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
+          throw new Error('PIN admin salah');
+        }
+      }
       if (t.ts <= lastRekapTs()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
       const b = find(t.barang_id);
       if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + t.jumlah);
       if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
+      if (adminEmail) t.dicatat_oleh = adminEmail;
       return true;
     },
     rekapDraf: () => {
       const c = Date.now();
       return { cutoff: c, baris: hitung(c) };
     },
-    simpanRekap: (cutoff, kid, input) => {
-      cutoff = num(cutoff);
-      if (cutoff > Date.now() + 60000) throw new Error('Waktu rekap tidak boleh di masa depan');
-      const last = lastRekapTs();
-      if (cutoff <= last) throw new Error('Sudah ada rekap yang lebih baru. Buka ulang menu rekap.');
-      const k = findK(kid);
-      if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
-      const draf = hitung(cutoff, last);
-      const by = Object.fromEntries(input.map((i) => [i.barang_id, i]));
-      draf.forEach((r) => {
-        const i = by[r.barang_id];
-        if (!i || i.sisa === '' || isNaN(Number(i.sisa))) throw new Error('Sisa ' + r.nama + ' belum diisi');
-        const s = num(i.sisa);
-        if (s < 0 || s > r.maks + 1e-9) throw new Error(`Sisa ${r.nama} harus 0 sampai ${r.maks}`);
-      });
-      const id = uid();
-      rekap.push({ id, ts: cutoff, waktu: fmt(cutoff), karyawan_id: k.id, karyawan: k.nama, diedit_admin: false });
-      draf.forEach((r) => {
-        const i = by[r.barang_id]!, s = r_(num(i.sisa));
-        find(r.barang_id)!.stok_luar = r_(s + r.setelah);
-        rekapBaris.push({ rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil, sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
-      });
-      return { id };
-    },
+    simpanRekap: (cutoff, kid, input, clientTxId) =>
+      withIdem(clientTxId, () => {
+        cutoff = num(cutoff);
+        if (cutoff > Date.now() + 60000) throw new Error('Waktu rekap tidak boleh di masa depan');
+        const last = lastRekapTs();
+        if (cutoff <= last) throw new Error('Sudah ada rekap yang lebih baru. Buka ulang menu rekap.');
+        const k = findK(kid);
+        if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+        const draf = hitung(cutoff, last);
+        const by = Object.fromEntries(input.map((i) => [i.barang_id, i]));
+        draf.forEach((r) => {
+          const i = by[r.barang_id];
+          if (!i || i.sisa === '' || i.sisa === null || Number.isNaN(Number(i.sisa))) throw new Error(`Sisa ${r.nama} belum diisi`);
+          const s = num(i.sisa);
+          if (s < 0 || s > r.maks + 1e-9) throw new Error(`Sisa ${r.nama} harus 0 sampai ${r.maks}`);
+        });
+        const id = uid();
+        rekap.push({ id, ts: cutoff, waktu: fmt(cutoff), karyawan_id: k.id, karyawan: k.nama, diedit_admin: false });
+        draf.forEach((r) => {
+          const i = by[r.barang_id]!, s = r_(num(i.sisa));
+          const b = find(r.barang_id);
+          if (b) b.stok_luar = r_(s + r.setelah);
+          rekapBaris.push({ rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil, sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
+        });
+        return { id };
+      }),
 
-    adminData: (pin): AdminData => {
-      auth(pin);
+    adminData: (pin, token): AdminData => {
+      auth(pin, token);
       return JSON.parse(
         JSON.stringify({
           barang,
@@ -253,29 +511,33 @@ export function createMock(): Impl {
         }),
       );
     },
-    simpanBarang: (pin, o) => {
-      auth(pin);
+    simpanBarang: (pin, o, token) => {
+      auth(pin, token);
       if (!o.nama.trim() || !o.satuan.trim()) throw new Error('Nama dan satuan wajib diisi');
       const min = r_(num(o.ambang_min));
       if (min < 0) throw new Error('Ambang minimum tidak boleh negatif');
       const kd = o.kode.trim();
       if (kd && barang.some((x) => x.kode === kd && x.id !== (o.id || ''))) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
+      const alur = o.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
       if (o.id) {
         const b = find(o.id);
         if (!b) throw new Error('Barang tidak ditemukan');
-        if (!o.aktif && b.aktif && (b.stok_dalam > 0 || b.stok_luar > 0)) throw new Error('Barang hanya bisa diarsipkan jika stok dalam dan luar = 0');
-        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur: o.alur, ambang_min: min, aktif: o.aktif });
+        const aktif = o.aktif !== false;
+        if (!aktif && b.aktif && (b.stok_dalam > 0 || b.stok_luar > 0)) throw new Error('Barang hanya bisa diarsipkan jika stok dalam dan luar = 0');
+        const opname_rekap = o.opname_rekap !== false;
+        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif, opname_rekap });
       } else {
         const awal = r_(num(o.stok_awal));
         if (awal < 0) throw new Error('Stok awal tidak boleh negatif');
-        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur: o.alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0 };
+        const opname_rekap = o.opname_rekap !== false;
+        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0, opname_rekap };
         barang.push(b);
-        if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, alur: '', catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
+        if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, alur: 'DALAM', catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
       }
       return true;
     },
-    hapusBarang: (pin, id) => {
-      auth(pin);
+    hapusBarang: (pin, id, token) => {
+      auth(pin, token);
       const bIdx = barang.findIndex((x) => x.id === id);
       if (bIdx === -1) throw new Error('Barang tidak ditemukan');
       const b = barang[bIdx]!;
@@ -303,8 +565,57 @@ export function createMock(): Impl {
         message: 'Barang berhasil dihapus permanen karena belum memiliki riwayat transaksi.',
       };
     },
-    simpanKaryawan: (pin, o) => {
-      auth(pin);
+    tambahKategori: (pin, namaKategori, token) => {
+      auth(pin, token);
+      const kat = String(namaKategori || '').trim();
+      if (!kat) throw new Error('Nama kategori tidak boleh kosong');
+      if (kat.toLowerCase() === 'lainnya') {
+        throw new Error('Kategori "Lainnya" sudah ada sebagai kategori bawaan');
+      }
+      if (urutan.some((k) => k.toLowerCase() === kat.toLowerCase())) {
+        throw new Error(`Kategori "${kat}" sudah ada`);
+      }
+      urutan.push(kat);
+      return { status: 'created', nama: kat, message: `Kategori "${kat}" berhasil ditambahkan` };
+    },
+    hapusKategori: (pin, namaKategori, token) => {
+      auth(pin, token);
+      const kat = String(namaKategori || '').trim();
+      if (!kat) throw new Error('Nama kategori tidak boleh kosong');
+      if (kat.toLowerCase() === 'lainnya') {
+        throw new Error('Kategori default "Lainnya" tidak dapat dihapus');
+      }
+
+      const katLower = kat.toLowerCase();
+      const idxUrutan = urutan.findIndex((k) => k.toLowerCase() === katLower);
+      const barangTerdampak = barang.filter((b) => (b.kategori || '').trim().toLowerCase() === katLower);
+
+      if (idxUrutan === -1 && barangTerdampak.length === 0) {
+        throw new Error(`Kategori "${kat}" tidak ditemukan`);
+      }
+
+      // Update barang di kategori ini menjadi '' (Lainnya), tidak menghapus barang
+      barangTerdampak.forEach((b) => {
+        b.kategori = '';
+      });
+
+      // Hapus dari urutan jika ada
+      if (idxUrutan !== -1) {
+        urutan.splice(idxUrutan, 1);
+      }
+
+      // Jaminan: Transaksi, rekap, opname sama sekali TIDAK dihapus
+      return {
+        status: 'deleted',
+        nama: kat,
+        jumlahBarang: barangTerdampak.length,
+        message: `Kategori "${kat}" berhasil dihapus. ${
+          barangTerdampak.length > 0 ? `${barangTerdampak.length} barang dialihkan ke kategori "Lainnya". ` : ''
+        }Riwayat transaksi tetap aman tersimpan.`,
+      };
+    },
+    simpanKaryawan: (pin, o, token) => {
+      auth(pin, token);
       const nm = o.nama.trim();
       if (!nm) throw new Error('Nama wajib diisi');
       if (karyawan.some((x) => x.nama.toLowerCase() === nm.toLowerCase() && x.id !== (o.id || '')))
@@ -325,6 +636,32 @@ export function createMock(): Impl {
       }
       return true;
     },
+    hapusKaryawan: (pin: string, id: string, token?: string) => {
+      auth(pin, token);
+      const kIdx = karyawan.findIndex((x) => x.id === id);
+      if (kIdx === -1) throw new Error('Karyawan tidak ditemukan');
+      const k = karyawan[kIdx]!;
+      const sid = String(id);
+      const sNama = String(k.nama);
+      const punyaRiwayat =
+        transaksi.some((t) => t.karyawan_id === sid || t.karyawan === sNama) ||
+        rekap.some((r) => r.karyawan_id === sid || r.karyawan === sNama);
+      if (punyaRiwayat) {
+        k.aktif = false;
+        return {
+          status: 'archived' as const,
+          nama: k.nama,
+          message: 'Karyawan memiliki riwayat transaksi/rekap sehingga otomatis dinonaktifkan agar riwayat laporan tidak hilang.',
+        };
+      }
+      karyawan.splice(kIdx, 1);
+      rateLimitReset(`karyawan_${sid}`);
+      return {
+        status: 'deleted' as const,
+        nama: k.nama,
+        message: 'Karyawan berhasil dihapus permanen karena belum memiliki riwayat transaksi.',
+      };
+    },
     verifikasiPinKaryawan: (kid, p) => {
       const k = findK(kid);
       if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
@@ -340,25 +677,34 @@ export function createMock(): Impl {
       rateLimitReset(`karyawan_${kid}`);
       return true;
     },
-    stokMasuk: (pin, bid, j, supplier, catatan) => {
-      auth(pin);
-      const n = r_(num(j));
-      if (!(n > 0)) throw new Error('Jumlah harus lebih dari 0');
-      const b = find(bid);
-      if (!b) throw new Error('Barang tidak ditemukan');
-      b.stok_dalam = r_(b.stok_dalam + n);
-      tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: '', supplier, catatan, kategori: b.kategori, satuan: b.satuan });
-      return true;
+    stokMasuk: (pin, bid, j, supplier, catatan, clientTxId, token) => {
+      const tok =
+        token ||
+        (typeof clientTxId === 'string' &&
+        (clientTxId.startsWith('mock_tok_') || clientTxId.indexOf('.') > 0)
+          ? clientTxId
+          : undefined);
+      const idemKey = clientTxId && clientTxId !== tok ? clientTxId : undefined;
+      return withIdem(idemKey, () => {
+        auth(pin, tok);
+        const n = r_(num(j));
+        if (!(n > 0)) throw new Error('Jumlah harus lebih dari 0');
+        const b = find(bid);
+        if (!b) throw new Error('Barang tidak ditemukan');
+        b.stok_dalam = r_(b.stok_dalam + n);
+        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: 'DALAM', supplier, catatan, kategori: b.kategori, satuan: b.satuan });
+        return true;
+      });
     },
-    ambilAdmin: (pin, kid, bid, j, ts) => {
-      auth(pin);
+    ambilAdmin: (pin, kid, bid, j, ts, token) => {
+      auth(pin, token);
       ts = num(ts) || Date.now();
       if (ts > Date.now() + 60000) throw new Error('Waktu tidak boleh di masa depan');
       if (ts <= lastRekapTs()) throw new Error('Waktu sebelum rekap terakhir. Koreksi lewat edit rekap atau opname.');
       return ambil_(kid, bid, num(j), ts, 'admin');
     },
-    simpanOpname: (pin, items) => {
-      auth(pin);
+    simpanOpname: (pin, items, token) => {
+      auth(pin, token);
       const ts = Date.now();
       let n = 0;
       items.forEach((i) => {
@@ -375,12 +721,12 @@ export function createMock(): Impl {
       });
       return n;
     },
-    editRekapTerakhir: (pin, input) => {
-      auth(pin);
+    editRekapTerakhir: (pin, input, token) => {
+      auth(pin, token);
       const rk = [...rekap].sort(setelahDesc)[0];
       if (!rk) throw new Error('Belum ada rekap');
-      let n = 0;
-      input.forEach((i) => {
+      const plan: { x: RekapBaris; b: Barang; s: number; maks: number; nl: number }[] = [];
+      (input || []).forEach((i) => {
         const x = rekapBaris.find((b) => b.rekap_id === rk.id && b.barang_id === i.barang_id);
         if (!x || i.sisa === '' || i.sisa === null || i.sisa === undefined) return;
         const s = r_(numWajib(i.sisa, 'Sisa ' + x.barang)), maks = r_(x.saldo_awal + x.diambil);
@@ -389,15 +735,24 @@ export function createMock(): Impl {
         if (!delta) return;
         const b = find(x.barang_id);
         if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
-        b.stok_luar = r_(b.stok_luar + delta);
-        x.terpakai = r_(maks - s);
-        n++;
+        const nl = r_(b.stok_luar + delta);
+        if (nl < 0) throw new Error('Saldo luar ' + x.barang + ' akan negatif');
+        plan.push({ x, b, s, maks, nl });
       });
-      if (n) rk.diedit_admin = true;
-      return n;
+      plan.forEach((p) => {
+        p.b.stok_luar = p.nl;
+        p.x.sisa = p.s;
+        p.x.terpakai = r_(p.maks - p.s);
+      });
+      if (plan.length) rk.diedit_admin = true;
+      return plan.length;
     },
-    simpanPengaturan: (pin, jam, baru) => {
-      auth(pin);
+    buatDummyRekap: (pin, token) => {
+      auth(pin, token);
+      return generateDummyRekap();
+    },
+    simpanPengaturan: (pin, jam, baru, token) => {
+      auth(pin, token);
       if (jam) {
         const m = /(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([AaPp][Mm])?/.exec(String(jam || ''));
         if (!m) throw new Error('Jam tutup tidak valid: ' + jam);
@@ -413,8 +768,8 @@ export function createMock(): Impl {
       }
       return true;
     },
-    laporan: (pin, dari, sampai) => {
-      auth(pin);
+    laporan: (pin, dari, sampai, token) => {
+      auth(pin, token);
       const p = (s: string, add = 0) => {
         const a = s.split('-').map(Number);
         return new Date(a[0]!, a[1]! - 1, a[2]! + add).getTime();
@@ -437,9 +792,194 @@ export function createMock(): Impl {
         .map((r) => ({ nama: r.nama, satuan: r.satuan, masuk: r_(r.masuk), terpakai_rekap: r_(r.rk), langsung_habis: r_(r.lh), total_terpakai: r_(r.rk + r.lh), opname: r_(r.op) }))
         .sort((a, b) => (a.nama < b.nama ? -1 : 1));
     },
-    laporanKeSheet: (pin, _dari, _sampai) => {
-      auth(pin);
+    laporanKeSheet: (pin, _dari, _sampai, token) => {
+      auth(pin, token);
       return 'https://docs.google.com/spreadsheets/';
+    },
+    getPublicAuthConfig: () => ({
+      hasGoogleAuth: Boolean(googleClientId),
+      googleClientId,
+    }),
+    requestOtp: (email: string) => {
+      const em = email.toLowerCase().trim();
+      const acc = authWhitelist.find((a) => a.email.toLowerCase() === em);
+      if (!acc || !acc.aktif) {
+        catatLog(em, 'OTP', '-', 'GAGAL - BUKAN WHITELIST');
+        throw new Error('Email tidak terdaftar atau akses telah dinonaktifkan. Hubungi admin.');
+      }
+      const code = '123456';
+      otpStore[em] = { code, exp: Date.now() + 300000 };
+      return { success: true, message: `Kode verifikasi dikirim ke ${em} (Kode mock: ${code})`, expSeconds: 300 };
+    },
+    verifyOtp: (email: string, code: string, userAgent = '') => {
+      const em = email.toLowerCase().trim();
+      const stored = otpStore[em];
+      if (!stored || Date.now() > stored.exp) {
+        catatLog(em, 'OTP', '-', 'GAGAL - OTP KADALUARSA', userAgent);
+        throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
+      }
+      if (stored.code !== code.trim()) {
+        catatLog(em, 'OTP', '-', 'GAGAL - OTP SALAH', userAgent);
+        throw new Error('Kode verifikasi salah.');
+      }
+      delete otpStore[em];
+      const acc = authWhitelist.find((a) => a.email.toLowerCase() === em);
+      if (!acc || !acc.aktif) {
+        catatLog(em, 'OTP', '-', 'GAGAL - BUKAN WHITELIST', userAgent);
+        throw new Error('Akun ini tidak memiliki akses aktif.');
+      }
+      catatLog(em, 'OTP', acc.role, 'BERHASIL', userAgent);
+      const duration = acc.role === 'tablet' ? 30 * 86400000 : 7 * 86400000;
+      return {
+        token: `mock_tok_${acc.role}_${acc.email}_${Date.now() + duration}`,
+        email: acc.email,
+        role: acc.role,
+        exp: Date.now() + duration,
+      };
+    },
+    verifyGoogleCredential: (credential: string, userAgent = '') => {
+      const em = (credential.includes('@') ? credential : 'admin@segara.com').toLowerCase().trim();
+      const acc = authWhitelist.find((a) => a.email.toLowerCase() === em);
+      if (!acc || !acc.aktif) {
+        catatLog(em, 'GOOGLE', '-', 'GAGAL - BUKAN WHITELIST', userAgent);
+        throw new Error(`Email Google (${em}) belum terdaftar di whitelist sistem. Hubungi admin.`);
+      }
+      catatLog(em, 'GOOGLE', acc.role, 'BERHASIL', userAgent);
+      const duration = acc.role === 'tablet' ? 30 * 86400000 : 7 * 86400000;
+      return {
+        token: `mock_tok_${acc.role}_${acc.email}_${Date.now() + duration}`,
+        email: acc.email,
+        role: acc.role,
+        exp: Date.now() + duration,
+      };
+    },
+    verifySessionToken: (token: string) => {
+      if (!token || !token.startsWith('mock_tok_')) return { valid: false, error: 'Token tidak valid' };
+      const parts = token.split('_');
+      const email = parts[3] || '';
+      const exp = Number(parts[4] || 0);
+      if (Date.now() > exp) return { valid: false, error: 'Sesi telah berakhir. Silakan login kembali.' };
+      const acc = authWhitelist.find((a) => a.email.toLowerCase() === email.toLowerCase());
+      if (!acc || !acc.aktif) return { valid: false, error: 'Akses akun telah dicabut atau dinonaktifkan.' };
+      return { valid: true, email: acc.email, role: acc.role, exp };
+    },
+    getAuthAccounts: (pin: string, token?: string) => {
+      auth(pin, token);
+      return authWhitelist.map((a) => ({
+        ...a,
+        punyaPin: Boolean(a.pinHash && String(a.pinHash).trim() !== ''),
+      }));
+    },
+    simpanAuthAccount: (pin: string, email: string, role: 'admin' | 'tablet', aktif: boolean, token?: string) => {
+      auth(pin, token);
+      if (!email || !email.trim()) throw new Error('Email wajib diisi');
+      const em = email.toLowerCase().trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error('Format email tidak valid');
+      if (role !== 'admin' && role !== 'tablet') throw new Error('Role harus admin atau tablet');
+
+      const adminLain = authWhitelist.filter((x) => x.role === 'admin' && x.aktif && x.email.toLowerCase() !== em);
+      const target = authWhitelist.find((x) => x.email.toLowerCase() === em);
+      if (target?.role === 'admin' && target.aktif && adminLain.length === 0) {
+        if (role !== 'admin' || !aktif) {
+          throw new Error('Tidak dapat menonaktifkan atau mengubah role admin aktif terakhir. Sisakan minimal satu admin aktif.');
+        }
+      }
+
+      const idx = authWhitelist.findIndex((a) => a.email.toLowerCase() === em);
+      if (idx >= 0) {
+        authWhitelist[idx]!.role = role;
+        authWhitelist[idx]!.aktif = aktif;
+      } else {
+        authWhitelist.push({ email: em, role, aktif, dibuat: Date.now() });
+      }
+      return true;
+    },
+    hapusAuthAccount: (pin: string, email: string, token?: string) => {
+      auth(pin, token);
+      const em = email.toLowerCase().trim();
+      const adminLain = authWhitelist.filter((x) => x.role === 'admin' && x.aktif && x.email.toLowerCase() !== em);
+      const target = authWhitelist.find((x) => x.email.toLowerCase() === em);
+      if (target?.role === 'admin' && adminLain.length === 0) {
+        throw new Error('Tidak dapat menghapus admin aktif terakhir. Sisakan minimal satu admin.');
+      }
+      const idx = authWhitelist.findIndex((a) => a.email.toLowerCase() === em);
+      if (idx >= 0) authWhitelist.splice(idx, 1);
+      return true;
+    },
+    getLoginHistory: (pin: string, limit = 100, token?: string) => {
+      auth(pin, token);
+      return loginLogs.slice(0, limit);
+    },
+    simpanGoogleClientId: (pin: string, clientId: string, token?: string) => {
+      auth(pin, token);
+      googleClientId = clientId.trim();
+      return true;
+    },
+    getAdminAuthStatus: (token?: string) => {
+      if (!token) throw new Error('Akses ditolak: sesi login wajib disertakan.');
+      const tokenEmail = token.split('_')[3]?.toLowerCase();
+      const v = authWhitelist.find((a) => a.email.toLowerCase() === tokenEmail);
+      if (!v || v.role !== 'admin' || !v.aktif) throw new Error('Akses ditolak: sesi login tidak valid.');
+      return {
+        email: v.email,
+        punyaPin: Boolean(v.pinHash && String(v.pinHash).trim() !== ''),
+      };
+    },
+    setupAdminPin: (newPin: string, token?: string) => {
+      if (!token) throw new Error('Akses ditolak: sesi login wajib disertakan.');
+      const pinStr = String(newPin || '').trim();
+      if (!/^\d{4,8}$/.test(pinStr)) throw new Error('PIN harus 4–8 angka');
+      const tokenEmail = token.split('_')[3]?.toLowerCase();
+      const v = authWhitelist.find((a) => a.email.toLowerCase() === tokenEmail);
+      if (!v || v.role !== 'admin' || !v.aktif) throw new Error('Akun admin tidak ditemukan di whitelist');
+      if (v.pinHash && String(v.pinHash).trim() !== '') throw new Error('Akun sudah memiliki PIN. Gunakan ganti PIN.');
+      const salt = `salt_${uid()}`;
+      v.salt = salt;
+      v.pinHash = mockHash(pinStr, salt);
+      return true;
+    },
+    gantiAdminPin: (oldPin: string, newPin: string, token?: string) => {
+      if (!token) throw new Error('Akses ditolak: sesi login wajib disertakan.');
+      const tokenEmail = token.split('_')[3]?.toLowerCase();
+      const v = authWhitelist.find((a) => a.email.toLowerCase() === tokenEmail);
+      if (!v || v.role !== 'admin' || !v.aktif) throw new Error('Akun admin tidak ditemukan di whitelist');
+      if (!v.pinHash) throw new Error('Akun belum memiliki PIN. Gunakan setup PIN.');
+      const rateKey = `admin_${v.email}`;
+      rateLimitGuard(rateKey);
+      const oldStr = String(oldPin || '').trim();
+      const newStr = String(newPin || '').trim();
+      if (!/^\d{4,8}$/.test(newStr)) throw new Error('PIN harus 4–8 angka');
+      const salt = v.salt || 'admin_salt';
+      if (v.pinHash !== mockHash(oldStr, salt)) {
+        rateLimitFail(rateKey);
+        throw new Error('PIN lama salah');
+      }
+      rateLimitReset(rateKey);
+      const newSalt = `salt_${uid()}`;
+      v.salt = newSalt;
+      v.pinHash = mockHash(newStr, newSalt);
+      return true;
+    },
+    resetAdminPinWithOtp: (email: string, code: string, newPin: string, _token?: string) => {
+      const em = String(email || '').toLowerCase().trim();
+      const cd = String(code || '').trim();
+      const pinStr = String(newPin || '').trim();
+      if (!/^\d{4,8}$/.test(pinStr)) throw new Error('PIN harus 4–8 angka');
+      const rateKey = `otp_ver_${em}`;
+      rateLimitGuard(rateKey);
+      const validCode = cd === '123456' || (otpStore[em] && otpStore[em].code === cd);
+      if (!validCode) {
+        rateLimitFail(rateKey);
+        throw new Error('Kode verifikasi salah');
+      }
+      rateLimitReset(rateKey);
+      const v = authWhitelist.find((a) => a.email.toLowerCase() === em);
+      if (!v || v.role !== 'admin' || !v.aktif) throw new Error('Akun admin tidak ditemukan');
+      const salt = `salt_${uid()}`;
+      v.salt = salt;
+      v.pinHash = mockHash(pinStr, salt);
+      delete otpStore[em];
+      return true;
     },
   };
 }

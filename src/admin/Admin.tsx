@@ -12,6 +12,7 @@ import {
   Gear,
   HandGrabbing,
   Lock,
+  LockKey,
   Moon,
   Package,
   Scales,
@@ -22,7 +23,7 @@ import {
 } from '@phosphor-icons/react';
 import { call, pesan, pinSalah } from '../lib/api';
 import { useApp } from '../lib/app';
-import type { AdminData } from '../lib/types';
+import type { AdminData, AuthSession } from '../lib/types';
 import { Button, Dialog, Field, Input, Skeleton, SyncStatusBadge } from '../components/ui';
 import { Logo } from '../components/Logo';
 import { Ctx, type AdminCtx } from './shared';
@@ -64,46 +65,54 @@ const PAGES: Record<Tab, FunctionComponent> = {
   set: PengaturanPage,
 };
 
-const KEY = 'sg_pin';
 
-// Web app Apps Script berjalan di iframe googleusercontent.com. Browser yang memblokir storage
-// pihak ketiga (mis. Safari/iPad) melempar SecurityError saat sessionStorage diakses.
-const sesi = {
-  get: () => {
-    try {
-      return sessionStorage.getItem(KEY) || '';
-    } catch {
-      return '';
-    }
-  },
-  set: (p: string) => {
-    try {
-      if (p) sessionStorage.setItem(KEY, p);
-      else sessionStorage.removeItem(KEY);
-    } catch {}
-  },
-};
-
-export function Admin({ onTablet }: { onTablet: () => void }) {
+export function Admin({
+  onTablet,
+  session,
+  onLogout,
+}: {
+  onTablet: () => void;
+  session?: AuthSession;
+  onLogout?: () => void;
+}) {
   const { act, toast, theme, toggleTheme, busy } = useApp();
-  const [pin, setPinState] = useState(sesi.get);
+  // PIN hanya disimpan di memori selama sesi komponen aktif (in-memory state).
+  // Tidak disimpan ke sessionStorage/localStorage agar saat halaman di-refresh,
+  // pengguna diwajibkan memasukkan PIN kembali demi keamanan.
+  const [pin, setPin] = useState('');
   const [d, setD] = useState<AdminData | null>(null);
   const [loadErr, setLoadErr] = useState('');
-  const [tab, setTab] = useState<Tab>('dash');
+  const [tab, setTab] = useState<Tab>(() => {
+    try {
+      const saved = sessionStorage.getItem('sg_admin_tab') as Tab;
+      if (saved && TABS.some((t) => t.k === saved)) {
+        return saved;
+      }
+    } catch {}
+    return 'dash';
+  });
   const [more, setMore] = useState(false);
 
-  const setPin = (p: string) => {
-    setPinState(p);
-    sesi.set(p);
-  };
+  // Bersihkan sisa token PIN lama dari sessionStorage jika pernah tersimpan
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem('sg_pin');
+    } catch {}
+  }, []);
+
   const logout = () => {
     setPin('');
     setD(null);
     setLoadErr('');
+    try {
+      sessionStorage.removeItem('sg_pin');
+      sessionStorage.removeItem('sg_admin_tab');
+    } catch {}
   };
   const onErr = (e: unknown) => pinSalah(e) && logout();
 
   const reload = async (): Promise<void> => {
+    if (!pin) return;
     setLoadErr('');
     const r = await act('adminData', [pin], (e) => {
       onErr(e);
@@ -114,21 +123,26 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
       setLoadErr('');
     }
   };
-  useEffect(() => {
-    if (pin && !d) reload();
-  }, []);
 
   const ctx = useMemo<AdminCtx | null>(() => {
     if (!d) return null;
     const run: AdminCtx['run'] = async (fn, args, ok) => {
       const r = await act(fn, args, onErr);
       if (r === undefined) return undefined;
-      toast(typeof ok === 'function' ? ok(r as never) : ok);
+      if (ok) toast(typeof ok === 'function' ? ok(r as never) : ok);
       // Jika ganti PIN, muat ulang dengan PIN baru agar tidak 'PIN salah'.
-      const nextPin = fn === 'simpanPengaturan' && args[2] ? String(args[2]) : pin;
+      const nextPin =
+        fn === 'simpanPengaturan' && args[2]
+          ? String(args[2])
+          : fn === 'gantiAdminPin' && args[1]
+            ? String(args[1])
+            : pin;
       if (nextPin !== pin) setPin(nextPin);
-      // Muat ulang tanpa mengunci tombol (sama seperti versi lama).
-      call('adminData', nextPin).then(setD, () => undefined);
+      // Muat ulang tanpa mengunci tombol (tangani eror jika PIN salah/sesi habis)
+      call('adminData', nextPin).then(setD, (err) => {
+        onErr(err);
+        toast(`Gagal memuat ulang data admin: ${pesan(err)}`, true);
+      });
       return r;
     };
     return {
@@ -144,6 +158,9 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
 
   const pilih = (k: Tab) => {
     setTab(k);
+    try {
+      sessionStorage.setItem('sg_admin_tab', k);
+    } catch {}
     setMore(false);
     window.scrollTo(0, 0);
   };
@@ -181,7 +198,14 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
         </div>
       );
     }
-    return <Login onTablet={onTablet} onOk={(p, r) => (setPin(p), setD(r))} />;
+    return (
+      <Login
+        onTablet={onTablet}
+        session={session}
+        onLogout={onLogout}
+        onOk={(p, r) => (setPin(p), setD(r))}
+      />
+    );
   }
 
   const Page = PAGES[tab];
@@ -205,6 +229,12 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
               ))}
             </ul>
           </nav>
+          {session?.email && (
+            <div class="px-4 py-2 text-xs border-t border-line flex flex-col gap-0.5 bg-muted/40">
+              <span class="text-muted-fg font-medium">Terotentikasi:</span>
+              <span class="font-bold text-fg truncate" title={session.email}>{session.email}</span>
+            </div>
+          )}
           <div class="flex flex-col gap-1 border-t border-line p-3">
             <Button variant="ghost" onClick={toggleTheme} class="justify-start">
               {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
@@ -213,38 +243,72 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
             <Button variant="ghost" onClick={onTablet} class="justify-start">
               <DeviceTablet size={20} aria-hidden /> Mode tablet
             </Button>
-            <Button variant="ghost" onClick={logout} class="justify-start">
-              <SignOut size={20} aria-hidden /> Keluar
+            <Button
+              variant="ghost"
+              onClick={() => {
+                logout();
+                onLogout?.();
+              }}
+              class="justify-start text-danger hover:text-danger hover:bg-danger-soft"
+            >
+              <SignOut size={20} aria-hidden /> Keluar Akun
             </Button>
           </div>
         </aside>
 
         {/* Header */}
-        <header class="sticky top-0 z-20 border-b border-line bg-card/95 backdrop-blur">
-          <div class="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 md:px-6">
-            <div class="lg:hidden">
+        <header class="sticky top-0 z-20 border-b border-line bg-card/95 backdrop-blur safe-top">
+          <div class="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:px-4 md:px-6">
+            <div class="min-w-0 shrink lg:hidden">
               <Logo sub={cur.label} />
             </div>
             <p class="hidden text-sm font-semibold text-muted-fg lg:block">{cur.label}</p>
-            <div class="ml-auto flex items-center gap-2">
+            <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
               <SyncStatusBadge busy={busy} />
               <Button
+                size="sm"
                 variant="ghost"
                 onClick={toggleTheme}
                 title={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
                 aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+                class="size-10 p-0 sm:size-auto sm:px-3 rounded-ctl"
               >
-                {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
+                {theme === 'dark' ? <Sun size={19} aria-hidden /> : <Moon size={19} aria-hidden />}
               </Button>
-              <Button variant="ghost" guard onClick={() => reload()} aria-label="Muat ulang data">
-                <ArrowClockwise size={20} aria-hidden />
+              <Button
+                size="sm"
+                variant="ghost"
+                guard
+                onClick={() => reload()}
+                aria-label="Muat ulang data"
+                title="Muat ulang data"
+                class="size-10 p-0 sm:size-auto sm:px-3 rounded-ctl"
+              >
+                <ArrowClockwise size={19} aria-hidden />
                 <span class="hidden sm:inline">Muat ulang</span>
               </Button>
-              <Button variant="ghost" onClick={onTablet} class="lg:hidden" aria-label="Mode tablet">
-                <DeviceTablet size={20} aria-hidden />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onTablet}
+                class="lg:hidden size-10 p-0 sm:size-auto sm:px-3 rounded-ctl"
+                aria-label="Mode tablet"
+                title="Beralih ke mode tablet"
+              >
+                <DeviceTablet size={19} aria-hidden />
               </Button>
-              <Button variant="ghost" onClick={logout} class="lg:hidden" aria-label="Keluar">
-                <SignOut size={20} aria-hidden />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  logout();
+                  onLogout?.();
+                }}
+                class="lg:hidden size-10 p-0 sm:size-auto sm:px-3 rounded-ctl text-danger hover:bg-danger-soft hover:text-danger"
+                aria-label="Keluar akun"
+                title="Keluar akun"
+              >
+                <SignOut size={19} aria-hidden />
               </Button>
             </div>
           </div>
@@ -269,23 +333,79 @@ export function Admin({ onTablet }: { onTablet: () => void }) {
         </nav>
 
         <Dialog open={more} onClose={() => setMore(false)} title="Menu lainnya">
-          <ul class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {TABS.filter((t) => !t.mobile).map((t) => (
-              <li key={t.k}>
-                <button
-                  type="button"
-                  onClick={() => pilih(t.k)}
-                  aria-current={t.k === tab ? 'page' : undefined}
-                  class={`flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-card border p-3 text-sm font-semibold transition-colors duration-150 ${
-                    t.k === tab ? 'border-primary bg-primary-soft text-primary' : 'border-line hover:bg-muted'
-                  }`}
+          <div class="flex flex-col gap-5">
+            <div>
+              <p class="mb-2 text-xs font-bold uppercase tracking-wider text-muted-fg">Navigasi</p>
+              <ul class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {TABS.filter((t) => !t.mobile).map((t) => (
+                  <li key={t.k}>
+                    <button
+                      type="button"
+                      onClick={() => pilih(t.k)}
+                      aria-current={t.k === tab ? 'page' : undefined}
+                      class={`flex min-h-20 w-full flex-col items-center justify-center gap-1.5 rounded-card border p-3 text-sm font-semibold transition-colors duration-150 ${
+                        t.k === tab ? 'border-primary bg-primary-soft text-primary' : 'border-line hover:bg-muted'
+                      }`}
+                    >
+                      <t.icon size={26} aria-hidden />
+                      {t.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div class="flex flex-col gap-2.5 border-t border-line pt-4">
+              <p class="text-xs font-bold uppercase tracking-wider text-muted-fg">Sistem & Akun</p>
+
+              {session?.email && (
+                <div class="flex items-center gap-2.5 rounded-card border border-line bg-muted/50 p-3 text-xs">
+                  <div class="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary-soft font-bold text-primary">
+                    {session.email.charAt(0).toUpperCase()}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[11px] text-muted-fg">Terotentikasi sebagai</div>
+                    <div class="font-bold text-fg truncate">{session.email}</div>
+                  </div>
+                </div>
+              )}
+
+              <div class="grid grid-cols-2 gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={toggleTheme}
+                  class="justify-center text-xs"
                 >
-                  <t.icon size={26} aria-hidden />
-                  {t.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+                  {theme === 'dark' ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
+                  {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setMore(false);
+                    onTablet();
+                  }}
+                  class="justify-center text-xs"
+                >
+                  <DeviceTablet size={18} aria-hidden /> Mode tablet
+                </Button>
+              </div>
+
+              <Button
+                variant="danger-ghost"
+                onClick={() => {
+                  setMore(false);
+                  logout();
+                  onLogout?.();
+                }}
+                class="mt-1 w-full justify-center text-danger hover:bg-danger-soft hover:text-danger font-bold"
+              >
+                <SignOut size={19} weight="bold" aria-hidden /> Keluar Akun
+              </Button>
+            </div>
+          </div>
         </Dialog>
       </div>
     </Ctx.Provider>
@@ -325,10 +445,61 @@ function BottomItem({ label, icon: I, active, onClick, expanded }: { label: stri
   );
 }
 
-function Login({ onOk, onTablet }: { onOk: (pin: string, d: AdminData) => void; onTablet: () => void }) {
-  const { act, theme, toggleTheme } = useApp();
+function Login({
+  onOk,
+  onTablet,
+  session,
+  onLogout,
+}: {
+  onOk: (pin: string, d: AdminData) => void;
+  onTablet: () => void;
+  session?: AuthSession;
+  onLogout?: () => void;
+}) {
+  const { act, toast, theme, toggleTheme } = useApp();
   const [p, setP] = useState('');
   const [err, setErr] = useState('');
+
+  // Status PIN Akun
+  const [statusLoaded, setStatusLoaded] = useState(false);
+  const [punyaPin, setPunyaPin] = useState(true);
+
+  // Form Setup PIN Baru (Force Setup untuk akun baru)
+  const [setupP1, setSetupP1] = useState('');
+  const [setupP2, setSetupP2] = useState('');
+  const [errSetup, setErrSetup] = useState('');
+  const errSetup1 = setupP1 && !/^\d{4,8}$/.test(setupP1) ? 'PIN harus 4–8 angka' : '';
+  const errSetup2 = setupP1 && setupP2 !== setupP1 ? 'PIN konfirmasi tidak sama' : '';
+
+  // Modal Lupa PIN via OTP
+  const [modalReset, setModalReset] = useState(false);
+  const [otpKirimBusy, setOtpKirimBusy] = useState(false);
+  const [otpTerkirim, setOtpTerkirim] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpP1, setOtpP1] = useState('');
+  const [otpP2, setOtpP2] = useState('');
+  const [otpErr, setOtpErr] = useState('');
+  const [otpBusy, setOtpBusy] = useState(false);
+  const errOtp1 = otpP1 && !/^\d{4,8}$/.test(otpP1) ? 'PIN harus 4–8 angka' : '';
+  const errOtp2 = otpP1 && otpP2 !== otpP1 ? 'PIN konfirmasi tidak sama' : '';
+
+  useEffect(() => {
+    let mounted = true;
+    call('getAdminAuthStatus', session?.token)
+      .then((st) => {
+        if (mounted && st) {
+          setPunyaPin(st.punyaPin);
+          setStatusLoaded(true);
+        }
+      })
+      .catch(() => {
+        if (mounted) setStatusLoaded(true);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [session?.token]);
+
   const masuk = async (e: Event) => {
     e.preventDefault();
     if (!p.trim()) return setErr('Masukkan PIN');
@@ -336,42 +507,229 @@ function Login({ onOk, onTablet }: { onOk: (pin: string, d: AdminData) => void; 
     const r = await act('adminData', [p], (e) => pinSalah(e) && setErr('PIN salah. Coba lagi.'));
     if (r) onOk(p, r);
   };
+
+  const handleSetupPin = async (e: Event) => {
+    e.preventDefault();
+    setErrSetup('');
+    if (!setupP1.trim()) return setErrSetup('PIN wajib diisi');
+    if (errSetup1 || errSetup2) return;
+    const ok = await act('setupAdminPin', [setupP1], (e) => setErrSetup(pesan(e)));
+    if (ok) {
+      toast('PIN admin berhasil dibuat');
+      const r = await act('adminData', [setupP1]);
+      if (r) onOk(setupP1, r);
+    }
+  };
+
+  const bukaModalReset = async () => {
+    setModalReset(true);
+    setOtpErr('');
+    setOtpCode('');
+    setOtpP1('');
+    setOtpP2('');
+    setOtpTerkirim(false);
+    if (session?.email) {
+      setOtpKirimBusy(true);
+      try {
+        const res = await call('requestOtp', session.email);
+        if (res && res.success) {
+          setOtpTerkirim(true);
+          toast('Kode OTP telah dikirim ke email Anda');
+        }
+      } catch (e) {
+        setOtpErr(pesan(e));
+      } finally {
+        setOtpKirimBusy(false);
+      }
+    }
+  };
+
+  const kirimUlangOtp = async () => {
+    if (!session?.email) return;
+    setOtpKirimBusy(true);
+    setOtpErr('');
+    try {
+      const res = await call('requestOtp', session.email);
+      if (res && res.success) {
+        setOtpTerkirim(true);
+        toast('Kode verifikasi baru telah dikirim');
+      }
+    } catch (e) {
+      setOtpErr(pesan(e));
+    } finally {
+      setOtpKirimBusy(false);
+    }
+  };
+
+  const handleResetPinSubmit = async (e: Event) => {
+    e.preventDefault();
+    if (!session?.email) return setOtpErr('Email sesi tidak ditemukan');
+    if (!otpCode.trim()) return setOtpErr('Masukkan kode OTP verifikasi');
+    if (!otpP1.trim()) return setOtpErr('Masukkan PIN baru');
+    if (errOtp1 || errOtp2) return;
+
+    setOtpBusy(true);
+    setOtpErr('');
+    try {
+      const ok = await call('resetAdminPinWithOtp', session.email, otpCode, otpP1);
+      if (ok) {
+        toast('PIN admin berhasil diperbarui');
+        setModalReset(false);
+        const r = await call('adminData', otpP1);
+        if (r) onOk(otpP1, r);
+      }
+    } catch (e) {
+      setOtpErr(pesan(e));
+    } finally {
+      setOtpBusy(false);
+    }
+  };
+
   return (
     <div class="grid min-h-dvh place-items-center px-4 py-10">
       <div class="w-full max-w-sm">
         <div class="mb-6 flex justify-center">
           <Logo sub="Admin" />
         </div>
-        <form onSubmit={masuk} class="flex flex-col gap-4 rounded-sheet border border-line bg-card p-6 shadow-sm">
-          <div class="flex items-center gap-3">
-            <span class="grid size-11 place-items-center rounded-full bg-primary-soft text-primary">
-              <Lock size={22} weight="bold" aria-hidden />
-            </span>
-            <div>
-              <h1 class="text-xl font-extrabold">Masuk admin</h1>
-              <p class="text-sm text-muted-fg">Masukkan PIN untuk melanjutkan.</p>
+
+        {statusLoaded && !punyaPin ? (
+          /* Form Buat PIN Pertama Kali (Force Setup) */
+          <form onSubmit={handleSetupPin} class="flex flex-col gap-4 rounded-sheet border border-line bg-card p-6 shadow-sm">
+            <div class="flex items-center gap-3">
+              <span class="grid size-11 place-items-center rounded-full bg-primary-soft text-primary">
+                <LockKey size={22} weight="bold" aria-hidden />
+              </span>
+              <div>
+                <h1 class="text-xl font-extrabold">Buat PIN Admin</h1>
+                <p class="text-xs text-muted-fg">Buat 4–8 angka PIN unik untuk akun Anda.</p>
+              </div>
             </div>
-          </div>
-          <Field label="PIN admin" error={err}>
-            {(id, dId) => (
-              <Input
-                id={id}
-                type="password"
-                inputmode="numeric"
-                autocomplete="current-password"
-                value={p}
-                onInput={(e) => setP(e.currentTarget.value)}
-                aria-invalid={!!err}
-                aria-describedby={dId}
-                class="num min-h-12 text-lg tracking-widest"
-                autoFocus
-              />
+
+            {session?.email && (
+              <div class="rounded-ctl bg-muted/60 p-2.5 text-xs border border-line flex items-center justify-between">
+                <div class="min-w-0">
+                  <span class="text-muted-fg block">Akun terverifikasi:</span>
+                  <span class="font-bold text-fg truncate block" title={session.email}>{session.email}</span>
+                </div>
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    class="text-xs font-semibold text-primary hover:underline shrink-0 ml-2 cursor-pointer"
+                  >
+                    Ganti Akun
+                  </button>
+                )}
+              </div>
             )}
-          </Field>
-          <Button type="submit" variant="primary" size="lg" guard>
-            Masuk
-          </Button>
-        </form>
+
+            {errSetup && (
+              <div class="rounded-ctl bg-danger-soft p-2.5 text-xs text-danger font-medium">
+                {errSetup}
+              </div>
+            )}
+
+            <Field label="PIN Baru (4–8 angka)" error={errSetup1}>
+              {(id, dId) => (
+                <Input
+                  id={id}
+                  type="password"
+                  inputmode="numeric"
+                  autocomplete="new-password"
+                  value={setupP1}
+                  onInput={(e) => setSetupP1(e.currentTarget.value)}
+                  aria-invalid={!!errSetup1}
+                  aria-describedby={dId}
+                  class="num min-h-12 text-lg tracking-widest"
+                  autoFocus
+                />
+              )}
+            </Field>
+
+            <Field label="Ulangi PIN Baru" error={errSetup2}>
+              {(id, dId) => (
+                <Input
+                  id={id}
+                  type="password"
+                  inputmode="numeric"
+                  autocomplete="new-password"
+                  value={setupP2}
+                  onInput={(e) => setSetupP2(e.currentTarget.value)}
+                  aria-invalid={!!errSetup2}
+                  aria-describedby={dId}
+                  class="num min-h-12 text-lg tracking-widest"
+                />
+              )}
+            </Field>
+
+            <Button type="submit" variant="primary" size="lg" guard disabled={!setupP1 || !!errSetup1 || !!errSetup2}>
+              Simpan PIN & Masuk
+            </Button>
+          </form>
+        ) : (
+          /* Form Masuk Admin Rutin */
+          <form onSubmit={masuk} class="flex flex-col gap-4 rounded-sheet border border-line bg-card p-6 shadow-sm">
+            <div class="flex items-center gap-3">
+              <span class="grid size-11 place-items-center rounded-full bg-primary-soft text-primary">
+                <Lock size={22} weight="bold" aria-hidden />
+              </span>
+              <div>
+                <h1 class="text-xl font-extrabold">Masuk admin</h1>
+                <p class="text-sm text-muted-fg">Masukkan PIN untuk melanjutkan.</p>
+              </div>
+            </div>
+
+            {session?.email && (
+              <div class="rounded-ctl bg-muted/60 p-2.5 text-xs border border-line flex items-center justify-between">
+                <div class="min-w-0">
+                  <span class="text-muted-fg block">Akun terverifikasi:</span>
+                  <span class="font-bold text-fg truncate block" title={session.email}>{session.email}</span>
+                </div>
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    class="text-xs font-semibold text-primary hover:underline shrink-0 ml-2 cursor-pointer"
+                  >
+                    Ganti Akun
+                  </button>
+                )}
+              </div>
+            )}
+
+            <Field label="PIN admin" error={err}>
+              {(id, dId) => (
+                <Input
+                  id={id}
+                  type="password"
+                  inputmode="numeric"
+                  autocomplete="current-password"
+                  value={p}
+                  onInput={(e) => setP(e.currentTarget.value)}
+                  aria-invalid={!!err}
+                  aria-describedby={dId}
+                  class="num min-h-12 text-lg tracking-widest"
+                  autoFocus
+                />
+              )}
+            </Field>
+
+            <div class="flex items-center justify-between text-xs pt-1">
+              <button
+                type="button"
+                onClick={bukaModalReset}
+                class="text-primary hover:underline font-medium cursor-pointer"
+              >
+                Lupa PIN?
+              </button>
+            </div>
+
+            <Button type="submit" variant="primary" size="lg" guard>
+              Masuk
+            </Button>
+          </form>
+        )}
+
         <div class="mt-4 flex items-center justify-center gap-2">
           <Button variant="ghost" onClick={onTablet}>
             <DeviceTablet size={20} aria-hidden /> Kembali ke mode tablet
@@ -386,6 +744,104 @@ function Login({ onOk, onTablet }: { onOk: (pin: string, d: AdminData) => void; 
           </Button>
         </div>
       </div>
+
+      {/* Dialog Modal Lupa PIN via OTP */}
+      <Dialog
+        open={modalReset}
+        onClose={() => setModalReset(false)}
+        title="Reset PIN Admin"
+      >
+        <p class="text-xs text-muted-fg -mt-2 mb-3">
+          Kode verifikasi dikirim ke <strong>{session?.email || 'email Anda'}</strong>.
+        </p>
+        <form onSubmit={handleResetPinSubmit} class="flex flex-col gap-4 pt-2">
+          {otpErr && (
+            <div class="rounded-ctl bg-danger-soft p-2.5 text-xs text-danger font-medium">
+              {otpErr}
+            </div>
+          )}
+
+          {otpTerkirim && (
+            <div class="rounded-ctl bg-success-soft p-2.5 text-xs text-success font-medium">
+              Kode verifikasi telah dikirim ke email <strong>{session?.email}</strong>. Berlaku 5 menit.
+            </div>
+          )}
+
+          <Field label="Kode Verifikasi (OTP)" hint="6 digit angka dari email">
+            {(id, dId) => (
+              <div class="flex gap-2">
+                <Input
+                  id={id}
+                  type="text"
+                  inputmode="numeric"
+                  maxlength={6}
+                  value={otpCode}
+                  onInput={(e) => setOtpCode(e.currentTarget.value)}
+                  aria-describedby={dId}
+                  class="num font-mono tracking-widest text-base"
+                  placeholder="123456"
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  onClick={kirimUlangOtp}
+                  disabled={otpKirimBusy}
+                  class="shrink-0 text-xs"
+                >
+                  {otpKirimBusy ? 'Mengirim…' : 'Kirim Ulang'}
+                </Button>
+              </div>
+            )}
+          </Field>
+
+          <Field label="PIN Baru (4–8 angka)" error={errOtp1}>
+            {(id, dId) => (
+              <Input
+                id={id}
+                type="password"
+                inputmode="numeric"
+                autocomplete="new-password"
+                value={otpP1}
+                onInput={(e) => setOtpP1(e.currentTarget.value)}
+                aria-invalid={!!errOtp1}
+                aria-describedby={dId}
+                class="num text-base tracking-widest"
+              />
+            )}
+          </Field>
+
+          <Field label="Ulangi PIN Baru" error={errOtp2}>
+            {(id, dId) => (
+              <Input
+                id={id}
+                type="password"
+                inputmode="numeric"
+                autocomplete="new-password"
+                value={otpP2}
+                onInput={(e) => setOtpP2(e.currentTarget.value)}
+                aria-invalid={!!errOtp2}
+                aria-describedby={dId}
+                class="num text-base tracking-widest"
+              />
+            )}
+          </Field>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setModalReset(false)} disabled={otpBusy}>
+              Batal
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={otpBusy || !otpCode || !otpP1 || !!errOtp1 || !!errOtp2}
+            >
+              {otpBusy ? 'Menyimpan…' : 'Reset PIN & Masuk'}
+            </Button>
+          </div>
+        </form>
+      </Dialog>
     </div>
   );
 }

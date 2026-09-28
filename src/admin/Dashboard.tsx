@@ -1,26 +1,98 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { ArrowSquareOut, ClipboardText, MagnifyingGlass, Package, Warning, X } from '@phosphor-icons/react';
+import {
+  ArrowSquareOut,
+  ClipboardText,
+  MagnifyingGlass,
+  Package,
+  Warning,
+  X,
+} from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 import { alurLabel, cocok, grupKat, katOf, nf, urutKat } from '../lib/format';
 import type { Barang } from '../lib/types';
-import { Banner, Button, Card, Input, PageTitle, Select, StockGauge, Tag } from '../components/ui';
+import { Banner, Button, Card, Input, PageTitle, Select, StockGauge, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
 
 export const total = (b: Barang) => b.stok_dalam + b.stok_luar;
 export const menipis = (b: Barang) => total(b) < b.ambang_min;
 
-function Stat({ icon: I, label, value, tone }: { icon: Icon; label: string; value: string | number; tone: string }) {
-  return (
-    <Card class="flex flex-col items-start gap-2 p-4 sm:flex-row sm:items-center sm:gap-3">
-      <span class={`grid size-10 shrink-0 place-items-center rounded-ctl sm:size-11 ${tone}`}>
-        <I size={22} weight="bold" aria-hidden />
-      </span>
-      <div class="min-w-0">
-        <p class="text-[13px] font-semibold leading-tight text-muted-fg">{label}</p>
-        <p class={`num mt-0.5 font-extrabold leading-tight break-words ${typeof value === 'number' ? 'text-2xl' : 'text-base'}`}>{value}</p>
+interface StatCardProps {
+  icon: Icon;
+  label: string;
+  value: string | number;
+  sublabel?: string;
+  tone: string;
+  active?: boolean;
+  onClick?: () => void;
+  badge?: string;
+  badgeTone?: 'warning' | 'primary' | 'danger';
+}
+
+function StatCard({
+  icon: I,
+  label,
+  value,
+  sublabel,
+  tone,
+  active,
+  onClick,
+  badge,
+  badgeTone = 'warning',
+}: StatCardProps) {
+  const isClickable = Boolean(onClick);
+  const badgeClasses = {
+    warning: 'bg-warning-soft text-warning border-warning/30',
+    primary: 'bg-primary-soft text-primary border-primary/30',
+    danger: 'bg-danger-soft text-danger border-danger/30',
+  }[badgeTone];
+
+  const content = (
+    <>
+      <div class="flex items-center justify-between gap-2">
+        <span
+          class={cx(
+            'grid size-10 shrink-0 place-items-center rounded-xl text-sm transition-transform group-hover:scale-105',
+            tone,
+          )}
+        >
+          <I size={20} weight="bold" aria-hidden />
+        </span>
+        {badge && (
+          <span class={cx('rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-tight', badgeClasses)}>
+            {badge}
+          </span>
+        )}
       </div>
-    </Card>
+
+      <div class="mt-2.5 min-w-0">
+        <p class="truncate text-xs font-semibold text-muted-fg">{label}</p>
+        <p
+          class={cx(
+            'num mt-0.5 font-extrabold tracking-tight truncate',
+            typeof value === 'number' ? 'text-2xl text-fg' : 'text-sm sm:text-base font-bold text-fg',
+          )}
+        >
+          {value}
+        </p>
+        {sublabel && <p class="mt-0.5 truncate text-[11px] font-medium text-muted-fg">{sublabel}</p>}
+      </div>
+    </>
   );
+
+  const cardClasses = cx(
+    'group relative flex flex-col justify-between p-3.5 sm:p-4 text-left transition-all duration-150 rounded-card border border-line bg-card shadow-sm',
+    isClickable && 'cursor-pointer active:scale-[0.98] select-none hover:border-primary/50',
+    active && 'ring-2 ring-primary border-primary bg-primary-soft/15 shadow-sm',
+  );
+
+  if (isClickable) {
+    return (
+      <button type="button" onClick={onClick} class={cardClasses}>
+        {content}
+      </button>
+    );
+  }
+  return <div class={cardClasses}>{content}</div>;
 }
 
 export function Dashboard() {
@@ -29,6 +101,7 @@ export function Dashboard() {
   const [kat, setKat] = useState('');
   const [onlyLow, setOnlyLow] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (
@@ -74,6 +147,72 @@ export function Dashboard() {
       </Tag>
     );
   };
+
+  // Kartu khusus layar ponsel (iPhone 11-18) yang rapi, padat, dan bebas overflow
+  const renderBarangCard = (b: Barang) => {
+    const tot = total(b);
+    const isLow = menipis(b);
+
+    return (
+      <div class="flex flex-col gap-3">
+        {/* Header Baris Barang */}
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <h4 class="text-[15px] font-bold leading-snug text-fg break-words">{b.nama}</h4>
+          </div>
+          <div class="flex shrink-0 items-center gap-1.5">
+            {isLow ? (
+              <Tag tone="warning">
+                <span class="inline-flex items-center gap-1">
+                  <Warning size={12} weight="fill" aria-hidden />
+                  <span>Menipis</span>
+                </span>
+              </Tag>
+            ) : null}
+            <Tag tone="neutral">{alurLabel(b.alur)}</Tag>
+          </div>
+        </div>
+
+        {/* Total Stok & Visual Gauge */}
+        <div class="rounded-xl border border-line bg-muted/30 p-2.5">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="text-xs font-semibold text-muted-fg">Total Tersedia:</span>
+            <div class="flex items-baseline gap-1">
+              <span class={cx('num text-2xl font-black leading-none', isLow ? 'text-warning' : 'text-fg')}>
+                {nf(tot)}
+              </span>
+              <span class="text-xs font-bold text-muted-fg">{b.satuan}</span>
+            </div>
+          </div>
+
+          {b.ambang_min > 0 && (
+            <div class="mt-2.5">
+              <StockGauge current={tot} min={b.ambang_min} unit={b.satuan} class="w-full" />
+            </div>
+          )}
+        </div>
+
+        {/* Rincian Sub-Metrik (3 Kolom Micro-Grid) */}
+        <div class="grid grid-cols-3 divide-x divide-line rounded-lg border border-line/70 bg-card py-2 text-center text-xs">
+          <div class="px-1.5">
+            <span class="block text-[11px] font-medium text-muted-fg">Stok Dalam</span>
+            <span class="num mt-0.5 block font-bold text-fg">{nf(b.stok_dalam)}</span>
+          </div>
+          <div class="px-1.5">
+            <span class="block text-[11px] font-medium text-muted-fg">Stok Luar</span>
+            <span class="num mt-0.5 block font-bold text-fg">
+              {b.alur === 'LUAR' || b.stok_luar ? nf(b.stok_luar) : '—'}
+            </span>
+          </div>
+          <div class="px-1.5">
+            <span class="block text-[11px] font-medium text-muted-fg">Batas Min</span>
+            <span class="num mt-0.5 block font-bold text-fg">{nf(b.ambang_min)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const cols: Col<Barang>[] = [
     {
       label: 'Barang',
@@ -107,54 +246,210 @@ export function Dashboard() {
   return (
     <div class="flex flex-col gap-6">
       {st.lewatHari ? (
-        <Banner tone="danger">Rekap tertunda: {st.belumRekap} pengambilan belum direkap, ada yang dari hari sebelumnya.</Banner>
+        <Banner key={`rekap-danger-${st.belumRekap}`} tone="danger">
+          Rekap tertunda: {st.belumRekap} pengambilan belum direkap, ada yang dari hari sebelumnya.
+        </Banner>
       ) : st.belumRekap ? (
-        <Banner tone="warning">{st.belumRekap} pengambilan belum direkap.</Banner>
+        <Banner key={`rekap-warning-${st.belumRekap}`} tone="warning">
+          {st.belumRekap} pengambilan belum direkap.
+        </Banner>
       ) : null}
 
       <PageTitle kicker="Ringkasan" title="Stok saat ini" />
 
-      <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={Package} label="Barang aktif" value={aktif.length} tone="bg-primary-soft text-primary" />
-        <Stat icon={Warning} label="Stok menipis" value={low.length} tone="bg-warning-soft text-warning" />
-        <Stat icon={ClipboardText} label="Belum direkap" value={st.belumRekap} tone="bg-danger-soft text-danger" />
-        <Stat icon={ClipboardText} label="Rekap terakhir" value={st.lastRekap || 'Belum ada'} tone="bg-success-soft text-success" />
+      {/* Bento Grid Ringkasan Interaktif */}
+      <div class="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <StatCard
+          icon={Package}
+          label="Barang aktif"
+          value={aktif.length}
+          sublabel="Semua item terdaftar"
+          tone="bg-primary-soft text-primary"
+          onClick={() => {
+            if (hasFilter) resetFilter();
+          }}
+          badge={hasFilter ? 'Reset' : undefined}
+          badgeTone="primary"
+        />
+        <StatCard
+          icon={Warning}
+          label="Stok menipis"
+          value={low.length}
+          sublabel={low.length > 0 ? 'Perlu pengadaan' : 'Stok aman'}
+          tone="bg-warning-soft text-warning"
+          active={onlyLow}
+          onClick={() => setOnlyLow(!onlyLow)}
+          badge={onlyLow ? 'Filter Aktif' : low.length > 0 ? 'Perhatian' : undefined}
+          badgeTone="warning"
+        />
+        <StatCard
+          icon={ClipboardText}
+          label="Belum direkap"
+          value={st.belumRekap}
+          sublabel={st.belumRekap > 0 ? 'Butuh rekonsiliasi' : 'Semua tersinkron'}
+          tone={st.belumRekap > 0 ? 'bg-danger-soft text-danger' : 'bg-muted text-muted-fg'}
+          badge={st.lewatHari ? 'Lewat hari' : undefined}
+          badgeTone="danger"
+        />
+        <StatCard
+          icon={ClipboardText}
+          label="Rekap terakhir"
+          value={st.lastRekap || 'Belum ada'}
+          sublabel="Waktu opname/rekap"
+          tone="bg-success-soft text-success"
+        />
       </div>
 
+      {/* Pratinjau Cepat Barang Menipis (Scroll Horisontal) */}
       {low.length > 0 && (
-        <Card class="p-4">
-          <h2 class="flex items-center gap-2 font-bold text-warning">
-            <Warning size={20} weight="fill" aria-hidden /> Stok menipis ({low.length})
-          </h2>
-          <ul class="mt-3 flex flex-wrap gap-2">
-            {low.map((b) => (
-              <li key={b.id} class="rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-sm">
-                <span class="font-semibold">{b.nama}</span>{' '}
-                <span class="num text-muted-fg">
-                  {nf(total(b))}/{nf(b.ambang_min)} {b.satuan}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Card class="p-3.5 sm:p-4">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="flex items-center gap-1.5 text-sm font-bold text-warning sm:text-base">
+              <Warning size={18} weight="fill" aria-hidden />
+              <span>Stok Menipis ({low.length})</span>
+            </h2>
+            <button
+              type="button"
+              onClick={() => setOnlyLow(!onlyLow)}
+              class={cx(
+                'inline-flex items-center gap-1 rounded-ctl px-2.5 py-1 text-xs font-bold transition-colors cursor-pointer select-none',
+                onlyLow
+                  ? 'bg-warning text-white'
+                  : 'text-warning bg-warning-soft hover:bg-warning-soft/80',
+              )}
+            >
+              <span>{onlyLow ? 'Buka Semua' : 'Filter di Tabel'}</span>
+            </button>
+          </div>
+
+          <div class="mt-3 flex gap-2 overflow-x-auto no-scrollbar -mx-3.5 px-3.5 sm:mx-0 sm:px-0 sm:flex-wrap">
+            {low.map((b) => {
+              const isSelected = q === b.nama;
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    if (isSelected) {
+                      setQ('');
+                    } else {
+                      setQ(b.nama);
+                    }
+                  }}
+                  class={cx(
+                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
+                    isSelected
+                      ? 'border-warning bg-warning text-white shadow-sm'
+                      : 'border-warning/30 bg-warning-soft text-warning hover:border-warning/50',
+                  )}
+                  title={`Klik untuk mencari ${b.nama}`}
+                >
+                  <span class="font-bold">{b.nama}</span>
+                  <span class={cx('num text-[11px]', isSelected ? 'text-white/90' : 'text-warning/80')}>
+                    {nf(total(b))}/{nf(b.ambang_min)} {b.satuan}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </Card>
       )}
 
+      {/* Pill Kategori yang Thumb-Friendly di Ponsel */}
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button
+          type="button"
+          onClick={() => setKat('')}
+          class={cx(
+            'inline-flex min-h-9 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
+            !kat
+              ? 'bg-primary text-white shadow-sm'
+              : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:text-fg',
+          )}
+        >
+          Semua ({aktif.length})
+        </button>
+
+        {kategoriList.map((k) => {
+          const count = aktif.filter((b) => katOf(b) === k).length;
+          const isSel = kat === k;
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setKat(isSel ? '' : k)}
+              class={cx(
+                'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
+                isSel
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:text-fg',
+              )}
+            >
+              <span>{k}</span>
+              <span class="num text-[11px] opacity-75">({count})</span>
+            </button>
+          );
+        })}
+
+        <button
+          type="button"
+          onClick={() => setOnlyLow(!onlyLow)}
+          class={cx(
+            'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 border',
+            onlyLow
+              ? 'border-warning bg-warning text-white shadow-sm'
+              : 'border-warning/30 bg-warning-soft text-warning hover:bg-warning-soft/80',
+          )}
+        >
+          <Warning size={13} weight="fill" />
+          <span>Menipis ({low.length})</span>
+        </button>
+      </div>
+
+      {/* Input Pencarian & Dropdown Kategori Desktop */}
       <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-        <label class="relative block flex-1">
-          <span class="sr-only">Cari barang</span>
-          <MagnifyingGlass size={20} class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg" aria-hidden />
+        <div class="relative flex-1">
+          <label class="sr-only" for="search-barang">
+            Cari barang
+          </label>
+          <MagnifyingGlass
+            size={18}
+            class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-fg"
+            aria-hidden
+          />
           <Input
+            id="search-barang"
             ref={searchRef}
             type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            autoCorrect="off"
+            autoCapitalize="none"
             value={q}
             onInput={(e) => setQ(e.currentTarget.value)}
-            placeholder="Cari nama atau kode… (tekan /)"
-            class="pl-10"
+            placeholder="Cari nama atau kode barang… (tekan /)"
+            class="min-h-11 pl-10 pr-9 text-sm rounded-xl"
           />
-        </label>
+          {q && (
+            <button
+              type="button"
+              onClick={() => {
+                setQ('');
+                searchRef.current?.focus();
+              }}
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 flex size-7 items-center justify-center rounded-full text-muted-fg hover:bg-muted hover:text-fg cursor-pointer"
+              aria-label="Hapus pencarian"
+            >
+              <X size={15} weight="bold" />
+            </button>
+          )}
+        </div>
 
-        <div class="w-full sm:w-56 shrink-0">
-          <label class="sr-only" for="filter-kategori">Filter Kategori</label>
+        {/* Dropdown filter untuk layar tablet/desktop */}
+        <div class="hidden sm:block w-56 shrink-0">
+          <label class="sr-only" for="filter-kategori">
+            Filter Kategori
+          </label>
           <Select
             id="filter-kategori"
             value={kat}
@@ -172,34 +467,25 @@ export function Dashboard() {
             })}
           </Select>
         </div>
-
-        <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-ctl border border-line bg-card px-3.5 font-semibold shrink-0 select-none hover:bg-muted/50 transition-colors">
-          <input
-            type="checkbox"
-            checked={onlyLow}
-            onChange={(e) => setOnlyLow(e.currentTarget.checked)}
-            class="size-5 accent-primary cursor-pointer"
-          />
-          <span class="text-sm">Hanya menipis</span>
-        </label>
       </div>
 
+      {/* Baris Ringkasan Filter Aktif */}
       {hasFilter && (
-        <div class="flex flex-wrap items-center justify-between gap-2 rounded-ctl border border-line/70 bg-muted/60 px-3 py-2 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line/70 bg-muted/60 px-3.5 py-2 text-xs">
           <div class="flex flex-wrap items-center gap-1.5 text-muted-fg">
             <span class="font-semibold text-fg">Filter aktif:</span>
             {q.trim() && (
-              <span class="rounded bg-card px-2 py-0.5 font-medium text-fg border border-line">
+              <span class="rounded-md bg-card px-2 py-0.5 font-medium text-fg border border-line">
                 Kata kunci: "{q.trim()}"
               </span>
             )}
             {kat && (
-              <span class="rounded bg-card px-2 py-0.5 font-medium text-fg border border-line">
+              <span class="rounded-md bg-card px-2 py-0.5 font-medium text-fg border border-line">
                 Kategori: {kat}
               </span>
             )}
             {onlyLow && (
-              <span class="rounded bg-warning-soft px-2 py-0.5 font-medium text-warning border border-warning/30">
+              <span class="rounded-md bg-warning-soft px-2 py-0.5 font-medium text-warning border border-warning/30">
                 Stok menipis
               </span>
             )}
@@ -208,7 +494,7 @@ export function Dashboard() {
           <button
             type="button"
             onClick={resetFilter}
-            class="inline-flex items-center gap-1 font-semibold text-primary hover:underline cursor-pointer select-none"
+            class="inline-flex min-h-8 items-center gap-1 font-semibold text-primary hover:underline cursor-pointer select-none"
           >
             <X size={14} aria-hidden />
             <span>Reset filter</span>
@@ -216,6 +502,7 @@ export function Dashboard() {
         </div>
       )}
 
+      {/* Tabel & Daftar Kartu Barang */}
       {list.length === 0 ? (
         <div class="flex flex-col items-center justify-center gap-3 rounded-card border border-dashed border-line bg-card p-10 text-center">
           <p class="text-sm font-semibold text-fg">Tidak ada barang yang cocok dengan filter yang dipilih.</p>
@@ -233,11 +520,18 @@ export function Dashboard() {
           groupBadge={groupBadge}
           searchQuery={q}
           empty="Tidak ada barang yang cocok."
+          renderCard={renderBarangCard}
         />
       )}
-      <p class="text-sm text-muted-fg">
+
+      <p class="text-xs sm:text-sm text-muted-fg">
         Data tersimpan di{' '}
-        <a href={d.url} target="_blank" rel="noopener" class="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline">
+        <a
+          href={d.url}
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+        >
           Google Sheet <ArrowSquareOut size={14} aria-hidden />
         </a>
         .

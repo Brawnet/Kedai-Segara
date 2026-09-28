@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { nf, parseNum, ymdhm } from '../lib/format';
+import { cegahBukanAngka, hanyaAngka, nf, parseNum, ymdhm } from '../lib/format';
 import { Banner, Button, Card, Field, Input, PageTitle, Select } from '../components/ui';
 import { Section, useAdmin } from './shared';
 import { BarangSelect, TxList } from './Tx';
@@ -18,7 +18,8 @@ export function MasukPage() {
     if (!(parseNum(f.j) > 0)) er.j = 'Jumlah harus lebih dari 0';
     setErr(er);
     if (Object.keys(er).length) return;
-    if (await A('stokMasuk', [f.b, parseNum(f.j), f.s.trim(), f.c.trim()], 'Stok masuk dicatat')) setF({ b: f.b, j: '', s: f.s, c: '' });
+    const reqId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    if (await A('stokMasuk', [f.b, parseNum(f.j), f.s.trim(), f.c.trim(), reqId], 'Stok masuk dicatat')) setF({ b: f.b, j: '', s: f.s, c: '' });
   };
 
   return (
@@ -31,7 +32,19 @@ export function MasukPage() {
           </Field>
           <Field label={`Jumlah datang${b ? ` (${b.satuan})` : ''}`} error={err.j}>
             {(id, dId) => (
-              <Input id={id} inputmode="decimal" value={f.j} onInput={(e) => setF({ ...f, j: e.currentTarget.value })} aria-invalid={!!err.j} aria-describedby={dId} class="num" />
+              <Input
+                id={id}
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="0"
+                value={f.j}
+                onKeyDown={(e) => cegahBukanAngka(e, f.j)}
+                onInput={(e) => setF({ ...f, j: hanyaAngka(e.currentTarget.value) })}
+                aria-invalid={!!err.j}
+                aria-describedby={dId}
+                class="num font-bold text-lg"
+              />
             )}
           </Field>
           <Field label="Supplier (opsional)">{(id) => <Input id={id} value={f.s} onInput={(e) => setF({ ...f, s: e.currentTarget.value })} />}</Field>
@@ -103,7 +116,19 @@ export function ManualPage() {
           </Field>
           <Field label={`Jumlah${b ? ` (${b.satuan})` : ''}`} error={err.j}>
             {(id, dId) => (
-              <Input id={id} inputmode="decimal" value={f.j} onInput={(e) => setF({ ...f, j: e.currentTarget.value })} aria-invalid={!!err.j} aria-describedby={dId} class="num" />
+              <Input
+                id={id}
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="0"
+                value={f.j}
+                onKeyDown={(e) => cegahBukanAngka(e, f.j)}
+                onInput={(e) => setF({ ...f, j: hanyaAngka(e.currentTarget.value) })}
+                aria-invalid={!!err.j}
+                aria-describedby={dId}
+                class="num font-bold text-lg"
+              />
             )}
           </Field>
           <div class="md:col-span-2">

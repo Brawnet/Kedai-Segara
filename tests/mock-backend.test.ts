@@ -125,6 +125,29 @@ describe('Mock Backend Business Logic & Invariants', () => {
     );
   });
 
+  it('simpanBarang preserves active status when aktif is omitted (undefined)', () => {
+    const api = createMock();
+    const item = api.getTablet().barang[0]!;
+    assert.ok(item);
+
+    // Updating item without explicitly passing aktif must not deactivate it or throw
+    const ok = api.simpanBarang('12345', {
+      id: item.id,
+      nama: item.nama + ' Updated',
+      satuan: item.satuan,
+      kategori: item.kategori,
+      kode: item.kode,
+      catatan: item.catatan,
+      alur: item.alur,
+      ambang_min: 5,
+    });
+    assert.equal(ok, true);
+
+    // Item must remain visible on tablet
+    const tabletAfter = api.getTablet();
+    assert.ok(tabletAfter.barang.some((b) => b.id === item.id && b.nama.includes('Updated')));
+  });
+
   it('simpanKaryawan prevents duplicate employee names (case-insensitive)', () => {
     const api = createMock();
     const admin = api.adminData('12345');
@@ -194,6 +217,21 @@ describe('Mock Backend Business Logic & Invariants', () => {
       () => api.simpanOpname('12345', [{ barang_id: item.id, fisik: 'abc' }]),
       /tidak valid/,
     );
+
+    // Multiple items opname preserves timestamp batching
+    const items = admin.barang.slice(0, 3);
+    const batchCount = api.simpanOpname(
+      '12345',
+      items.map((b) => ({ barang_id: b.id, fisik: String(b.stok_dalam + 1) })),
+    );
+    assert.equal(batchCount, 3);
+    const opnames = api.adminData('12345').opname;
+    assert.ok(opnames.length >= 4);
+    const latestTime = opnames[0]!.waktu;
+    assert.ok(latestTime);
+    // The 3 items in the batch share the exact same timestamp
+    assert.equal(opnames[1]!.waktu, latestTime);
+    assert.equal(opnames[2]!.waktu, latestTime);
   });
 
   it('simpanPengaturan updates closing time and PIN securely', () => {
@@ -271,5 +309,28 @@ describe('Mock Backend Business Logic & Invariants', () => {
     const emp = api.adminData('12345').karyawan.find((k) => k.nama === 'Tanpa Pin Mock');
     assert.ok(emp);
     assert.equal(emp.punyaPin, false);
+  });
+
+  it('provides dummy rekap data with realistic historical balance tracking', () => {
+    const api = createMock();
+    const admin = api.adminData('12345');
+
+    // Pre-seeded with 3 historical rekap sessions
+    assert.ok(admin.rekap.length >= 3);
+    const latest = admin.rekap[0]!;
+    assert.ok(latest.waktu);
+    assert.ok(latest.karyawan);
+    assert.ok(latest.baris.length > 0);
+
+    // Balance equation check: terpakai == saldo_awal + diambil - sisa
+    for (const b of latest.baris) {
+      assert.equal(b.terpakai, b.saldo_awal + b.diambil - b.sisa);
+    }
+
+    // Calling buatDummyRekap requires valid PIN and adds more sessions
+    assert.throws(() => api.buatDummyRekap('wrong'), /PIN salah/);
+    const added = api.buatDummyRekap('12345');
+    assert.equal(added, 3);
+    assert.ok(api.adminData('12345').rekap.length >= 6);
   });
 });

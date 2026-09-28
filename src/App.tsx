@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { diAppsScript } from './lib/api';
 import { Tablet } from './tablet/Tablet';
 import { Admin } from './admin/Admin';
-
+import { AuthGate } from './components/AuthGate';
 export type Mode = 'tablet' | 'admin';
 
 function awalMode(): Mode {
@@ -25,5 +25,43 @@ export function App() {
     );
   }
 
-  return mode === 'tablet' ? <Tablet onAdmin={() => setMode('admin')} /> : <Admin onTablet={() => setMode('tablet')} />;
+  return (
+    <AuthGate>
+      {(session, logout) => {
+        if (session.role === 'tablet' && mode === 'admin') {
+          return (
+            <main class="min-h-screen flex items-center justify-center p-4 bg-bg text-fg">
+              <div class="max-w-md w-full rounded-card border border-warning/40 bg-card p-6 flex flex-col gap-4 text-center shadow-md">
+                <h2 class="text-xl font-bold text-warning">Akses Dibatasi</h2>
+                <p class="text-sm text-muted-fg leading-relaxed">
+                  Akun Anda (<strong class="text-fg">{session.email}</strong>) terdaftar dengan hak akses <strong>Tablet Saja</strong>. Menu Admin memerlukan akun dengan hak akses Admin Penuh.
+                </p>
+                <div class="flex gap-2 justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setMode('tablet')}
+                    class="rounded-ctl bg-primary px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-hover cursor-pointer"
+                  >
+                    Kembali ke Tablet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    class="rounded-ctl border border-line px-4 py-2 font-semibold hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    Ganti Akun
+                  </button>
+                </div>
+              </div>
+            </main>
+          );
+        }
+        return mode === 'tablet' ? (
+          <Tablet onAdmin={() => setMode('admin')} session={session} onLogout={logout} />
+        ) : (
+          <Admin onTablet={() => setMode('tablet')} session={session} onLogout={logout} />
+        );
+      }}
+    </AuthGate>
+  );
 }

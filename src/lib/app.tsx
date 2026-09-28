@@ -1,6 +1,7 @@
 import { createContext } from 'preact';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
+import { CheckCircle, WarningOctagon } from '@phosphor-icons/react';
 import { call, pesan } from './api';
 import type { Api } from './types';
 
@@ -66,7 +67,10 @@ export function AppProvider({ children }: { children: ComponentChildren }) {
 
   const act = useCallback<AppCtx['act']>(
     async (fn, args, onErr) => {
-      if (busyRef.current) return undefined;
+      if (busyRef.current) {
+        toast('Sedang memproses permintaan, silakan tunggu…', false);
+        return undefined;
+      }
       busyRef.current = true;
       setBusy(true);
       try {
@@ -100,11 +104,18 @@ export function AppProvider({ children }: { children: ComponentChildren }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            class={`animate-rise pointer-events-auto max-w-md rounded-ctl px-4 py-3 text-sm font-semibold text-white shadow-lg ${
-              t.bad ? 'bg-danger' : 'bg-fg'
+            class={`animate-rise pointer-events-auto flex items-center gap-2.5 max-w-md rounded-ctl px-4 py-3 text-sm font-semibold shadow-xl border ${
+              t.bad
+                ? 'bg-danger text-white border-danger-hover'
+                : 'bg-fg text-bg border-line/30 dark:bg-card dark:text-fg dark:border-line-strong'
             }`}
           >
-            {t.msg}
+            {t.bad ? (
+              <WarningOctagon size={18} weight="fill" class="shrink-0 text-white" aria-hidden />
+            ) : (
+              <CheckCircle size={18} weight="fill" class="shrink-0 text-emerald-400 dark:text-emerald-400" aria-hidden />
+            )}
+            <span>{t.msg}</span>
           </div>
         ))}
       </div>

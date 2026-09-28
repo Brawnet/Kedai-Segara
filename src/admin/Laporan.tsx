@@ -34,8 +34,10 @@ export function LaporanPage() {
     const url = await act('laporanKeSheet', [pin, a, b], onErr);
     if (url) {
       setSheet(url);
-      toast('Laporan disalin ke sheet “Laporan”');
-      window.open(url, '_blank', 'noopener');
+      toast('Laporan disalin ke sheet “Laporan”. Klik tautan di bawah jika popup terblokir.');
+      try {
+        window.open(url, '_blank', 'noopener');
+      } catch {}
     }
   };
 

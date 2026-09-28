@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { nf, parseNum, r3, cocok, dekatTutup, urutKat, grupKat, katOf } from '../src/lib/format.ts';
+import { nf, parseNum, r3, cocok, dekatTutup, urutKat, grupKat, katOf, hanyaAngka, cegahBukanAngka } from '../src/lib/format.ts';
 
 describe('Format & Number Parsing Helpers', () => {
   it('nf formats valid numbers into Indonesian locale with max 3 decimals', () => {
@@ -21,12 +21,16 @@ describe('Format & Number Parsing Helpers', () => {
     assert.equal(nf('not-a-number'), '0');
   });
 
-  it('parseNum converts comma decimals and returns valid numbers', () => {
+  it('parseNum converts comma decimals, thousands separators, and returns valid numbers', () => {
     assert.equal(parseNum('10'), 10);
     assert.equal(parseNum('10,5'), 10.5);
     assert.equal(parseNum('0,125'), 0.125);
     assert.equal(parseNum(5.5), 5.5);
     assert.equal(parseNum(0), 0);
+    assert.equal(parseNum('1.000'), 1000);
+    assert.equal(parseNum('1.000,5'), 1000.5);
+    assert.equal(parseNum('1.000.000'), 1000000);
+    assert.equal(parseNum('1.000.000,25'), 1000000.25);
   });
 
   it('parseNum returns NaN for empty/null/undefined or non-numeric strings', () => {
@@ -83,5 +87,68 @@ describe('Format & Number Parsing Helpers', () => {
     assert.equal(grouped[0].l.length, 2);
     assert.equal(grouped[1].k, 'Freezer Protein');
     assert.equal(grouped[1].l.length, 1);
+  });
+
+  it('hanyaAngka strips non-numeric characters and enforces at most one decimal separator', () => {
+    assert.equal(hanyaAngka('123'), '123');
+    assert.equal(hanyaAngka('12a3bc'), '123');
+    assert.equal(hanyaAngka('abc'), '');
+    assert.equal(hanyaAngka('-5'), '5');
+    assert.equal(hanyaAngka('10,5'), '10,5');
+    assert.equal(hanyaAngka('10.5'), '10.5');
+    assert.equal(hanyaAngka('10.5.2'), '10.52');
+    assert.equal(hanyaAngka('10,5,2'), '10,52');
+    assert.equal(hanyaAngka('!@#$%^'), '');
+  });
+
+  it('cegahBukanAngka prevents non-numeric keys while allowing navigation and shortcuts', () => {
+    let prevented = false;
+    const makeEv = (key: string, extra = {}) => ({
+      key,
+      preventDefault: () => { prevented = true; },
+      ...extra,
+    } as unknown as KeyboardEvent);
+
+    // Allowed digit
+    prevented = false;
+    cegahBukanAngka(makeEv('5'), '');
+    assert.equal(prevented, false);
+
+    // Allowed decimal point when none exists
+    prevented = false;
+    cegahBukanAngka(makeEv(','), '10');
+    assert.equal(prevented, false);
+
+    prevented = false;
+    cegahBukanAngka(makeEv('.'), '10');
+    assert.equal(prevented, false);
+
+    // Blocked second decimal point
+    prevented = false;
+    cegahBukanAngka(makeEv(','), '10,5');
+    assert.equal(prevented, true);
+
+    // Blocked letters and symbols
+    prevented = false;
+    cegahBukanAngka(makeEv('a'), '10');
+    assert.equal(prevented, true);
+
+    prevented = false;
+    cegahBukanAngka(makeEv('-'), '10');
+    assert.equal(prevented, true);
+
+    // Allowed navigation / control keys
+    prevented = false;
+    cegahBukanAngka(makeEv('Backspace'), '10');
+    assert.equal(prevented, false);
+
+    prevented = false;
+    cegahBukanAngka(makeEv('ArrowLeft'), '10');
+    assert.equal(prevented, false);
+
+    // Allowed shortcuts (e.g. Ctrl+A, Ctrl+V)
+    prevented = false;
+    cegahBukanAngka(makeEv('v', { ctrlKey: true }), '10');
+    assert.equal(prevented, false);
   });
 });
