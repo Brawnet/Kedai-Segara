@@ -47,6 +47,17 @@ function resetStokLuar() {
   });
 }
 
+function appendBatch_(n, rows) {
+  if (!rows || rows.length === 0) return;
+  var s = sheet_(n);
+  var cols = SHEETS[n];
+  var raw = rows.map(function (o) {
+    return cols.map(function (k) { return safeCell_(o[k] === undefined ? '' : o[k]); });
+  });
+  var lr = s.getLastRow();
+  s.getRange(lr + 1, 1, raw.length, cols.length).setValues(raw);
+}
+
 function tutupPeriodeSeptember() {
   return lock_(function () {
     var allTx = rows_('Transaksi');
@@ -59,6 +70,7 @@ function tutupPeriodeSeptember() {
     var rekapWaktu = fmt_(rekapTs);
     var rekapId = 'rekap_sept_2026';
     var existingRekap = rows_('Rekap').filter(function (r) { return String(r.id) === rekapId || num_(r.ts) >= rekapTs; });
+    var barisAdded = 0;
     if (existingRekap.length === 0) {
       append_('Rekap', {
         id: rekapId,
@@ -75,11 +87,12 @@ function tutupPeriodeSeptember() {
           before[id] = r_((before[id] || 0) + num_(t.jumlah));
         }
       });
+      var barisRows = [];
       rows_('Barang').forEach(function (b) {
         var id = String(b.id);
         var diambil = before[id] || 0;
         if (diambil > 0) {
-          append_('RekapBaris', {
+          barisRows.push({
             rekap_id: rekapId,
             barang_id: id,
             barang: b.nama,
@@ -91,21 +104,20 @@ function tutupPeriodeSeptember() {
           });
         }
       });
+      appendBatch_('RekapBaris', barisRows);
+      barisAdded = barisRows.length;
     }
-    var barangList = rows_('Barang');
-    var updated = 0;
-    barangList.forEach(function (b) {
-      if (num_(b.stok_luar) !== 0) {
-        b.stok_luar = 0;
-        update_('Barang', b);
-        updated++;
-      }
-    });
+    var shB = sheet_('Barang');
+    var lr = shB.getLastRow();
+    if (lr > 1) {
+      var colIdx = SHEETS['Barang'].indexOf('stok_luar') + 1;
+      shB.getRange(2, colIdx, lr - 1, 1).setValue(0);
+    }
     return {
       ok: true,
       rekap_id: rekapId,
       rekap_waktu: rekapWaktu,
-      stok_luar_dinolkan: updated,
+      baris_ditutup: barisAdded,
       transaksi_terakhir: fmt_(maxTs)
     };
   });
@@ -113,21 +125,35 @@ function tutupPeriodeSeptember() {
 
 function doGet(e) {
   if (e && e.parameter && e.parameter.aksi === 'reset_stok_luar') {
-    var res = resetStokLuar();
-    return ContentService.createTextOutput(JSON.stringify(res))
-      .setMimeType(ContentService.MimeType.JSON);
+    try {
+      var res = resetStokLuar();
+      return ContentService.createTextOutput(JSON.stringify(res))
+        .setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
   if (e && e.parameter && e.parameter.aksi === 'tutup_september') {
-    var res = tutupPeriodeSeptember();
-    return ContentService.createTextOutput(JSON.stringify(res))
-      .setMimeType(ContentService.MimeType.JSON);
+    try {
+      var res = tutupPeriodeSeptember();
+      return ContentService.createTextOutput(JSON.stringify(res))
+        .setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
   if (e && e.parameter && e.parameter.aksi === 'cek_rekap_draf') {
-    var draf = hitungRekap_(Date.now());
-    return ContentService.createTextOutput(JSON.stringify({ total: draf.length, baris: draf }))
-      .setMimeType(ContentService.MimeType.JSON);
+    try {
+      var draf = hitungRekap_(Date.now());
+      return ContentService.createTextOutput(JSON.stringify({ total: draf.length, baris: draf }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
-  var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
   var html = HtmlService.createHtmlOutputFromFile('index').getContent().replace('__SEGARA_MODE__', mode);
   return HtmlService.createHtmlOutput(html)
     .setTitle('Stok Segara')
