@@ -28,6 +28,7 @@ export interface Karyawan {
   id: string;
   nama: string;
   punyaPin?: boolean;
+  pinLen?: number;
 }
 export interface KaryawanAdmin extends Karyawan {
   aktif: boolean;

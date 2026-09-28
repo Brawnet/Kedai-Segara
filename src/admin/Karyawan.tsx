@@ -212,7 +212,7 @@ export function KaryawanPage() {
               <ShieldCheck size={14} weight="bold" class="mr-1 inline" aria-hidden /> PIN Aktif
             </Tag>
             <span class="font-mono text-xs tracking-widest text-muted-fg select-none" title="PIN terpasang">
-              ••••
+              {'•'.repeat(k.pinLen || 4)}
             </span>
           </div>
         ) : (

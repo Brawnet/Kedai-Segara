@@ -178,6 +178,20 @@ function jam_(s) {
 function jamTutup_() { return jam_(getSetting_('jam_tutup')); }
 // PIN karyawan sebagai teks. Sel lama bisa berupa angka (Sheets membuang nol di depan).
 function pinK_(k) { return k.pin === null || k.pin === undefined ? '' : String(k.pin).trim(); }
+function pinLen_(k) {
+  var s = pinK_(k);
+  if (!s) return 0;
+  if (typeof k.pin === 'number') {
+    var numStr = String(k.pin);
+    return numStr.length >= 4 && numStr.length <= 6 ? numStr.length : 4;
+  }
+  if (s.indexOf('$') > 0) {
+    var len = parseInt(s.split('$')[0], 10);
+    if (len >= 4 && len <= 6) return len;
+  }
+  if (/^\d{4,6}$/.test(s)) return s.length;
+  return 4;
+}
 function cache_() {
   try {
     return typeof CacheService !== 'undefined' ? CacheService.getScriptCache() : null;
@@ -441,7 +455,7 @@ function getTablet(token) {
   return {
     barang: rows_('Barang').map(pub_).filter(function (b) { return b.aktif; }).map(tab_),
     karyawan: rows_('Karyawan').filter(function (k) { return truthy_(k.aktif); }).map(function (k) {
-      return { id: String(k.id), nama: String(k.nama), punyaPin: pinK_(k) !== '' };
+      return { id: String(k.id), nama: String(k.nama), punyaPin: pinK_(k) !== '', pinLen: pinLen_(k) };
     }),
     status: status_(),
     urutan: urutanKategori_(),
@@ -457,12 +471,12 @@ function ambil_(karyawanId, barangId, jumlah, ts, oleh) {
     if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
     if (!k || (oleh === 'karyawan' && !truthy_(k.aktif))) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     if (jumlah > num_(b.stok_dalam) + 1e-9) throw new Error(oleh === 'admin' ? 'Stok gudang tidak cukup. Sisa: ' + num_(b.stok_dalam) + ' ' + b.satuan : 'Jumlah melebihi stok gudang yang tercatat. Hubungi admin.');
-    var alur = b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     b.stok_dalam = r_(num_(b.stok_dalam) - jumlah);
-    if (alur === 'LUAR') b.stok_luar = r_(num_(b.stok_luar) + jumlah);
+    b.stok_luar = r_(num_(b.stok_luar) + jumlah);
+    b.alur = 'LUAR';
     update_('Barang', b);
     var t = { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'AMBIL', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-      karyawan_id: String(k.id), karyawan: k.nama, alur: alur, status: 'AKTIF', dicatat_oleh: oleh,
+      karyawan_id: String(k.id), karyawan: k.nama, alur: 'LUAR', status: 'AKTIF', dicatat_oleh: oleh,
       kategori: String(b.kategori || ''), satuan: String(b.satuan || '') };
     append_('Transaksi', t);
     return { tx: { id: t.id, ts: ts }, barang: oleh === 'admin' ? pub_(b) : tab_(pub_(b)) };
@@ -499,7 +513,7 @@ function batalAmbil(txId, pin, token) {
     var b = find_('Barang', t.barang_id);
     if (!b) throw new Error('Barang tidak ditemukan');
     b.stok_dalam = r_(num_(b.stok_dalam) + num_(t.jumlah));
-    if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
+    b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
     update_('Barang', b);
     t.status = 'BATAL';
     if (adminEmail) t.dicatat_oleh = adminEmail;
@@ -579,7 +593,7 @@ function adminData(pin, token) {
   return {
     barang: rows_('Barang').map(pub_),
     karyawan: rows_('Karyawan').map(function (k) {
-      return { id: String(k.id), nama: String(k.nama), aktif: truthy_(k.aktif), punyaPin: pinK_(k) !== '' };
+      return { id: String(k.id), nama: String(k.nama), aktif: truthy_(k.aktif), punyaPin: pinK_(k) !== '', pinLen: pinLen_(k) };
     }),
     transaksi: rows_('Transaksi').sort(desc).slice(0, 400).map(clean_),
     rekap: rekap,
@@ -669,11 +683,11 @@ function simpanKaryawan(pin, o, token) {
       var k = find_('Karyawan', o.id);
       if (!k) throw new Error('Karyawan tidak ditemukan');
       k.nama = nm; k.aktif = o.aktif !== false;
-      if (pVal !== undefined) k.pin = pVal ? hashPin_(pVal, karyawanSalt_(k.id)) : '';
+      if (pVal !== undefined) k.pin = pVal ? (pVal.length + '$' + hashPin_(pVal, karyawanSalt_(k.id))) : '';
       update_('Karyawan', k);
     } else {
       var newId = uid_();
-      append_('Karyawan', { id: newId, nama: nm, aktif: true, pin: pVal ? hashPin_(pVal, karyawanSalt_(newId)) : '' });
+      append_('Karyawan', { id: newId, nama: nm, aktif: true, pin: pVal ? (pVal.length + '$' + hashPin_(pVal, karyawanSalt_(newId))) : '' });
     }
     return true;
   });
@@ -806,13 +820,15 @@ function verifikasiPinKaryawan(karyawanId, pin) {
   // Sel lama berisi angka (Sheets membuang nol di depan: "0123" → 123): cocokkan nilai angkanya,
   // hanya untuk input 4–6 digit. Teks biasa harus sama persis.
   var legacyNum = typeof k.pin === 'number' && /^\d{4,6}$/.test(input) && Number(input) === k.pin;
-  var cocok = (stored === hashed) || (stored === input) || legacyNum;
+  var storedHash = stored.indexOf('$') > 0 ? stored.split('$')[1] : stored;
+  var cocok = (stored === hashed) || (storedHash === hashed) || (stored === input) || legacyNum;
   if (!cocok) {
     rateLimitCatatGagal_('karyawan_' + karyawanId, 60);
     throw new Error('PIN karyawan salah');
   }
-  if (stored !== hashed) {
-    k.pin = hashed;
+  var newStored = input.length + '$' + hashed;
+  if (stored !== newStored) {
+    k.pin = newStored;
     update_('Karyawan', k);
   }
   rateLimitReset_('karyawan_' + karyawanId);
