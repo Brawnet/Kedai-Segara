@@ -185,6 +185,7 @@ export function BarangPage() {
                   {b.kode}
                 </span>
               )}
+              {b.alur === 'LANGSUNG_HABIS' && <Tag tone="neutral">Langsung Habis</Tag>}
               {!b.aktif && <Tag tone="danger">Arsip</Tag>}
               {menipis && (
                 <Tag tone="warning">
@@ -220,7 +221,7 @@ export function BarangPage() {
       align: 'center',
       cell: (b) => (
         <span class="num font-semibold text-fg text-sm sm:text-[15px]">
-          {nf(b.stok_luar)}
+          {b.alur === 'LANGSUNG_HABIS' ? '—' : nf(b.stok_luar)}
         </span>
       ),
     },
@@ -331,6 +332,7 @@ export function BarangPage() {
                   {nf(total)} Porsi
                 </Tag>
               )}
+              {b.alur === 'LANGSUNG_HABIS' && <Tag tone="neutral">Langsung Habis</Tag>}
               {!b.aktif && <Tag tone="danger">Arsip</Tag>}
               {menipis && (
                 <Tag tone="warning">
@@ -364,9 +366,9 @@ export function BarangPage() {
           <div class="flex flex-col border-x border-line/60">
             <span class="text-[11px] text-muted-fg font-medium">Luar / Dapur</span>
             <span class="font-semibold text-sm text-fg num">
-              {nf(b.stok_luar)}
+              {b.alur === 'LANGSUNG_HABIS' ? '—' : nf(b.stok_luar)}
             </span>
-            <span class="text-[10px] text-muted-fg">{b.satuan}</span>
+            <span class="text-[10px] text-muted-fg">{b.alur === 'LANGSUNG_HABIS' ? 'Langsung' : b.satuan}</span>
           </div>
           <div class="flex flex-col">
             <span class="text-[11px] text-muted-fg font-medium">{porsi ? 'Total Porsi' : 'Min. Ambang'}</span>
@@ -793,10 +795,14 @@ export function BarangPage() {
                 <div class="flex items-center gap-1.5 text-muted-fg font-medium flex-wrap">
                   <span>Stok tercatat:</span>
                   <span class="font-bold text-fg num">{nf(itemDiedit.stok_dalam)}</span> gudang
-                  <span>·</span>
-                  <span class="font-bold text-fg num">
-                    {nf(itemDiedit.stok_luar)} luar/dapur
-                  </span>
+                  {itemDiedit.alur !== 'LANGSUNG_HABIS' && (
+                    <>
+                      <span>·</span>
+                      <span class="font-bold text-fg num">
+                        {nf(itemDiedit.stok_luar)} luar/dapur
+                      </span>
+                    </>
+                  )}
                   <span>·</span>
                   <span>
                     Total: <strong class="text-primary font-bold num">{nf(totalStokDiedit)} {itemDiedit.satuan}</strong>
@@ -930,6 +936,7 @@ export function BarangPage() {
                       class="min-h-11 text-base"
                     >
                       <option value="LUAR">Masuk Dapur (Stock Luar) & Direkap</option>
+                      <option value="LANGSUNG_HABIS">Langsung Habis (Tanpa Rekap Dapur)</option>
                     </Select>
                   )}
                 </Field>
