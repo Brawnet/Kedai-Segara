@@ -134,22 +134,29 @@ export function RekapPage() {
         label: modeTampilan === 'rinci' ? 'Rincian Stok & Pemakaian' : 'Terpakai',
         bare: true,
         cell: (x) => (
-          <div class="flex flex-wrap items-center gap-2 justify-start py-0.5">
+          <div
+            class={cx(
+              'w-full py-0.5',
+              modeTampilan === 'rinci'
+                ? 'grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap items-stretch gap-2.5'
+                : 'flex flex-wrap items-center gap-2 justify-start',
+            )}
+          >
             {x.baris.length ? (
               x.baris.map((b) =>
                 modeTampilan === 'rinci' ? (
                   <div
                     key={b.barang_id}
-                    class="inline-flex flex-col rounded-ctl border border-line bg-card p-2 text-xs shadow-2xs hover:border-line-strong hover:bg-muted/20 transition-all min-w-[145px] max-w-[220px]"
+                    class="flex flex-col justify-between rounded-ctl border border-line bg-card p-3 sm:p-2.5 text-xs shadow-2xs hover:border-line-strong hover:bg-muted/20 transition-all w-full md:w-auto md:min-w-[165px] md:max-w-[240px]"
                     title={`Awal: ${nf(b.saldo_awal)} | +Ambil: ${nf(b.diambil)} | Sisa: ${nf(b.sisa)} → Terpakai: ${nf(b.terpakai)}`}
                   >
-                    <div class="flex items-center justify-between gap-2 border-b border-line/70 pb-1 mb-1.5">
-                      <span class="font-bold text-fg truncate text-xs" title={b.barang}>
+                    <div class="flex items-center justify-between gap-3 border-b border-line/70 pb-2 sm:pb-1.5 mb-2 sm:mb-1.5">
+                      <span class="font-bold text-fg truncate text-sm sm:text-xs" title={b.barang}>
                         {b.barang}
                       </span>
                       <span
                         class={cx(
-                          'num font-bold px-1.5 py-0.5 rounded text-[11px] min-w-5 text-center shrink-0',
+                          'num font-bold px-2 py-0.5 rounded text-xs sm:text-[11px] min-w-6 text-center shrink-0',
                           b.terpakai > 0
                             ? 'bg-primary-soft text-primary'
                             : 'bg-muted text-muted-fg border border-line/60',
@@ -159,22 +166,22 @@ export function RekapPage() {
                         {nf(b.terpakai)}
                       </span>
                     </div>
-                    <div class="grid grid-cols-3 gap-1 text-center num text-[10.5px]">
+                    <div class="grid grid-cols-3 gap-2 sm:gap-1 text-center num text-xs sm:text-[10.5px]">
                       <div class="flex flex-col items-center">
-                        <span class="text-[9px] uppercase font-bold text-muted-fg tracking-wider">Awal</span>
-                        <span class="font-semibold text-fg">{nf(b.saldo_awal)}</span>
+                        <span class="text-[10px] sm:text-[9px] uppercase font-bold text-muted-fg tracking-wider">Awal</span>
+                        <span class="font-semibold text-fg text-sm sm:text-xs">{nf(b.saldo_awal)}</span>
                       </div>
                       <div class="flex flex-col items-center border-x border-line/60 px-1">
-                        <span class="text-[9px] uppercase font-bold text-muted-fg tracking-wider">+Ambil</span>
-                        <span class="font-semibold text-fg">{b.diambil > 0 ? `+${nf(b.diambil)}` : '0'}</span>
+                        <span class="text-[10px] sm:text-[9px] uppercase font-bold text-muted-fg tracking-wider">+Ambil</span>
+                        <span class="font-semibold text-fg text-sm sm:text-xs">{b.diambil > 0 ? `+${nf(b.diambil)}` : '0'}</span>
                       </div>
                       <div class="flex flex-col items-center">
-                        <span class="text-[9px] uppercase font-bold text-muted-fg tracking-wider">Sisa</span>
-                        <span class="font-semibold text-muted-fg">{nf(b.sisa)}</span>
+                        <span class="text-[10px] sm:text-[9px] uppercase font-bold text-muted-fg tracking-wider">Sisa</span>
+                        <span class="font-semibold text-muted-fg text-sm sm:text-xs">{nf(b.sisa)}</span>
                       </div>
                     </div>
                     {b.catatan ? (
-                      <div class="mt-1 pt-1 border-t border-dashed border-line text-[10px] text-muted-fg italic truncate" title={b.catatan}>
+                      <div class="mt-2 pt-1.5 border-t border-dashed border-line text-[11px] sm:text-[10px] text-muted-fg italic truncate" title={b.catatan}>
                         "{b.catatan}"
                       </div>
                     ) : null}
