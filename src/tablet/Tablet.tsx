@@ -1197,14 +1197,13 @@ function RekapOk({ st, onHome }: { st: Extract<Step, { s: 'rekapOk' }>; onHome: 
         <span class="grid size-14 shrink-0 place-items-center rounded-full bg-success-soft text-success">
           <CheckCircle size={32} weight="fill" aria-hidden />
         </span>
-        <PageTitle kicker={`Rekap tersimpan · ${st.k.nama}`} title="Pemakaian hari ini" />
+        <PageTitle kicker={`Rekap tersimpan · ${st.k.nama}`} title="Sisa dapur hari ini" />
       </div>
       <div class="overflow-hidden rounded-card border border-line bg-card shadow-sm">
         <table class="w-full text-left">
           <thead class="bg-muted text-sm text-muted-fg">
             <tr>
               <th class="px-4 py-3 font-semibold">Barang</th>
-              <th class="px-4 py-3 text-right font-semibold">Terpakai</th>
               <th class="px-4 py-3 text-right font-semibold">Sisa</th>
             </tr>
           </thead>
@@ -1212,10 +1211,7 @@ function RekapOk({ st, onHome }: { st: Extract<Step, { s: 'rekapOk' }>; onHome: 
             {st.rows.map((r, i) => (
               <tr key={r.barang_id}>
                 <td class="px-4 py-3 font-medium">{r.nama}</td>
-                <td class="num px-4 py-3 text-right font-bold">
-                  {nf(r3(r.maks - st.sisa[i]!))} {r.satuan}
-                </td>
-                <td class="num px-4 py-3 text-right text-muted-fg">
+                <td class="num px-4 py-3 text-right font-bold text-fg">
                   {nf(st.sisa[i]!)} {r.satuan}
                 </td>
               </tr>
