@@ -49,9 +49,9 @@ export function Button({ variant = 'secondary', size = 'md', guard, loading, dis
 }
 
 /* ---------- Form ---------- */
-const ctl =
-  'w-full min-h-11 rounded-ctl border border-line-strong bg-card px-3 py-2 text-fg placeholder:text-muted-fg/80 transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:bg-muted aria-[invalid=true]:border-danger';
-
+const ctlBase =
+  'w-full min-h-11 rounded-ctl border border-line-strong bg-card py-2 text-fg placeholder:text-muted-fg/80 transition-colors duration-150 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:bg-muted aria-[invalid=true]:border-danger';
+const ctl = cx(ctlBase, 'px-3');
 export function Field({
   label,
   hint,
@@ -345,11 +345,11 @@ export function Select({
         aria-label={p['aria-label']}
         onClick={() => !disabled && setOpen(!open)}
         class={cx(
-          ctl,
-          'cursor-pointer select-none text-left flex items-center justify-between gap-2 transition-all duration-150',
+          ctlBase,
+          'pl-3.5 pr-4 cursor-pointer select-none text-left flex items-center justify-between gap-2.5 transition-all duration-150',
           open && 'border-primary ring-2 ring-primary/25 bg-card',
           disabled && 'opacity-50 cursor-not-allowed bg-muted',
-          typeof c === 'string' ? c : undefined,
+          typeof c === 'string' ? c.replace(/\b(truncate|pl-\S+|pr-\S+|px-\S+)\b/g, '').trim() : undefined,
         )}
       >
         <span class={cx('truncate flex-1', isPlaceholder ? 'text-muted-fg font-normal' : 'text-fg font-medium')}>
