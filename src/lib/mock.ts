@@ -123,6 +123,7 @@ export function createMock(): Impl {
       aktif: true,
       pin: i === 0 ? mockHash('1234', `salt_${id}`) : '',
       punyaPin: i === 0,
+      pinLen: i === 0 ? 4 : undefined,
     };
   });
   const transaksi: Transaksi[] = [];
@@ -206,8 +207,9 @@ export function createMock(): Impl {
     if (j > b.stok_dalam + 1e-9)
       throw new Error(oleh === 'admin' ? `Stok gudang tidak cukup. Sisa: ${b.stok_dalam} ${b.satuan}` : 'Jumlah melebihi stok gudang yang tercatat. Hubungi admin.');
     b.stok_dalam = r_(b.stok_dalam - j);
-    if (b.alur === 'LUAR') b.stok_luar = r_(b.stok_luar + j);
-    const t = tx({ ts, jenis: 'AMBIL', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: b.alur, dicatat_oleh: oleh, kategori: b.kategori, satuan: b.satuan });
+    b.stok_luar = r_(b.stok_luar + j);
+    b.alur = 'LUAR';
+    const t = tx({ ts, jenis: 'AMBIL', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'LUAR', dicatat_oleh: oleh, kategori: b.kategori, satuan: b.satuan });
     return { tx: { id: t.id, ts }, barang: oleh === 'admin' ? { ...b } : tab(b) };
   };
   const hitung = (cutoff: number, last = lastRekapTs()): RekapRow[] => {
@@ -418,7 +420,7 @@ export function createMock(): Impl {
   return {
     getTablet: () => ({
       barang: barang.filter((b) => b.aktif).map(tab),
-      karyawan: karyawan.filter((k) => k.aktif).map(({ id, nama, pin, punyaPin }) => ({ id, nama, punyaPin: punyaPin ?? !!(pin && pin.trim()) })),
+      karyawan: karyawan.filter((k) => k.aktif).map(({ id, nama, pin, punyaPin, pinLen }) => ({ id, nama, punyaPin: punyaPin ?? !!(pin && pin.trim()), pinLen: pinLen || (pin ? 4 : 0) })),
       status: status(),
       urutan,
       jamTutup,
@@ -458,7 +460,7 @@ export function createMock(): Impl {
       const b = find(t.barang_id);
       if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + t.jumlah);
-      if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
+      b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
       if (adminEmail) t.dicatat_oleh = adminEmail;
       return true;
@@ -499,7 +501,7 @@ export function createMock(): Impl {
       return JSON.parse(
         JSON.stringify({
           barang,
-          karyawan: karyawan.map(({ id, nama, aktif, punyaPin, pin }) => ({ id, nama, aktif, punyaPin: punyaPin ?? !!(pin && pin.trim()) })),
+          karyawan: karyawan.map(({ id, nama, aktif, punyaPin, pin, pinLen }) => ({ id, nama, aktif, punyaPin: punyaPin ?? !!(pin && pin.trim()), pinLen: pinLen || (pin ? 4 : 0) })),
           transaksi: [...transaksi].sort(setelahDesc).slice(0, 400),
           rekap: [...rekap].sort(setelahDesc).slice(0, 30).map((r) => ({ ...r, baris: rekapBaris.filter((x) => x.rekap_id === r.id) })),
           opname: [...opname].sort(setelahDesc).slice(0, 100),
@@ -628,11 +630,11 @@ export function createMock(): Impl {
         Object.assign(k, {
           nama: nm,
           aktif: o.aktif !== false,
-          ...(pVal !== undefined ? { pin: pVal ? mockHash(pVal, `salt_${k.id}`) : '', punyaPin: !!pVal } : {}),
+          ...(pVal !== undefined ? { pin: pVal ? `${pVal.length}$${mockHash(pVal, `salt_${k.id}`)}` : '', punyaPin: !!pVal, pinLen: pVal ? pVal.length : 0 } : {}),
         });
       } else {
         const newId = uid();
-        karyawan.push({ id: newId, nama: nm, aktif: true, pin: pVal ? mockHash(pVal, `salt_${newId}`) : '', punyaPin: !!pVal });
+        karyawan.push({ id: newId, nama: nm, aktif: true, pin: pVal ? `${pVal.length}$${mockHash(pVal, `salt_${newId}`)}` : '', punyaPin: !!pVal, pinLen: pVal ? pVal.length : 0 });
       }
       return true;
     },
@@ -669,7 +671,8 @@ export function createMock(): Impl {
       if (!target) return true;
       rateLimitGuard(`karyawan_${kid}`);
       const input = String(p).trim();
-      const valid = target === input || target === mockHash(input, `salt_${kid}`);
+      const targetHash = target.includes('$') ? target.split('$')[1] : target;
+      const valid = target === input || targetHash === input || target === mockHash(input, `salt_${kid}`) || targetHash === mockHash(input, `salt_${kid}`);
       if (!valid) {
         rateLimitFail(`karyawan_${kid}`);
         throw new Error('PIN karyawan salah');

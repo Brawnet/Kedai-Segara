@@ -439,6 +439,10 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     assert.ok(bambang);
     assert.equal(bambang.punyaPin, true);
     assert.equal(bambang.pin, undefined); // PIN is NOT leaked to admin client
+    assert.equal(bambang.pinLen, 4);
+    const getTablet = runInContext('getTablet', context);
+    const tabBambang = getTablet().karyawan.find((k: { id: string }) => k.id === bambang.id);
+    assert.equal(tabBambang.pinLen, 4);
 
     // Verify stored in sheet as SHA-256 hash, not plaintext
     const row = sheetsData.Karyawan.find((r) => r[1] === 'Bambang');

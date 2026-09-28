@@ -938,7 +938,7 @@ function Jumlah({
     }
   };
 
-  const ket = masuk ? 'Ditambahkan ke stok gudang' : b.alur === 'LUAR' ? 'Dibawa ke dapur, direkap saat closing' : 'Langsung tercatat terpakai';
+  const ket = masuk ? 'Ditambahkan ke stok gudang' : 'Dibawa ke dapur, direkap saat closing';
 
   return (
     <section class="flex flex-col gap-5">
@@ -946,9 +946,9 @@ function Jumlah({
       <div class="grid gap-6 md:grid-cols-[1fr_minmax(300px,380px)] md:items-start">
         <div class="flex flex-col gap-5">
           <PageTitle kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang' : 'Ambil dari gudang'}`} title={b.nama} sub={b.catatan || undefined} />
-          {b.alur === 'LUAR' && (
+          {!masuk && (
             <div class="flex items-center justify-between rounded-card border border-primary/20 bg-primary-soft/50 px-4 py-2.5 text-sm">
-              <span class="font-medium text-muted-fg">Tersedia di luar / depan saat ini:</span>
+              <span class="font-medium text-muted-fg">Tersedia di dapur saat ini:</span>
               <span class="num text-base font-extrabold text-primary">
                 {nf(b.stok_luar ?? 0)} {b.satuan}
               </span>
@@ -1264,6 +1264,7 @@ function PinPromptDialog({
 
   if (!prompt) return null;
   const k = prompt.k;
+  const pinLen = k.pinLen || 4;
 
   const verifikasi = async (val: string) => {
     if (!val || busy) return;
@@ -1299,10 +1300,13 @@ function PinPromptDialog({
       setPin('');
       if (err) setErr('');
     } else if (/^\d$/.test(key)) {
-      if (pin.length < 6) {
+      if (pin.length < pinLen) {
         const next = pin + key;
         setPin(next);
         if (err) setErr('');
+        if (next.length === pinLen) {
+          verifikasi(next);
+        }
       }
     }
   };
@@ -1321,7 +1325,7 @@ function PinPromptDialog({
             variant="primary"
             guard
             loading={busy}
-            disabled={pin.length < 4 || busy}
+            disabled={pin.length < pinLen || busy}
             onClick={() => verifikasi(pin)}
           >
             Masuk
@@ -1336,14 +1340,14 @@ function PinPromptDialog({
           </div>
           <div class="min-w-0 flex-1 text-left">
             <div class="font-bold text-fg truncate">{k.nama}</div>
-            <div class="text-xs text-muted-fg">Masukkan 4–6 angka PIN tablet</div>
+            <div class="text-xs text-muted-fg">Masukkan {pinLen} angka PIN tablet</div>
           </div>
           <LockKey size={20} class="text-primary shrink-0" aria-hidden />
         </div>
 
         {/* Display PIN Dots */}
         <div class="flex items-center justify-center gap-2.5 py-1">
-          {[0, 1, 2, 3, 4, 5].map((idx) => {
+          {Array.from({ length: pinLen }).map((_, idx) => {
             const filled = idx < pin.length;
             return (
               <span

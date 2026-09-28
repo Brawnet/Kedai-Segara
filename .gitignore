@@ -5,8 +5,8 @@
 # Node / build
 node_modules/
 dist/
-# Hasil build Vite (dibuat oleh `npm run build`)
-apps-script/index.html
+# Hasil build Vite (di-track agar siap pakai di Google Apps Script tanpa build manual)
+!apps-script/index.html
 
 # clasp login token (jangan di-commit)
 .clasprc.json

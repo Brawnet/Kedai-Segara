@@ -186,7 +186,6 @@ export function BarangPage() {
                 </span>
               )}
               {!b.aktif && <Tag tone="danger">Arsip</Tag>}
-              {b.opname_rekap === false && <Tag tone="neutral">Tanpa Rekap/Opname</Tag>}
               {menipis && (
                 <Tag tone="warning">
                   <Warning size={12} weight="bold" class="mr-1 inline" aria-hidden /> Menipis
@@ -221,7 +220,7 @@ export function BarangPage() {
       align: 'center',
       cell: (b) => (
         <span class="num font-semibold text-fg text-sm sm:text-[15px]">
-          {b.alur === 'LANGSUNG_HABIS' ? '—' : nf(b.stok_luar)}
+          {nf(b.stok_luar)}
         </span>
       ),
     },
@@ -333,7 +332,6 @@ export function BarangPage() {
                 </Tag>
               )}
               {!b.aktif && <Tag tone="danger">Arsip</Tag>}
-              {b.opname_rekap === false && <Tag tone="neutral">Tanpa Rekap/Opname</Tag>}
               {menipis && (
                 <Tag tone="warning">
                   <Warning size={12} weight="bold" class="mr-1 inline" aria-hidden /> Menipis
@@ -366,9 +364,9 @@ export function BarangPage() {
           <div class="flex flex-col border-x border-line/60">
             <span class="text-[11px] text-muted-fg font-medium">Luar / Dapur</span>
             <span class="font-semibold text-sm text-fg num">
-              {b.alur === 'LANGSUNG_HABIS' ? '—' : nf(b.stok_luar)}
+              {nf(b.stok_luar)}
             </span>
-            <span class="text-[10px] text-muted-fg">{b.alur === 'LANGSUNG_HABIS' ? 'Langsung' : b.satuan}</span>
+            <span class="text-[10px] text-muted-fg">{b.satuan}</span>
           </div>
           <div class="flex flex-col">
             <span class="text-[11px] text-muted-fg font-medium">{porsi ? 'Total Porsi' : 'Min. Ambang'}</span>
@@ -797,7 +795,7 @@ export function BarangPage() {
                   <span class="font-bold text-fg num">{nf(itemDiedit.stok_dalam)}</span> gudang
                   <span>·</span>
                   <span class="font-bold text-fg num">
-                    {itemDiedit.alur === 'LANGSUNG_HABIS' ? '—' : `${nf(itemDiedit.stok_luar)} luar`}
+                    {nf(itemDiedit.stok_luar)} luar/dapur
                   </span>
                   <span>·</span>
                   <span>
@@ -931,8 +929,7 @@ export function BarangPage() {
                       onChange={(e) => up({ alur: e.currentTarget.value as Alur })}
                       class="min-h-11 text-base"
                     >
-                      <option value="LUAR">Lewat Stock Luar (direkap)</option>
-                      <option value="LANGSUNG_HABIS">Langsung habis</option>
+                      <option value="LUAR">Masuk Dapur (Stock Luar) & Direkap</option>
                     </Select>
                   )}
                 </Field>
@@ -1012,56 +1009,6 @@ export function BarangPage() {
               </div>
             </div>
 
-            {/* Bagian 3: Visibilitas Rekap & Opname */}
-            <div class="pt-2.5 border-t border-line">
-              <label
-                class={cx(
-                  'flex items-center justify-between gap-4 rounded-xl border p-3 transition-colors cursor-pointer select-none',
-                  f.opname_rekap !== false
-                    ? 'border-primary/40 bg-primary-soft/40 hover:bg-primary-soft/60'
-                    : 'border-line bg-muted/40 hover:bg-muted/70'
-                )}
-              >
-                <div class="flex flex-col gap-0.5 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold text-fg">Munculkan di Rekap Closing & Opname</span>
-                    {f.opname_rekap !== false ? (
-                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-success-soft text-success border border-success/30">
-                        Aktif
-                      </span>
-                    ) : (
-                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-fg border border-line">
-                        Nonaktif
-                      </span>
-                    )}
-                  </div>
-                  <span class="text-xs text-muted-fg leading-relaxed">
-                    Jika aktif, barang ini akan muncul di lembar rekap harian staf dapur dan proses stock opname fisik.
-                  </span>
-                </div>
-                <div class="relative shrink-0 flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={f.opname_rekap !== false}
-                    onChange={(e) => up({ opname_rekap: e.currentTarget.checked })}
-                    class="sr-only"
-                  />
-                  <div
-                    class={cx(
-                      'w-11 h-6 rounded-full transition-colors duration-200 ease-in-out relative',
-                      f.opname_rekap !== false ? 'bg-primary' : 'bg-line-strong/40'
-                    )}
-                  >
-                    <span
-                      class={cx(
-                        'absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out',
-                        f.opname_rekap !== false ? 'translate-x-5' : 'translate-x-0'
-                      )}
-                    />
-                  </div>
-                </div>
-              </label>
-            </div>
           </form>
         )}
       </Dialog>
