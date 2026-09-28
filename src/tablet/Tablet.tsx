@@ -1138,15 +1138,9 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
               )}
             >
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                {/* Kolom Kiri: Nama Barang & Info Total Stok */}
+                {/* Kolom Kiri: Nama Barang */}
                 <div class="min-w-0 flex-1">
                   <h3 class="text-base sm:text-lg font-bold text-fg leading-snug">{r.nama}</h3>
-                  <div class="mt-1.5 flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 rounded-md border border-line/70 bg-muted/60 px-2.5 py-0.5 text-xs font-medium text-muted-fg">
-                      <span>Total tercatat:</span>
-                      <strong class="num font-bold text-fg">{nf(r.maks)} {r.satuan}</strong>
-                    </span>
-                  </div>
                 </div>
 
                 {/* Kolom Kanan: Input Sisa */}
