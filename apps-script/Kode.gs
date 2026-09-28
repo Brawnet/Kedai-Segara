@@ -124,6 +124,7 @@ function tutupPeriodeSeptember() {
 }
 
 function doGet(e) {
+  var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
   if (e && e.parameter && e.parameter.aksi === 'reset_stok_luar') {
     try {
       var res = resetStokLuar();
