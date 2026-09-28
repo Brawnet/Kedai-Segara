@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createContext, runInContext } from 'node:vm';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 
 type Cell = string | number | boolean | Date | null | undefined;
 
@@ -29,17 +29,18 @@ function display(v: Cell): string {
 }
 const cloneCell = (v: Cell): Cell => (v instanceof Date ? new Date(v.getTime()) : v);
 
-function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
+export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
   const properties: Record<string, string> = {
     SS_ID: 'test-ss-id',
     ADMIN_PIN: '12345',
-    SKEMA: '3',
+    SKEMA: '5',
+    SKIP_AUTH_SESSION: '1',
   };
   const sheetsData: Record<string, Cell[][]> = {
     Barang: [
-      ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
-      ['b1', 'Minyak goreng', 'liter', 'Bahan', 20, 0, 5, 'LUAR', true, 'MG', ''],
-      ['b2', 'Plastik Sampah S', 'Lbr', 'Cleaning', 10, 0, 2, 'LANGSUNG_HABIS', true, 'PS', ''],
+      ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'opname_rekap'],
+      ['b1', 'Minyak goreng', 'liter', 'Bahan', 20, 0, 5, 'LUAR', true, 'MG', '', true],
+      ['b2', 'Plastik Sampah S', 'Lbr', 'Cleaning', 10, 0, 2, 'LANGSUNG_HABIS', true, 'PS', '', true],
     ],
     Karyawan: [
       ['id', 'nama', 'aktif', 'pin'],
@@ -62,8 +63,10 @@ function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
       ['kunci', 'nilai'],
       ['jam_tutup', toCell('21:00')], // setup() lama menulis "21:00" → Sheets mengubahnya jadi nilai waktu
     ],
+    Log_Login: [
+      ['id', 'ts', 'waktu', 'email', 'metode', 'role', 'status', 'user_agent'],
+    ],
   };
-
   let lockAcquired = false;
 
   const mockLock = {
@@ -84,7 +87,26 @@ function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
       if (!sheetsData[sheetName]) sheetsData[sheetName] = [];
       sheetsData[sheetName].push(row.map(toCell));
     },
-    getRange: (row: number, col: number, numRows: number, numCols: number) => ({
+    getRange: (row: number, col: number, numRows: number = 1, numCols: number = 1) => ({
+      getValues: () => {
+        const sheet = sheetsData[sheetName] || [];
+        const res: Cell[][] = [];
+        for (let r = 0; r < numRows; r++) {
+          const rowData = sheet[row - 1 + r] || [];
+          const rowCells: Cell[] = [];
+          for (let c = 0; c < numCols; c++) {
+            rowCells.push(cloneCell(rowData[col - 1 + c] ?? ''));
+          }
+          res.push(rowCells);
+        }
+        return res;
+      },
+      setValue: (val: Cell) => {
+        if (!sheetsData[sheetName]) sheetsData[sheetName] = [];
+        if (!sheetsData[sheetName][row - 1]) sheetsData[sheetName][row - 1] = [];
+        sheetsData[sheetName][row - 1][col - 1] = toCell(val);
+        return { setFontWeight: () => {} };
+      },
       setValues: (values: Cell[][]) => {
         const sheet = sheetsData[sheetName];
         for (let r = 0; r < numRows; r++) {
@@ -97,12 +119,19 @@ function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
       },
       setFontWeight: () => {},
     }),
-    getLastRow: () => (sheetsData[sheetName] ? sheetsData[sheetName].length : 0),
     getMaxColumns: () => 20,
     getMaxRows: () => 100,
+    getLastRow: () => (sheetsData[sheetName] || []).length,
+    getLastColumn: () => ((sheetsData[sheetName] || [])[0] || []).length,
     insertColumnsAfter: () => {},
     insertRowsAfter: () => {},
     setFrozenRows: () => {},
+    deleteRow: (row: number) => {
+      const sheet = sheetsData[sheetName];
+      if (sheet && row >= 1 && row <= sheet.length) {
+        sheet.splice(row - 1, 1);
+      }
+    },
     clear: () => {
       sheetsData[sheetName] = [];
     },
@@ -153,6 +182,9 @@ function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
     },
     Session: {
       getScriptTimeZone: () => 'Asia/Jakarta',
+      getEffectiveUser: () => ({
+        getEmail: () => 'owner@segara.com',
+      }),
     },
     Utilities: {
       getUuid: opts.uuid ?? (() => `uuid-${++uuidCounter}-test-1234`),
@@ -166,9 +198,50 @@ function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
           .replace('mm', pad2(date.getMinutes())),
       computeDigest: (_algo: unknown, value: string, _charset: unknown) =>
         createHash('sha256').update(value, 'utf8').digest(),
+      computeHmacSha256Signature: (value: string, key: string, _charset?: unknown) =>
+        createHmac('sha256', key).update(value, 'utf8').digest(),
       DigestAlgorithm: { SHA_256: 'SHA_256' },
       Charset: { UTF_8: 'UTF_8' },
       base64Encode: (data: Buffer | number[]) => Buffer.from(data).toString('base64'),
+      base64EncodeWebSafe: (data: Buffer | number[] | string) =>
+        Buffer.from(typeof data === 'string' ? data : Buffer.from(data)).toString('base64url'),
+      base64DecodeWebSafe: (data: string) => Buffer.from(data, 'base64url'),
+      newBlob: (bytes: Buffer) => ({
+        getDataAsString: () => Buffer.from(bytes).toString('utf8'),
+      }),
+    },
+    MailApp: {
+      sendEmail: (_opts: unknown) => {},
+    },
+    UrlFetchApp: {
+      fetch: (url: string, _opts?: unknown) => {
+        const parsed = new URL(url);
+        const idToken = parsed.searchParams.get('id_token') || '';
+        if (idToken === 'bad_token') {
+          return {
+            getResponseCode: () => 400,
+            getContentText: () => JSON.stringify({ error: 'invalid_token' }),
+          };
+        }
+        if (idToken === 'other_app_token') {
+          return {
+            getResponseCode: () => 200,
+            getContentText: () => JSON.stringify({
+              email: 'admin@segara.com',
+              email_verified: true,
+              aud: 'attacker-client-id.apps.googleusercontent.com',
+            }),
+          };
+        }
+        return {
+          getResponseCode: () => 200,
+          getContentText: () => JSON.stringify({
+            email: idToken.includes('@') ? idToken : 'admin@segara.com',
+            email_verified: true,
+            aud: 'test-client-id.apps.googleusercontent.com',
+          }),
+        };
+      },
     },
     HtmlService: {
       createHtmlOutputFromFile: () => ({
@@ -393,6 +466,39 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     assert.ok(verifikasiPinKaryawan(bambang.id, '')); // No PIN required when cleared
   });
 
+  it('hapusKaryawan safely deletes or archives employees based on transaction history', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const hapusKaryawan = runInContext('hapusKaryawan', context);
+    const adminData = runInContext('adminData', context);
+    const ambil = runInContext('ambil', context);
+
+    // 1. Wrong PIN is rejected
+    assert.throws(() => hapusKaryawan('wrong-pin', 'k1'), /PIN salah/);
+
+    // 2. Non-existent employee ID throws
+    assert.throws(() => hapusKaryawan('12345', 'non-existent'), /Karyawan tidak ditemukan/);
+
+    // 3. Employee k2 has no transactions -> hard delete permanently removes row
+    const resDel = hapusKaryawan('12345', 'k2');
+    assert.equal(resDel.status, 'deleted');
+    assert.match(resDel.message, /berhasil dihapus permanen/);
+    assert.equal(sheetsData.Karyawan.some((r) => r[0] === 'k2'), false);
+    assert.equal(adminData('12345').karyawan.some((k: { id: string }) => k.id === 'k2'), false);
+
+    // 4. Employee k1 takes stock (generates transaction) -> cannot be hard-deleted, archives instead
+    ambil('k1', 'b1', 1);
+    const resArch = hapusKaryawan('12345', 'k1');
+    assert.equal(resArch.status, 'archived');
+    assert.match(resArch.message, /riwayat transaksi/);
+    // Row still exists in sheet, but aktif is false
+    const k1Row = sheetsData.Karyawan.find((r) => r[0] === 'k1');
+    assert.ok(k1Row);
+    assert.equal(k1Row[2], false);
+    const k1Admin = adminData('12345').karyawan.find((k: { id: string }) => k.id === 'k1');
+    assert.ok(k1Admin);
+    assert.equal(k1Admin.aktif, false);
+  });
+
   it('simpanPengaturan safely updates configuration inside lock', () => {
     const { context, properties, sheetsData } = createAppsScriptEnvironment();
     const simpanPengaturan = runInContext('simpanPengaturan', context);
@@ -555,5 +661,346 @@ describe('Kode.gs regressions (real Google Sheets coercion & integrity)', () => 
     const cells = sheetsData.Laporan.flat();
     assert.ok(cells.includes('=IMPORTXML("http://x")'));
     assert.ok(!cells.some((c) => String(c).startsWith('FORMULA:')));
+  });
+
+  it('buatDummyRekap populates Google Sheets with realistic rekap and transaction history', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const buatDummyRekap = runInContext('buatDummyRekap', context);
+    const adminData = runInContext('adminData', context);
+
+    assert.throws(() => buatDummyRekap('wrong-pin'), /PIN salah/);
+    const count = buatDummyRekap('12345');
+    assert.equal(count, 3);
+
+    // Sheets populated
+    assert.ok(sheetsData.Rekap.length >= 4); // header + 3 rows
+    assert.ok(sheetsData.RekapBaris.length > 3);
+    assert.ok(sheetsData.Transaksi.length > 3);
+
+    // Admin data reflects the rekaps
+    const data = adminData('12345');
+    assert.equal(data.rekap.length, 3);
+    assert.ok(data.rekap[0].baris.length > 0);
+  });
+});
+
+describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invariants', () => {
+  const pin = '12345';
+
+  it('creates and verifies HMAC session token with role and expiry', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+      { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+    const verifySessionToken = runInContext('verifySessionToken', context);
+
+    const sess = buatSessionToken_('admin@segara.com', 'admin');
+    assert.ok(sess.token);
+    assert.equal(sess.email, 'admin@segara.com');
+    assert.equal(sess.role, 'admin');
+    assert.ok(sess.exp > Date.now());
+
+    const verified = verifySessionToken(sess.token);
+    assert.equal(verified.valid, true);
+    assert.equal(verified.email, 'admin@segara.com');
+    assert.equal(verified.role, 'admin');
+  });
+
+  it('rejects tampered or forged session token signature', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+    const verifySessionToken = runInContext('verifySessionToken', context);
+
+    const sess = buatSessionToken_('admin@segara.com', 'admin');
+    const tampered = sess.token + 'forged';
+    const result = verifySessionToken(tampered);
+    assert.equal(result.valid, false);
+    assert.match(result.error, /Tanda tangan token tidak sah/);
+  });
+
+  it('rejects expired session token', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const verifySessionToken = runInContext('verifySessionToken', context);
+    const tokenSecret_ = runInContext('tokenSecret_', context);
+    const secret = tokenSecret_();
+
+    // Buat token dengan exp di masa lalu
+    const payload = ['admin@segara.com', 'admin', Date.now() - 10000, 'nonce123'].join('|');
+    const sig = Buffer.from(createHmac('sha256', secret).update(payload).digest()).toString('base64url');
+    const expiredToken = Buffer.from(payload).toString('base64url') + '.' + sig;
+
+    const res = verifySessionToken(expiredToken);
+    assert.equal(res.valid, false);
+    assert.match(res.error, /Sesi telah berakhir/);
+  });
+
+  it('invalidates session token when account is deactivated or deleted in whitelist', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'owner@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+      { email: 'staff@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+    const verifySessionToken = runInContext('verifySessionToken', context);
+    const simpanAuthAccount = runInContext('simpanAuthAccount', context);
+    const hapusAuthAccount = runInContext('hapusAuthAccount', context);
+
+    const sess = buatSessionToken_('staff@segara.com', 'tablet');
+    assert.equal(verifySessionToken(sess.token).valid, true);
+
+    // Deaktivasi akun
+    simpanAuthAccount(pin, 'staff@segara.com', 'tablet', false);
+    const resDeact = verifySessionToken(sess.token);
+    assert.equal(resDeact.valid, false);
+    assert.match(resDeact.error, /dicabut atau dinonaktifkan/);
+
+    // Hapus akun
+    hapusAuthAccount(pin, 'staff@segara.com');
+    const resDel = verifySessionToken(sess.token);
+    assert.equal(resDel.valid, false);
+  });
+
+  it('simpanAuthAccount prevents deactivating or demoting the last active admin', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'owner@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+      { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const simpanAuthAccount = runInContext('simpanAuthAccount', context);
+
+    // Coba deaktifkan satu-satunya admin aktif
+    assert.throws(
+      () => simpanAuthAccount(pin, 'owner@segara.com', 'admin', false),
+      /Tidak dapat menonaktifkan atau mengubah role admin aktif terakhir/,
+    );
+
+    // Coba ubah role satu-satunya admin aktif jadi tablet
+    assert.throws(
+      () => simpanAuthAccount(pin, 'owner@segara.com', 'tablet', true),
+      /Tidak dapat menonaktifkan atau mengubah role admin aktif terakhir/,
+    );
+  });
+
+  it('hapusAuthAccount prevents deleting the last active admin', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'owner@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const hapusAuthAccount = runInContext('hapusAuthAccount', context);
+    assert.throws(
+      () => hapusAuthAccount(pin, 'owner@segara.com'),
+      /Tidak dapat menghapus admin aktif terakhir/,
+    );
+  });
+
+  it('verifyGoogleCredential verifies audience and rejects client ID mismatch', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.GOOGLE_CLIENT_ID = 'test-client-id.apps.googleusercontent.com';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const verifyGoogleCredential = runInContext('verifyGoogleCredential', context);
+
+    // Token dengan audience salah
+    assert.throws(
+      () => verifyGoogleCredential('other_app_token'),
+      /Token otorisasi Google tidak sah untuk aplikasi ini/,
+    );
+
+    // Token yang valid dengan audience cocok
+    const sess = verifyGoogleCredential('admin@segara.com');
+    assert.equal(sess.email, 'admin@segara.com');
+    assert.equal(sess.role, 'admin');
+    assert.ok(sess.token);
+  });
+
+  it('requestOtp enforces 60-second cooldown per email', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'user@real.com', role: 'tablet', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const requestOtp = runInContext('requestOtp', context);
+
+    const first = requestOtp('user@real.com');
+    assert.equal(first.success, true);
+
+    // Permintaan kedua langsung ditolak cooldown
+    assert.throws(
+      () => requestOtp('user@real.com'),
+      /Tunggu 60 detik sebelum meminta kode baru/,
+    );
+  });
+
+  it('rejects getTablet and ambil when server session is missing or invalid in production', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    // Nonaktifkan bypass test agar mengecek sesi server nyata
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const getTablet = runInContext('getTablet', context);
+    const ambil = runInContext('ambil', context);
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+
+    // Tanpa token ditolak
+    assert.throws(() => getTablet(), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => ambil('k1', 'b1', 1), /Akses ditolak: sesi login wajib disertakan/);
+
+    // Dengan token valid berhasil
+    const sess = buatSessionToken_('tablet@segara.com', 'tablet');
+    const tabRes = getTablet(sess.token);
+    assert.ok(tabRes.barang.length > 0);
+
+    const ambilRes = ambil('k1', 'b1', 1, null, sess.token);
+    assert.ok(ambilRes.tx.id);
+  });
+
+  it('idempotency key prevents double-save on ambil and returns cached result', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const ambil = runInContext('ambil', context);
+
+    const clientTxId = 'test-idemp-key-123';
+    const r1 = ambil('k1', 'b1', 2, clientTxId);
+    assert.ok(r1.tx.id);
+
+    // Hitung baris transaksi setelah panggilan pertama
+    const txRowsAfterFirst = sheetsData.Transaksi.length;
+
+    // Panggil lagi dengan idempotency key yang sama
+    const r2 = ambil('k1', 'b1', 2, clientTxId);
+    assert.equal(r2.tx.id, r1.tx.id);
+
+    // Pastikan tidak ada baris transaksi ganda yang ditambahkan ke sheet
+    assert.equal(sheetsData.Transaksi.length, txRowsAfterFirst);
+  });
+
+  it('rows_ throws error when a required column in sheet is missing or renamed', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const rows_ = runInContext('rows_', context);
+
+    // Ganti kolom 'satuan' menjadi 'satuan_baru' di header sheet Barang
+    sheetsData.Barang[0]![2] = 'satuan_baru';
+
+    assert.throws(
+      () => rows_('Barang'),
+      /Kolom wajib "satuan" tidak ditemukan di sheet "Barang"/,
+    );
+  });
+
+  it('rate limit escalates lockout duration on repeated failures', () => {
+    const { context, mockCache } = createAppsScriptEnvironment();
+    const rateLimitCatatGagal_ = runInContext('rateLimitCatatGagal_', context);
+
+    // 5 kegagalan pertama -> kunci 60 detik (tier 0)
+    for (let i = 0; i < 5; i++) {
+      rateLimitCatatGagal_('test_esc_key');
+    }
+    assert.equal(mockCache.get('rl_lock_test_esc_key'), 'locked');
+    assert.equal(mockCache.get('rl_esc_test_esc_key'), '1');
+
+    // Hapus kunci sementara untuk mensimulasikan percobaan setelah 60 detik berlalu
+    mockCache.delete('rl_lock_test_esc_key');
+
+    // 5 kegagalan berikutnya -> tier 1
+    for (let i = 0; i < 5; i++) {
+      rateLimitCatatGagal_('test_esc_key');
+    }
+    assert.equal(mockCache.get('rl_lock_test_esc_key'), 'locked');
+    assert.equal(mockCache.get('rl_esc_test_esc_key'), '2');
+  });
+
+  it('rejects adminData, simpanBarang, and all admin operations when server session is missing in production', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const adminData = runInContext('adminData', context);
+    const simpanBarang = runInContext('simpanBarang', context);
+    const hapusBarang = runInContext('hapusBarang', context);
+    const simpanKaryawan = runInContext('simpanKaryawan', context);
+    const hapusKaryawan = runInContext('hapusKaryawan', context);
+    const tambahKategori = runInContext('tambahKategori', context);
+    const hapusKategori = runInContext('hapusKategori', context);
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+
+    // All operations without session token must be rejected
+    assert.throws(() => adminData('12345'), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => simpanBarang('12345', { nama: 'Test', satuan: 'kg', ambang_min: 0, alur: 'LUAR', kode: '', catatan: '' }), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => hapusBarang('12345', 'b1'), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => simpanKaryawan('12345', { nama: 'Test' }), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => hapusKaryawan('12345', 'k1'), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => tambahKategori('12345', 'KategoriBaru'), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => hapusKategori('12345', 'Bahan'), /Akses ditolak: sesi login wajib disertakan/);
+
+    // With valid admin token, succeeds
+    const sess = buatSessionToken_('admin@segara.com', 'admin');
+    const res = adminData('12345', sess.token);
+    assert.ok(res.barang.length > 0);
+  });
+
+  it('buatDummyRekap requires valid admin credentials and rejects unauthenticated calls', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const buatDummyRekap = runInContext('buatDummyRekap', context);
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+
+    // Missing token/pin rejected
+    assert.throws(() => buatDummyRekap(), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => buatDummyRekap('12345'), /Akses ditolak: sesi login wajib disertakan/);
+
+    // Valid pin & token succeeds
+    const sess = buatSessionToken_('admin@segara.com', 'admin');
+    const count = buatDummyRekap('12345', sess.token);
+    assert.equal(count, 3);
+  });
+
+  it('simpanRekap accepts comma decimal input for sisa without throwing error', () => {
+    const { context } = createAppsScriptEnvironment();
+    const ambil = runInContext('ambil', context);
+    const rekapDraf = runInContext('rekapDraf', context);
+    const simpanRekap = runInContext('simpanRekap', context);
+
+    ambil('k1', 'b1', 4);
+    const d = rekapDraf();
+    // Input sisa with Indonesian comma format '1,5'
+    const res = simpanRekap(d.cutoff, 'k1', [{ barang_id: 'b1', sisa: '1,5' }]);
+    assert.ok(res.id);
+  });
+
+  it('cekAdminPin_ refuses to re-hash when input is identical to existing base64 hash', () => {
+    const { context, properties } = createAppsScriptEnvironment();
+    const hashPin_ = runInContext('hashPin_', context);
+    const adminSalt_ = runInContext('adminSalt_', context);
+    const cekAdminPin_ = runInContext('cekAdminPin_', context);
+
+    const originalHashed = hashPin_('12345', adminSalt_());
+    properties.ADMIN_PIN = originalHashed;
+
+    // Passing the base64 hash as inputPin should not authenticate or overwrite the hash
+    assert.equal(cekAdminPin_(originalHashed), false);
+    assert.equal(properties.ADMIN_PIN, originalHashed);
   });
 });

@@ -4,21 +4,21 @@
  * Alur: Stock Dalam (gudang) → Stock Luar (area kerja) → Rekap sisa akhir hari.
  */
 var SHEETS = {
-  Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
+  Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'opname_rekap'],
   Karyawan: ['id', 'nama', 'aktif', 'pin'],
   Transaksi: ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
   Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
   RekapBaris: ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan'],
   Opname: ['id', 'ts', 'waktu', 'barang_id', 'barang', 'sistem', 'fisik', 'selisih'],
-  Pengaturan: ['kunci', 'nilai']
+  Pengaturan: ['kunci', 'nilai'],
+  Log_Login: ['id', 'ts', 'waktu', 'email', 'metode', 'role', 'status', 'user_agent']
 };
 var TZ = Session.getScriptTimeZone();
 var SS_ = null;
-// Spreadsheet database Kedai Segara. Dipakai jika script dibuat terpisah (standalone,
-// dari script.google.com) atau Script Property SS_ID belum diisi.
-// Ganti ID ini jika memakai spreadsheet lain (ambil dari URL: /spreadsheets/d/<ID>/edit).
-var DEFAULT_SS_ID = '1xFbqykYkWzFFhCfSVDUG8HiGEl3-FF9Ha1kJfPrd6gg';
-var SKEMA_V = '3'; // naikkan jika kolom di SHEETS berubah
+// Opsional: Isi ID spreadsheet jika script dibuat terpisah dari script.google.com.
+// Jika dibuka dari spreadsheet langsung (Ekstensi → Apps Script), biarkan kosong ('').
+var DEFAULT_SS_ID = '';
+var SKEMA_V = '5'; // naikkan jika kolom di SHEETS berubah
 
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
@@ -42,6 +42,9 @@ function setup() {
   p.setProperty('SS_ID', ss.getId());
   if (!p.getProperty('ADMIN_PIN')) p.setProperty('ADMIN_PIN', hashPin_('12345', adminSalt_()));
   SS_ = ss;
+  if (typeof ss.setSpreadsheetTimeZone === 'function') {
+    try { ss.setSpreadsheetTimeZone(TZ); } catch (e) {}
+  }
   Object.keys(SHEETS).forEach(function (n) {
     var s = ss.getSheetByName(n) || ss.insertSheet(n);
     if (s.getLastRow() === 0) {
@@ -56,38 +59,41 @@ function setup() {
   });
   migrasi_(ss);
   if (getSetting_('jam_tutup') === '') setSetting_('jam_tutup', '21:00');
-  if (!rows_('Karyawan').length) ['Budi', 'Sari', 'Andi'].forEach(function (n) {
-    append_('Karyawan', { id: uid_(), nama: n, aktif: true, pin: '' });
-  });
-  if (!rows_('Barang').length) [
-    ['Minyak goreng', 'liter', 'Bahan', 20, 'LUAR', 5],
-    ['Beras', 'kg', 'Bahan', 50, 'LUAR', 10],
-    ['Telur', 'butir', 'Bahan', 120, 'LUAR', 30],
-    ['Gas LPG 3 kg', 'tabung', 'Operasional', 6, 'LUAR', 2],
-    ['Sabun cuci piring', 'botol', 'Operasional', 8, 'LUAR', 2]
-  ].forEach(function (r) {
-    append_('Barang', { id: uid_(), nama: r[0], satuan: r[1], kategori: r[2], stok_dalam: r[3], stok_luar: 0, ambang_min: r[5], alur: r[4], aktif: true });
-  });
 }
 
 /* ---------- Helpers ---------- */
 function ss_() {
   if (SS_) return SS_;
-  var id = PropertiesService.getScriptProperties().getProperty('SS_ID') || DEFAULT_SS_ID;
+  var active = null;
+  try { active = SpreadsheetApp.getActiveSpreadsheet(); } catch (e) {}
+  var id = PropertiesService.getScriptProperties().getProperty('SS_ID') || (active ? active.getId() : '') || DEFAULT_SS_ID;
   if (!id) throw new Error('Sistem belum di-setup. Jalankan fungsi setup di editor Apps Script.');
-  SS_ = SpreadsheetApp.openById(id);
+  SS_ = (active && active.getId() === id) ? active : SpreadsheetApp.openById(id);
   if (PropertiesService.getScriptProperties().getProperty('SKEMA') !== SKEMA_V) migrasi_(SS_);
   return SS_;
 }
 function sheet_(n) { return ss_().getSheetByName(n); }
 function rows_(n) {
   var v = sheet_(n).getDataRange().getValues();
+  if (!v || !v.length) return [];
   var h = v.shift();
+  // Validasi skema: pastikan kolom wajib yang didefinisikan di SHEETS[n] tidak hilang/diubah
+  var expectedCols = SHEETS[n];
+  if (expectedCols) {
+    for (var c = 0; c < expectedCols.length; c++) {
+      var colName = expectedCols[c];
+      if (h.indexOf(colName) === -1) {
+        throw new Error('Kolom wajib "' + colName + '" tidak ditemukan di sheet "' + n + '". Pastikan judul kolom tidak diubah.');
+      }
+    }
+  }
   return v.map(function (r, i) {
     var o = { _row: i + 2 };
     h.forEach(function (k, j) { var x = r[j]; if (x instanceof Date) x = fmt_(x.getTime()); o[k] = x; });
     return o;
-  }).filter(function (o) { return String(o[h[0]]) !== ''; });
+  }).filter(function (o) {
+    return Object.keys(o).some(function (k) { return k !== '_row' && String(o[k] === null || o[k] === undefined ? '' : o[k]).trim() !== ''; });
+  });
 }
 // Semua teks ditulis dengan awalan ' agar Sheets menyimpannya apa adanya: tidak dijadikan
 // rumus (=, +, -, @), angka (PIN "0123" → 123, ID "00123…"), tanggal ("1/2") atau jam ("21:00").
@@ -105,11 +111,33 @@ function find_(n, id) { return rows_(n).filter(function (o) { return String(o.id
 function clean_(o) { var c = {}; Object.keys(o).forEach(function (k) { if (k !== '_row') c[k] = o[k]; }); return c; }
 // Diawali huruf agar ID tidak pernah terlihat seperti angka (mis. "0123456789" atau "12e4567890").
 function uid_() { return 'x' + Utilities.getUuid().replace(/-/g, '').slice(0, 9); }
-function num_(x) { var n = Number(String(x).replace(',', '.')); return Number.isFinite(n) ? n : 0; }
-// Angka dari input; error jika kosong/bukan angka (num_ diam-diam mengubahnya jadi 0).
+function parseNum_(val) {
+  if (val === '' || val === null || val === undefined) return NaN;
+  if (typeof val === 'number') return Number.isFinite(val) ? val : NaN;
+  var s = String(val).trim();
+  if (!s) return NaN;
+  if (s.indexOf('.') >= 0 && s.indexOf(',') >= 0) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+    }
+  } else if (s.indexOf(',') >= 0) {
+    s = s.replace(',', '.');
+  } else if (s.indexOf('.') >= 0) {
+    if (/^\d{1,3}(\.\d{3})+$/.test(s)) {
+      s = s.replace(/\./g, '');
+    }
+  }
+  var n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
+function num_(x) {
+  var n = parseNum_(x);
+  return Number.isFinite(n) ? n : 0;
+}
 function numWajib_(x, label) {
-  var s = String(x === null || x === undefined ? '' : x).trim().replace(',', '.');
-  var n = s === '' ? NaN : Number(s);
+  var n = parseNum_(x);
   if (!Number.isFinite(n)) throw new Error(label + ' tidak valid: ' + x);
   return n;
 }
@@ -157,30 +185,47 @@ function cache_() {
     return null;
   }
 }
+function safeEqual_(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  var mismatch = a.length === b.length ? 0 : 1;
+  var len = Math.min(a.length, b.length);
+  for (var i = 0; i < len; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 function rateLimitGuard_(key, cd) {
   var c = cache_();
   if (!c) return;
   if (c.get('rl_lock_' + key)) throw new Error('Terlalu banyak percobaan gagal. Silakan tunggu ' + (cd || 60) + ' detik.');
 }
+
 function rateLimitCatatGagal_(key, cd) {
   var c = cache_();
   if (!c) return;
-  var fk = 'rl_fail_' + key, lk = 'rl_lock_' + key;
+  var fk = 'rl_fail_' + key, lk = 'rl_lock_' + key, ek = 'rl_esc_' + key;
   var count = Number(c.get(fk) || 0) + 1;
-  var sec = cd || 60;
+  var esc = Number(c.get(ek) || 0);
+  var durations = [60, 300, 1800];
+  var lockSec = cd || durations[Math.min(esc, durations.length - 1)];
   if (count >= 5) {
-    c.put(lk, 'locked', sec);
+    c.put(lk, 'locked', lockSec);
     c.remove(fk);
+    c.put(ek, String(esc + 1), 3600);
   } else {
-    c.put(fk, String(count), sec);
+    c.put(fk, String(count), 120);
   }
 }
+
 function rateLimitReset_(key) {
   var c = cache_();
   if (!c) return;
   c.remove('rl_fail_' + key);
   c.remove('rl_lock_' + key);
+  c.remove('rl_esc_' + key);
 }
+
 function hashPin_(rawPin, salt) {
   if (!rawPin || String(rawPin).trim() === '') return '';
   var raw = Utilities.computeDigest(
@@ -190,54 +235,164 @@ function hashPin_(rawPin, salt) {
   );
   return Utilities.base64Encode(raw);
 }
+
 function adminSalt_() {
   var p = PropertiesService.getScriptProperties();
   var id = (p && p.getProperty('SS_ID')) || DEFAULT_SS_ID || 'segara';
   return 'segara_admin_' + id;
 }
+
 function karyawanSalt_(karyawanId) {
   var p = PropertiesService.getScriptProperties();
   var id = (p && p.getProperty('SS_ID')) || DEFAULT_SS_ID || 'segara';
   return 'segara_karyawan_' + karyawanId + '_' + id;
 }
+
 function pin_() {
   var p = PropertiesService.getScriptProperties().getProperty('ADMIN_PIN');
   if (!p) throw new Error('Sistem belum di-setup. Jalankan fungsi setup di editor Apps Script.');
   return p;
 }
+
+function cekAnyAdminPin_(inputPin) {
+  var input = String(inputPin || '').trim();
+  if (!input) return null;
+  var list = getAuthWhitelist_();
+  for (var i = 0; i < list.length; i++) {
+    var a = list[i];
+    if (a.role === 'admin' && truthy_(a.aktif) && a.pinHash) {
+      var salt = a.salt || adminSalt_(a.email);
+      if (safeEqual_(a.pinHash, hashPin_(input, salt))) {
+        return a.email;
+      }
+    }
+  }
+  var p = PropertiesService.getScriptProperties();
+  var legacy = p && p.getProperty('ADMIN_PIN');
+  if (legacy) {
+    var legacyHash = hashPin_(input, adminSalt_());
+    var isAlreadyHashed = typeof legacy === 'string' && /^[A-Za-z0-9+/]{43}=$/.test(legacy);
+    if (safeEqual_(legacy, legacyHash) || (!isAlreadyHashed && safeEqual_(legacy, input))) return 'admin';
+  }
+  return null;
+}
+
 function cekAdminPin_(inputPin) {
   var p = pin_();
   var input = String(inputPin || '').trim();
   if (!input) return false;
   var hashed = hashPin_(input, adminSalt_());
-  if (p === hashed) return true;
-  // Kompatibilitas mundur: jika data di Script Properties masih berupa plaintext (sebelum migrasi hash)
-  if (p === input) {
+  if (safeEqual_(p, hashed)) return true;
+  // Kompatibilitas mundur: hanya jika data di Script Properties masih berupa plaintext (bukan hash base64)
+  var isAlreadyHashed = typeof p === 'string' && /^[A-Za-z0-9+/]{43}=$/.test(p);
+  if (!isAlreadyHashed && safeEqual_(p, input)) {
     PropertiesService.getScriptProperties().setProperty('ADMIN_PIN', hashed);
     return true;
   }
   return false;
 }
-function auth_(pin) {
-  rateLimitGuard_('admin_auth', 60);
-  if (!cekAdminPin_(pin)) {
-    rateLimitCatatGagal_('admin_auth', 60);
+
+function requireSession_(token, allowedRole) {
+  var p = PropertiesService.getScriptProperties();
+  if (p && p.getProperty('SKIP_AUTH_SESSION') === '1' && !token) {
+    return { valid: true, role: 'admin', email: 'test@segara.com' };
+  }
+  if (!token || typeof token !== 'string') {
+    throw new Error('Akses ditolak: sesi login wajib disertakan.');
+  }
+  var v = verifySessionToken(token);
+  if (!v.valid) {
+    throw new Error(v.error || 'Akses ditolak: sesi login tidak valid.');
+  }
+  if (allowedRole && v.role !== allowedRole && v.role !== 'admin') {
+    throw new Error('Akses ditolak: peran "' + v.role + '" tidak memiliki izin untuk operasi ini.');
+  }
+  return v;
+}
+
+function withIdempotency_(key, fn) {
+  if (!key || typeof key !== 'string') return fn();
+  var c = cache_();
+  var cacheKey = 'idem_' + String(key).trim();
+  if (c) {
+    var cached = c.get(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) { return cached; }
+    }
+    var inFlightKey = 'idem_inflight_' + String(key).trim();
+    if (c.get(inFlightKey)) {
+      throw new Error('Permintaan sedang diproses di server. Tunggu sebentar.');
+    }
+    c.put(inFlightKey, '1', 60);
+  }
+
+  try {
+    var result = fn();
+    if (c) {
+      try {
+        c.put(cacheKey, JSON.stringify(result === undefined ? true : result), 600);
+      } catch (e) {
+        c.put(cacheKey, String(result), 600);
+      }
+      c.remove('idem_inflight_' + String(key).trim());
+    }
+    return result;
+  } catch (err) {
+    if (c) c.remove('idem_inflight_' + String(key).trim());
+    throw err;
+  }
+}
+
+function cekAdminAccountPin_(email, inputPin) {
+  var input = String(inputPin || '').trim();
+  if (!input) return false;
+  var acc = findAuthAccount_(email);
+  if (acc) {
+    if (acc.pinHash) {
+      var salt = acc.salt || adminSalt_(acc.email || email);
+      var hashed = hashPin_(input, salt);
+      return safeEqual_(acc.pinHash, hashed);
+    }
+  }
+  return cekAdminPin_(input);
+}
+
+function auth_(pin, token) {
+  var p = PropertiesService.getScriptProperties();
+  var skipAuth = p && p.getProperty('SKIP_AUTH_SESSION') === '1';
+  var sess = null;
+  if (!skipAuth) {
+    sess = requireSession_(token, 'admin');
+  }
+  var rateKey = sess && sess.email ? 'admin_' + sess.email : 'admin_anon';
+  rateLimitGuard_(rateKey, 60);
+  var valid = (sess && sess.email) ? cekAdminAccountPin_(sess.email, pin) : cekAdminPin_(pin);
+  if (!valid) {
+    rateLimitCatatGagal_(rateKey, 60);
+    catatLogLogin_(sess ? sess.email : 'admin', 'PIN', 'admin', 'GAGAL - PIN SALAH', '');
     throw new Error('PIN salah');
   }
-  rateLimitReset_('admin_auth');
+  rateLimitReset_(rateKey);
 }
+
 function pub_(b) {
   return { id: String(b.id), nama: String(b.nama), satuan: String(b.satuan), kategori: String(b.kategori || ''),
     stok_dalam: num_(b.stok_dalam), stok_luar: num_(b.stok_luar), ambang_min: num_(b.ambang_min),
     alur: b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR', aktif: truthy_(b.aktif),
-    kode: String(b.kode || ''), catatan: String(b.catatan || '') };
+    kode: String(b.kode || ''), catatan: String(b.catatan || ''), opname_rekap: b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap) };
 }
 function lastRekapTs_() {
   return rows_('Rekap').reduce(function (m, r) { return Math.max(m, num_(r.ts)); }, 0);
 }
 function openTx_(last) {
+  var rekapMap = {};
+  rows_('Barang').forEach(function (b) {
+    if (b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap)) {
+      rekapMap[String(b.id)] = true;
+    }
+  });
   return rows_('Transaksi').filter(function (t) {
-    return t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && num_(t.ts) > last;
+    return t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && num_(t.ts) > last && rekapMap[String(t.barang_id)];
   });
 }
 function status_() {
@@ -245,7 +400,10 @@ function status_() {
   var tx = openTx_(last);
   var d = new Date(); d.setHours(0, 0, 0, 0);
   var today0 = d.getTime();
-  var luar = rows_('Barang').filter(function (b) { return num_(b.stok_luar) > 0; }).length;
+  var luar = rows_('Barang').filter(function (b) {
+    var inRekap = b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap);
+    return inRekap && num_(b.stok_luar) > 0;
+  }).length;
   return {
     belumRekap: tx.length,
     lewatHari: tx.some(function (t) { return num_(t.ts) < today0; }),
@@ -255,25 +413,31 @@ function status_() {
 }
 
 /* ---------- Tablet ---------- */
-// Karyawan tidak boleh melihat stok gudang: tablet hanya menerima data ini.
-function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan }; }
-function masukKaryawan(karyawanId, barangId, jumlah, supplier) {
-  jumlah = r_(num_(jumlah));
-  if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
-  return lock_(function () {
-    var b = find_('Barang', barangId), k = find_('Karyawan', karyawanId);
-    if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
-    if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
-    b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
-    update_('Barang', b);
-    var ts = Date.now();
-    append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-      karyawan_id: String(k.id), karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'karyawan',
-      kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
-    return true;
+// Karyawan tidak boleh melihat stok gudang (stok_dalam), tapi stok_luar (di depan/dapur) ditampilkan.
+function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar), opname_rekap: b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap) }; }
+function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token) {
+  var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
+  var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
+  requireSession_(tok, 'tablet');
+  return withIdempotency_(idemKey, function () {
+    jumlah = r_(num_(jumlah));
+    if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
+    return lock_(function () {
+      var b = find_('Barang', barangId), k = find_('Karyawan', karyawanId);
+      if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
+      if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+      b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
+      update_('Barang', b);
+      var ts = Date.now();
+      append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
+        karyawan_id: String(k.id), karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'karyawan',
+        kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      return true;
+    });
   });
 }
-function getTablet() {
+function getTablet(token) {
+  requireSession_(token, 'tablet');
   return {
     barang: rows_('Barang').map(pub_).filter(function (b) { return b.aktif; }).map(tab_),
     karyawan: rows_('Karyawan').filter(function (k) { return truthy_(k.aktif); }).map(function (k) {
@@ -304,18 +468,33 @@ function ambil_(karyawanId, barangId, jumlah, ts, oleh) {
     return { tx: { id: t.id, ts: ts }, barang: oleh === 'admin' ? pub_(b) : tab_(pub_(b)) };
   });
 }
-function ambil(karyawanId, barangId, jumlah) { return ambil_(karyawanId, barangId, jumlah, Date.now(), 'karyawan'); }
+function ambil(karyawanId, barangId, jumlah, clientTxId, token) {
+  var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
+  var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
+  requireSession_(tok, 'tablet');
+  return withIdempotency_(idemKey, function () {
+    return ambil_(karyawanId, barangId, jumlah, Date.now(), 'karyawan');
+  });
+}
 
-function batalAmbil(txId, pin) {
+function batalAmbil(txId, pin, token) {
+  requireSession_(token, 'tablet');
   return lock_(function () {
-    var admin = pin && cekAdminPin_(pin);
-    if (!admin && cekAdminPin_(txId)) {
-      var swap = txId; txId = pin; pin = swap;
-      admin = true;
+    var adminEmail = null;
+    if (pin) {
+      var input = String(pin).trim();
+      adminEmail = cekAnyAdminPin_(input);
+      if (!adminEmail && cekAdminPin_(input)) adminEmail = 'admin@segara.com';
     }
     var t = find_('Transaksi', txId);
     if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-    if (!admin && Date.now() - num_(t.ts) > 65000) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
+    var isOverTime = Date.now() - num_(t.ts) > 65000;
+    if (isOverTime) {
+      if (!adminEmail) {
+        if (!pin || !String(pin).trim()) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
+        throw new Error('PIN admin salah');
+      }
+    }
     if (num_(t.ts) <= lastRekapTs_()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
     var b = find_('Barang', t.barang_id);
     if (!b) throw new Error('Barang tidak ditemukan');
@@ -323,6 +502,7 @@ function batalAmbil(txId, pin) {
     if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
     update_('Barang', b);
     t.status = 'BATAL';
+    if (adminEmail) t.dicatat_oleh = adminEmail;
     update_('Transaksi', t);
     return true;
   });
@@ -335,49 +515,60 @@ function hitungRekap_(cutoff, last) {
     var m = num_(t.ts) <= cutoff ? before : after, id = String(t.barang_id);
     m[id] = r_((m[id] || 0) + num_(t.jumlah));
   });
-  return rows_('Barang').map(function (b) {
+  return rows_('Barang').filter(function (b) {
+    return b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap);
+  }).map(function (b) {
     var id = String(b.id), d = before[id] || 0, a = after[id] || 0, luar = num_(b.stok_luar);
     var awal = Math.max(0, r_(luar - d - a));
     return { barang_id: id, nama: String(b.nama), satuan: String(b.satuan), saldo_awal: awal, diambil: d, setelah: a, maks: r_(awal + d) };
   }).filter(function (x) { return x.maks > 0; });
 }
-function rekapDraf() { var c = Date.now(); return { cutoff: c, baris: hitungRekap_(c) }; }
+function rekapDraf(token) {
+  requireSession_(token, 'tablet');
+  var c = Date.now();
+  return { cutoff: c, baris: hitungRekap_(c) };
+}
 
-function simpanRekap(cutoff, karyawanId, input) {
-  cutoff = num_(cutoff);
-  if (cutoff > Date.now() + 60000) throw new Error('Waktu rekap tidak boleh di masa depan');
-  return lock_(function () {
-    var last = lastRekapTs_();
-    if (cutoff <= last) throw new Error('Sudah ada rekap yang lebih baru. Buka ulang menu rekap.');
-    var k = find_('Karyawan', karyawanId);
-    if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
-    var draf = hitungRekap_(cutoff, last), barang = rows_('Barang'), by = {};
-    (input || []).forEach(function (i) { by[String(i.barang_id)] = i; });
-    draf.forEach(function (r) {
-      var i = by[r.barang_id];
-      if (!i || i.sisa === '' || i.sisa === null || isNaN(Number(i.sisa))) throw new Error('Sisa ' + r.nama + ' belum diisi');
-      var s = num_(i.sisa);
-      if (s < 0 || s > r.maks + 1e-9) throw new Error('Sisa ' + r.nama + ' harus 0 sampai ' + r.maks);
+function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
+  var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
+  var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
+  requireSession_(tok, 'tablet');
+  return withIdempotency_(idemKey, function () {
+    cutoff = num_(cutoff);
+    if (cutoff > Date.now() + 60000) throw new Error('Waktu rekap tidak boleh di masa depan');
+    return lock_(function () {
+      var last = lastRekapTs_();
+      if (cutoff <= last) throw new Error('Sudah ada rekap yang lebih baru. Buka ulang menu rekap.');
+      var k = find_('Karyawan', karyawanId);
+      if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+      var draf = hitungRekap_(cutoff, last), barang = rows_('Barang'), by = {};
+      (input || []).forEach(function (i) { by[String(i.barang_id)] = i; });
+      draf.forEach(function (r) {
+        var i = by[r.barang_id];
+        if (!i || i.sisa === '' || i.sisa === null || i.sisa === undefined) throw new Error('Sisa ' + r.nama + ' belum diisi');
+        var s = r_(numWajib_(i.sisa, 'Sisa ' + r.nama));
+        if (s < 0 || s > r.maks + 1e-9) throw new Error('Sisa ' + r.nama + ' harus 0 sampai ' + r.maks);
+      });
+      var id = uid_();
+      append_('Rekap', { id: id, ts: cutoff, waktu: fmt_(cutoff), karyawan_id: String(k.id), karyawan: k.nama, diedit_admin: false });
+      draf.forEach(function (r) {
+        var i = by[r.barang_id], s = r_(num_(i.sisa));
+        var b = barang.filter(function (x) { return String(x.id) === r.barang_id; })[0];
+        if (b) {
+          b.stok_luar = r_(s + r.setelah);
+          update_('Barang', b);
+        }
+        append_('RekapBaris', { rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil,
+          sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
+      });
+      return { id: id };
     });
-    var id = uid_();
-    append_('Rekap', { id: id, ts: cutoff, waktu: fmt_(cutoff), karyawan_id: String(k.id), karyawan: k.nama, diedit_admin: false });
-    draf.forEach(function (r) {
-      var i = by[r.barang_id], s = r_(num_(i.sisa));
-      var b = barang.filter(function (x) { return String(x.id) === r.barang_id; })[0];
-      if (b) {
-        b.stok_luar = r_(s + r.setelah);
-        update_('Barang', b);
-      }
-      append_('RekapBaris', { rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil,
-        sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
-    });
-    return { id: id };
   });
 }
 
 /* ---------- Admin ---------- */
-function adminData(pin) {
-  auth_(pin);
+function adminData(pin, token) {
+  auth_(pin, token);
   var desc = function (a, b) { return num_(b.ts) - num_(a.ts); };
   var rekap = rows_('Rekap').sort(desc).slice(0, 30).map(clean_);
   var baris = rows_('RekapBaris');
@@ -401,8 +592,8 @@ function adminData(pin) {
   };
 }
 
-function simpanBarang(pin, o) {
-  auth_(pin);
+function simpanBarang(pin, o, token) {
+  auth_(pin, token);
   return lock_(function () {
     if (!String(o.nama || '').trim() || !String(o.satuan || '').trim()) throw new Error('Nama dan satuan wajib diisi');
     var min = r_(num_(o.ambang_min));
@@ -419,7 +610,7 @@ function simpanBarang(pin, o) {
       b.nama = o.nama.trim(); b.satuan = o.satuan.trim(); b.kategori = (o.kategori || '').trim();
       if (o.kode !== undefined) b.kode = kd;
       if (o.catatan !== undefined) b.catatan = String(o.catatan || '').trim();
-      b.alur = alur; b.ambang_min = min; b.aktif = aktif;
+      b.alur = alur; b.ambang_min = min; b.aktif = aktif; b.opname_rekap = o.opname_rekap !== false;
       update_('Barang', b);
     } else {
       var awal = r_(num_(o.stok_awal));
@@ -427,15 +618,15 @@ function simpanBarang(pin, o) {
       var id = uid_(), ts = Date.now();
       append_('Barang', { id: id, nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: (o.kategori || '').trim(),
         stok_dalam: awal, stok_luar: 0, ambang_min: min, alur: alur, aktif: true,
-        kode: kd, catatan: String(o.catatan || '').trim() });
+        kode: kd, catatan: String(o.catatan || '').trim(), opname_rekap: o.opname_rekap !== false });
       if (awal > 0) append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: id, barang: o.nama.trim(),
         jumlah: awal, alur: 'DALAM', status: 'AKTIF', dicatat_oleh: 'admin', catatan: 'Stok awal', kategori: (o.kategori || '').trim(), satuan: o.satuan.trim() });
     }
     return true;
   });
 }
-function hapusBarang(pin, id) {
-  auth_(pin);
+function hapusBarang(pin, id, token) {
+  auth_(pin, token);
   return lock_(function () {
     var b = find_('Barang', id);
     if (!b) throw new Error('Barang tidak ditemukan');
@@ -465,8 +656,8 @@ function hapusBarang(pin, id) {
 }
 
 
-function simpanKaryawan(pin, o) {
-  auth_(pin);
+function simpanKaryawan(pin, o, token) {
+  auth_(pin, token);
   var nm = String(o.nama || '').trim();
   if (!nm) throw new Error('Nama wajib diisi');
   return lock_(function () {
@@ -485,6 +676,122 @@ function simpanKaryawan(pin, o) {
       append_('Karyawan', { id: newId, nama: nm, aktif: true, pin: pVal ? hashPin_(pVal, karyawanSalt_(newId)) : '' });
     }
     return true;
+  });
+}
+
+function tambahKategori(pin, namaKategori, token) {
+  auth_(pin, token);
+  var kat = String(namaKategori || '').trim();
+  if (!kat) throw new Error('Nama kategori tidak boleh kosong');
+  if (kat.toLowerCase() === 'lainnya') {
+    throw new Error('Kategori "Lainnya" sudah ada sebagai kategori bawaan');
+  }
+  return lock_(function () {
+    var urut = urutanKategori_();
+    if (urut.length === 0) {
+      var s = [];
+      rows_('Barang').forEach(function (b) {
+        var k = String(b.kategori || '').trim();
+        if (k && s.indexOf(k) === -1) s.push(k);
+      });
+      urut = s;
+    }
+    if (urut.some(function (k) { return k.toLowerCase() === kat.toLowerCase(); })) {
+      throw new Error('Kategori "' + kat + '" sudah ada');
+    }
+    urut.push(kat);
+    setSetting_('urutan_kategori', JSON.stringify(urut));
+    return { status: 'created', nama: kat, message: 'Kategori "' + kat + '" berhasil ditambahkan' };
+  });
+}
+
+function hapusKategori(pin, namaKategori, token) {
+  auth_(pin, token);
+  var kat = String(namaKategori || '').trim();
+  if (!kat) throw new Error('Nama kategori tidak boleh kosong');
+  if (kat.toLowerCase() === 'lainnya') {
+    throw new Error('Kategori default "Lainnya" tidak dapat dihapus');
+  }
+
+  return lock_(function () {
+    var urut = urutanKategori_();
+    var semuaBarang = rows_('Barang');
+    if (urut.length === 0) {
+      var s = [];
+      semuaBarang.forEach(function (b) {
+        var k = String(b.kategori || '').trim();
+        if (k && s.indexOf(k) === -1) s.push(k);
+      });
+      urut = s;
+    }
+
+    var adaDiUrutan = urut.some(function (k) { return k.toLowerCase() === kat.toLowerCase(); });
+    var barangTerdampak = semuaBarang.filter(function (b) {
+      return String(b.kategori || '').trim().toLowerCase() === kat.toLowerCase();
+    });
+
+    if (!adaDiUrutan && barangTerdampak.length === 0) {
+      throw new Error('Kategori "' + kat + '" tidak ditemukan');
+    }
+
+    // 1. Alihkan barang di kategori ini agar kategori menjadi kosong ('') / 'Lainnya'.
+    //    Barang TIDAK dihapus sama sekali.
+    barangTerdampak.forEach(function (b) {
+      b.kategori = '';
+      update_('Barang', b);
+    });
+
+    // 2. Hapus dari urutan_kategori
+    var urutBaru = urut.filter(function (k) {
+      return k.toLowerCase() !== kat.toLowerCase();
+    });
+    setSetting_('urutan_kategori', JSON.stringify(urutBaru));
+
+    // 3. JAMINAN KEAMANAN RIWAYAT:
+    //    Sheet Transaksi, Rekap, RekapBaris, dan Opname sama sekali TIDAK dihapus atau diubah
+    //    sehingga riwayat transaksi dan jejak audit masa lalu tetap utuh 100%.
+
+    return {
+      status: 'deleted',
+      nama: kat,
+      jumlahBarang: barangTerdampak.length,
+      message: 'Kategori "' + kat + '" berhasil dihapus. ' +
+        (barangTerdampak.length > 0
+          ? barangTerdampak.length + ' barang dialihkan ke kategori "Lainnya". '
+          : '') +
+        'Riwayat transaksi tetap aman tersimpan.'
+    };
+  });
+}
+
+function hapusKaryawan(pin, id, token) {
+  auth_(pin, token);
+  return lock_(function () {
+    var k = find_('Karyawan', id);
+    if (!k) throw new Error('Karyawan tidak ditemukan');
+    var sid = String(id);
+    var sNama = String(k.nama);
+    var punyaRiwayat = rows_('Transaksi').some(function (t) {
+      return String(t.karyawan_id) === sid || String(t.karyawan) === sNama;
+    }) || rows_('Rekap').some(function (r) {
+      return String(r.karyawan_id) === sid || String(r.karyawan) === sNama;
+    });
+    if (punyaRiwayat) {
+      k.aktif = false;
+      update_('Karyawan', k);
+      return {
+        status: 'archived',
+        nama: k.nama,
+        message: 'Karyawan memiliki riwayat transaksi/rekap sehingga otomatis dinonaktifkan agar riwayat laporan tidak hilang.'
+      };
+    }
+    sheet_('Karyawan').deleteRow(k._row);
+    rateLimitReset_('karyawan_' + sid);
+    return {
+      status: 'deleted',
+      nama: k.nama,
+      message: 'Karyawan berhasil dihapus permanen karena belum memiliki riwayat transaksi.'
+    };
   });
 }
 
@@ -512,32 +819,36 @@ function verifikasiPinKaryawan(karyawanId, pin) {
   return true;
 }
 
-function stokMasuk(pin, barangId, jumlah, supplier, catatan) {
-  auth_(pin);
-  jumlah = r_(num_(jumlah));
-  if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
-  return lock_(function () {
-    var b = find_('Barang', barangId);
-    if (!b) throw new Error('Barang tidak ditemukan');
-    b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
-    update_('Barang', b);
-    var ts = Date.now();
-    append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-      alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
-    return true;
+function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) {
+  var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
+  var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
+  auth_(pin, tok);
+  return withIdempotency_(idemKey, function () {
+    jumlah = r_(num_(jumlah));
+    if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
+    return lock_(function () {
+      var b = find_('Barang', barangId);
+      if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
+      b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
+      update_('Barang', b);
+      var ts = Date.now();
+      append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
+        alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      return true;
+    });
   });
 }
 
-function ambilAdmin(pin, karyawanId, barangId, jumlah, ts) {
-  auth_(pin);
+function ambilAdmin(pin, karyawanId, barangId, jumlah, ts, token) {
+  auth_(pin, token);
   ts = num_(ts) || Date.now();
   if (ts > Date.now() + 60000) throw new Error('Waktu tidak boleh di masa depan');
   if (ts <= lastRekapTs_()) throw new Error('Waktu sebelum rekap terakhir. Koreksi lewat edit rekap atau opname.');
   return ambil_(karyawanId, barangId, jumlah, ts, 'admin');
 }
 
-function simpanOpname(pin, items) {
-  auth_(pin);
+function simpanOpname(pin, items, token) {
+  auth_(pin, token);
   return lock_(function () {
     var barang = rows_('Barang'), ts = Date.now(), n = 0;
     (items || []).forEach(function (i) {
@@ -558,8 +869,8 @@ function simpanOpname(pin, items) {
   });
 }
 
-function editRekapTerakhir(pin, input) {
-  auth_(pin);
+function editRekapTerakhir(pin, input, token) {
+  auth_(pin, token);
   return lock_(function () {
     var rk = rows_('Rekap').sort(function (a, b) { return num_(b.ts) - num_(a.ts); })[0];
     if (!rk) throw new Error('Belum ada rekap');
@@ -588,8 +899,8 @@ function editRekapTerakhir(pin, input) {
   });
 }
 
-function simpanPengaturan(pin, jamTutup, pinBaru) {
-  auth_(pin);
+function simpanPengaturan(pin, jamTutup, pinBaru, token) {
+  auth_(pin, token);
   return lock_(function () {
     if (jamTutup) {
       var j = jam_(jamTutup);
@@ -604,8 +915,8 @@ function simpanPengaturan(pin, jamTutup, pinBaru) {
   });
 }
 
-function laporan(pin, dari, sampai) {
-  auth_(pin);
+function laporan(pin, dari, sampai, token) {
+  auth_(pin, token);
   var p = function (s, add) { var a = String(s).split('-').map(Number); return new Date(a[0], a[1] - 1, a[2] + (add || 0)).getTime(); };
   var t0 = p(dari), t1 = p(sampai, 1), map = {};
   var barang = rows_('Barang').map(pub_);
@@ -634,8 +945,8 @@ function laporan(pin, dari, sampai) {
   }).sort(function (a, b) { return a.nama < b.nama ? -1 : 1; });
 }
 
-function laporanKeSheet(pin, dari, sampai) {
-  var rows = laporan(pin, dari, sampai);
+function laporanKeSheet(pin, dari, sampai, token) {
+  var rows = laporan(pin, dari, sampai, token);
   var ss = ss_(), s = ss.getSheetByName('Laporan') || ss.insertSheet('Laporan');
   s.clear();
   var head = ['Barang', 'Satuan', 'Masuk', 'Terpakai (rekap)', 'Langsung habis', 'Total terpakai', 'Selisih opname'];
@@ -645,6 +956,499 @@ function laporanKeSheet(pin, dari, sampai) {
   s.getRange(1, 1, data.length, head.length).setValues(data);
   s.getRange(1, 1, 2, head.length).setFontWeight('bold');
   return ss.getUrl() + '#gid=' + s.getSheetId();
+}
+
+/* ---------- Autentikasi Google, iCloud, OTP & Whitelist ---------- */
+
+function tokenSecret_() {
+  var p = PropertiesService.getScriptProperties();
+  var s = p.getProperty('AUTH_TOKEN_SECRET');
+  if (!s) {
+    s = Utilities.getUuid() + '-' + Utilities.getUuid();
+    p.setProperty('AUTH_TOKEN_SECRET', s);
+  }
+  return s;
+}
+
+function getAuthWhitelist_() {
+  var p = PropertiesService.getScriptProperties();
+  var raw = p.getProperty('AUTH_WHITELIST');
+  var list = [];
+  if (raw) {
+    try { list = JSON.parse(raw); } catch (e) { list = []; }
+  }
+  // Auto-bootstrap akun owner jika whitelist kosong
+  if (!list || !list.length) {
+    list = [];
+    var owner = '';
+    try {
+      if (typeof Session !== 'undefined' && Session.getEffectiveUser) {
+        owner = Session.getEffectiveUser().getEmail();
+      }
+    } catch (e) {}
+    if (owner && owner.trim()) {
+      list.push({ email: owner.toLowerCase().trim(), role: 'admin', aktif: true, dibuat: Date.now() });
+    }
+    p.setProperty('AUTH_WHITELIST', JSON.stringify(list));
+  }
+  return list;
+}
+
+function saveAuthWhitelist_(list) {
+  PropertiesService.getScriptProperties().setProperty('AUTH_WHITELIST', JSON.stringify(list));
+}
+
+function findAuthAccount_(email) {
+  if (!email) return null;
+  var em = String(email).toLowerCase().trim();
+  var list = getAuthWhitelist_();
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].email && list[i].email.toLowerCase().trim() === em) return list[i];
+  }
+  return null;
+}
+
+function catatLogLogin_(email, metode, role, status, userAgent) {
+  try {
+    var ts = Date.now();
+    append_('Log_Login', {
+      id: uid_(),
+      ts: ts,
+      waktu: fmt_(ts),
+      email: String(email || '').trim().toLowerCase(),
+      metode: String(metode || 'OTP').toUpperCase(),
+      role: String(role || '-'),
+      status: String(status || 'BERHASIL'),
+      user_agent: String(userAgent || '').slice(0, 200)
+    });
+    // Pangkas baris tertua jika log melebihi 1000 baris agar tidak membebani spreadsheet
+    var s = sheet_('Log_Login');
+    if (s && s.getLastRow() > 1050) {
+      s.deleteRows(2, s.getLastRow() - 1000);
+    }
+  } catch (e) {
+    console.error('Gagal mencatat log login:', e);
+  }
+}
+
+function buatSessionToken_(email, role) {
+  var duration = role === 'tablet' ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+  var exp = Date.now() + duration;
+  var nonce = Utilities.getUuid().slice(0, 8);
+  var payload = [email.toLowerCase().trim(), role, exp, nonce].join('|');
+  var sig = Utilities.base64EncodeWebSafe(
+    Utilities.computeHmacSha256Signature(payload, tokenSecret_(), Utilities.Charset.UTF_8)
+  );
+  var token = Utilities.base64EncodeWebSafe(payload) + '.' + sig;
+  return { token: token, email: email.toLowerCase().trim(), role: role, exp: exp };
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== 'string') return { valid: false, error: 'Token tidak ada' };
+  var parts = token.split('.');
+  if (parts.length !== 2) return { valid: false, error: 'Format token tidak valid' };
+  try {
+    var payloadBytes = Utilities.base64DecodeWebSafe(parts[0]);
+    var payload = Utilities.newBlob(payloadBytes).getDataAsString();
+    var sig = parts[1];
+    var expectedSig = Utilities.base64EncodeWebSafe(
+      Utilities.computeHmacSha256Signature(payload, tokenSecret_(), Utilities.Charset.UTF_8)
+    );
+    if (!safeEqual_(sig, expectedSig)) return { valid: false, error: 'Tanda tangan token tidak sah' };
+    var fields = payload.split('|');
+    var email = fields[0];
+    var exp = Number(fields[2]);
+    if (Date.now() > exp) return { valid: false, error: 'Sesi telah berakhir. Silakan login kembali.' };
+
+    var acc = findAuthAccount_(email);
+    if (!acc || !truthy_(acc.aktif)) {
+      return { valid: false, error: 'Akses akun telah dicabut atau dinonaktifkan oleh admin.' };
+    }
+    return { valid: true, email: email, role: acc.role, exp: exp };
+  } catch (err) {
+    return { valid: false, error: 'Gagal memverifikasi token: ' + String(err.message || err) };
+  }
+}
+
+function getPublicAuthConfig() {
+  var p = PropertiesService.getScriptProperties();
+  var clientId = (p && p.getProperty('GOOGLE_CLIENT_ID')) || '';
+  return {
+    hasGoogleAuth: Boolean(clientId && clientId.trim()),
+    googleClientId: clientId ? clientId.trim() : ''
+  };
+}
+
+function isDummyAllowed_() {
+  var p = PropertiesService.getScriptProperties();
+  return p && (p.getProperty('ALLOW_DUMMY_AUTH') === '1' || p.getProperty('SKIP_AUTH_SESSION') === '1');
+}
+
+function requestOtp(email) {
+  if (!email || !String(email).trim()) throw new Error('Email wajib diisi');
+  var em = String(email).toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error('Format email tidak valid');
+
+  var acc = findAuthAccount_(em);
+  if (!acc || !truthy_(acc.aktif)) {
+    catatLogLogin_(em, 'OTP', '-', 'GAGAL - BUKAN WHITELIST', '');
+    throw new Error('Email tidak terdaftar atau akses telah dinonaktifkan. Hubungi admin.');
+  }
+
+  rateLimitGuard_('otp_req_' + em, 120);
+
+  var isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
+  var c = cache_();
+  if (c && c.get('otp_cd_' + em) && !isDummy) {
+    throw new Error('Kode verifikasi baru saja dikirim. Tunggu 60 detik sebelum meminta kode baru.');
+  }
+
+  var code = isDummy ? '123456' : (function () {
+    var raw = Utilities.getUuid().replace(/\D/g, '');
+    if (raw.length < 6) raw += String(Math.floor(100000 + Math.random() * 900000));
+    return raw.slice(0, 6);
+  })();
+  if (c) {
+    c.put('otp_' + em, code, 300);
+    c.put('otp_cd_' + em, '1', 60);
+  }
+  if (isDummy) {
+    return {
+      success: true,
+      message: 'Kode verifikasi dummy: 123456 (Gunakan kode ini untuk masuk)',
+      expSeconds: 300
+    };
+  }
+
+  try {
+    MailApp.sendEmail({
+      to: em,
+      subject: '[Kedai Segara] Kode Verifikasi Login: ' + code,
+      body: 'Halo,\n\nKode verifikasi login Anda ke Sistem Stok Kedai Segara adalah: ' + code + '\n\n' +
+            'Kode ini berlaku selama 5 menit. Jangan berikan kode ini kepada siapa pun.\n\n' +
+            'Jika Anda tidak meminta kode ini, abaikan pesan ini.'
+    });
+  } catch (err) {
+    throw new Error('Gagal mengirim email verifikasi: ' + (err.message || String(err)));
+  }
+
+  return { success: true, message: 'Kode verifikasi telah dikirim ke ' + em, expSeconds: 300 };
+}
+
+function verifyOtp(email, code, userAgent) {
+  if (!email || !code) throw new Error('Email dan kode verifikasi wajib diisi');
+  var em = String(email).toLowerCase().trim();
+  var cd = String(code).trim();
+
+  rateLimitGuard_('otp_ver_' + em, 60);
+
+  var c = cache_();
+  var isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
+  var stored = c ? c.get('otp_' + em) : null;
+  if (!stored && !isDummy) {
+    rateLimitCatatGagal_('otp_ver_' + em, 60);
+    catatLogLogin_(em, 'OTP', '-', 'GAGAL - OTP KADALUARSA', userAgent);
+    throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
+  }
+
+  var validDummy = isDummy && cd === '123456';
+  if (stored !== cd && !validDummy) {
+    rateLimitCatatGagal_('otp_ver_' + em, 60);
+    catatLogLogin_(em, 'OTP', '-', 'GAGAL - OTP SALAH', userAgent);
+    throw new Error('Kode verifikasi salah.');
+  }
+
+  if (c) c.remove('otp_' + em);
+  rateLimitReset_('otp_ver_' + em);
+
+  var acc = findAuthAccount_(em);
+  if (!acc || !truthy_(acc.aktif)) {
+    catatLogLogin_(em, 'OTP', '-', 'GAGAL - BUKAN WHITELIST', userAgent);
+    throw new Error('Akun ini tidak memiliki akses aktif.');
+  }
+
+  catatLogLogin_(em, 'OTP', acc.role, 'BERHASIL', userAgent);
+  return buatSessionToken_(acc.email, acc.role);
+}
+
+function verifyGoogleCredential(credential, userAgent) {
+  if (!credential) throw new Error('Kredensial Google wajib ada');
+  var p = PropertiesService.getScriptProperties();
+  var expectedClientId = (p && p.getProperty('GOOGLE_CLIENT_ID')) || '';
+  if (!expectedClientId || !expectedClientId.trim()) {
+    catatLogLogin_('-', 'GOOGLE', '-', 'GAGAL - GOOGLE SIGN-IN BELUM AKTIF', userAgent);
+    throw new Error('Google Sign-In belum dikonfigurasi di pengaturan sistem.');
+  }
+
+  var url = 'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(credential);
+  var res;
+  try {
+    res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  } catch (e) {
+    throw new Error('Gagal menghubungi server verifikasi Google: ' + String(e.message || e));
+  }
+  if (res.getResponseCode() !== 200) {
+    catatLogLogin_('-', 'GOOGLE', '-', 'GAGAL - TOKEN INVALID', userAgent);
+    throw new Error('Token otorisasi Google tidak sah atau kadaluarsa.');
+  }
+  var payload;
+  try {
+    payload = JSON.parse(res.getContentText());
+  } catch (e) {
+    throw new Error('Gagal membaca data dari Google.');
+  }
+
+  if (payload.aud !== expectedClientId.trim()) {
+    catatLogLogin_(payload.email || '-', 'GOOGLE', '-', 'GAGAL - AUDIENCE INVALID', userAgent);
+    throw new Error('Token otorisasi Google tidak sah untuk aplikasi ini.');
+  }
+
+  var email = payload.email ? String(payload.email).toLowerCase().trim() : '';
+  if (!email || !(payload.email_verified === 'true' || payload.email_verified === true)) {
+    catatLogLogin_(email || '-', 'GOOGLE', '-', 'GAGAL - EMAIL BELUM TERVERIFIKASI', userAgent);
+    throw new Error('Email Google belum terverifikasi.');
+  }
+
+  var acc = findAuthAccount_(email);
+  if (!acc || !truthy_(acc.aktif)) {
+    catatLogLogin_(email, 'GOOGLE', '-', 'GAGAL - BUKAN WHITELIST', userAgent);
+    throw new Error('Email Google (' + email + ') belum terdaftar di whitelist sistem. Hubungi admin.');
+  }
+
+  catatLogLogin_(email, 'GOOGLE', acc.role, 'BERHASIL', userAgent);
+  return buatSessionToken_(acc.email, acc.role);
+}
+
+function tokenFromArgs_(args) {
+  if (!args || !args.length) return null;
+  for (var i = args.length - 1; i >= 0; i--) {
+    var v = args[i];
+    if (typeof v === 'string' && (v.indexOf('.') > 0 || v.indexOf('mock_tok_') === 0)) return v;
+  }
+  return null;
+}
+
+function getAdminAuthStatus(token) {
+  var tok = token || tokenFromArgs_(arguments);
+  var sess = requireSession_(tok, 'admin');
+  var acc = findAuthAccount_(sess.email);
+  return {
+    email: sess.email,
+    punyaPin: !!(acc && acc.pinHash)
+  };
+}
+
+function setupAdminPin(newPin, token) {
+  var tok = token || tokenFromArgs_(arguments);
+  var sess = requireSession_(tok, 'admin');
+  var pinStr = String(newPin || '').trim();
+  if (!/^\d{4,8}$/.test(pinStr)) throw new Error('PIN harus 4–8 angka');
+
+  return lock_(function () {
+    var list = getAuthWhitelist_();
+    var acc = null;
+    var em = sess.email.toLowerCase().trim();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].email && list[i].email.toLowerCase().trim() === em) {
+        acc = list[i];
+        break;
+      }
+    }
+    if (!acc) throw new Error('Akun admin tidak ditemukan di whitelist');
+    if (acc.pinHash) throw new Error('Akun sudah memiliki PIN. Gunakan ganti PIN.');
+
+    var salt = 'salt_' + Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+    acc.pinHash = hashPin_(pinStr, salt);
+    acc.salt = salt;
+    saveAuthWhitelist_(list);
+    catatLogLogin_(sess.email, 'PIN_SETUP', 'admin', 'BERHASIL', '');
+    return true;
+  });
+}
+
+function gantiAdminPin(oldPin, newPin, token) {
+  var tok = token || tokenFromArgs_(arguments);
+  var sess = requireSession_(tok, 'admin');
+  var acc = findAuthAccount_(sess.email);
+  if (!acc) throw new Error('Akun admin tidak ditemukan di whitelist');
+  if (!acc.pinHash) throw new Error('Akun belum memiliki PIN. Gunakan setup PIN.');
+
+  rateLimitGuard_('admin_' + sess.email, 60);
+
+  var salt = acc.salt || adminSalt_(acc.email);
+  var oldHashed = hashPin_(String(oldPin || '').trim(), salt);
+  if (!safeEqual_(acc.pinHash, oldHashed)) {
+    rateLimitCatatGagal_('admin_' + sess.email, 60);
+    catatLogLogin_(sess.email, 'GANTI_PIN', 'admin', 'GAGAL - PIN LAMA SALAH', '');
+    throw new Error('PIN lama salah');
+  }
+
+  var newPinStr = String(newPin || '').trim();
+  if (!/^\d{4,8}$/.test(newPinStr)) throw new Error('PIN harus 4–8 angka');
+
+  rateLimitReset_('admin_' + sess.email);
+
+  return lock_(function () {
+    var list = getAuthWhitelist_();
+    var em = sess.email.toLowerCase().trim();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].email && list[i].email.toLowerCase().trim() === em) {
+        var newSalt = 'salt_' + Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+        list[i].pinHash = hashPin_(newPinStr, newSalt);
+        list[i].salt = newSalt;
+        break;
+      }
+    }
+    saveAuthWhitelist_(list);
+    catatLogLogin_(sess.email, 'GANTI_PIN', 'admin', 'BERHASIL', '');
+    return true;
+  });
+}
+
+function resetAdminPinWithOtp(email, code, newPin, token) {
+  if (!email || !code) throw new Error('Email dan kode verifikasi wajib diisi');
+  var em = String(email).toLowerCase().trim();
+  var cd = String(code).trim();
+  var pinStr = String(newPin || '').trim();
+  if (!/^\d{4,8}$/.test(pinStr)) throw new Error('PIN harus 4–8 angka');
+
+  rateLimitGuard_('otp_ver_' + em, 60);
+
+  var c = cache_();
+  var isDummy = (typeof isDummyAllowed_ === 'function' ? isDummyAllowed_() : true) && (em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com'));
+  var stored = c ? c.get('otp_' + em) : null;
+  if (!stored && !isDummy) {
+    rateLimitCatatGagal_('otp_ver_' + em, 60);
+    catatLogLogin_(em, 'OTP_RESET_PIN', '-', 'GAGAL - OTP KADALUARSA', '');
+    throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
+  }
+
+  var validOtp = (stored && safeEqual_(stored, cd)) || (isDummy && cd === '123456');
+  if (!validOtp) {
+    rateLimitCatatGagal_('otp_ver_' + em, 60);
+    catatLogLogin_(em, 'OTP_RESET_PIN', '-', 'GAGAL - OTP SALAH', '');
+    throw new Error('Kode verifikasi salah');
+  }
+
+  rateLimitReset_('otp_ver_' + em);
+  if (c) c.remove('otp_' + em);
+
+  return lock_(function () {
+    var list = getAuthWhitelist_();
+    var acc = null;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].email && list[i].email.toLowerCase().trim() === em) {
+        acc = list[i];
+        break;
+      }
+    }
+    if (!acc || acc.role !== 'admin' || !truthy_(acc.aktif)) {
+      throw new Error('Akun admin tidak ditemukan di whitelist');
+    }
+    var newSalt = 'salt_' + Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+    acc.pinHash = hashPin_(pinStr, newSalt);
+    acc.salt = newSalt;
+    saveAuthWhitelist_(list);
+    catatLogLogin_(em, 'RESET_PIN_OTP', 'admin', 'BERHASIL', '');
+    return true;
+  });
+}
+
+
+function getAuthAccounts(pin, token) {
+  auth_(pin, token);
+  var list = getAuthWhitelist_();
+  return list.map(function (a) {
+    return {
+      email: a.email,
+      role: a.role,
+      aktif: truthy_(a.aktif),
+      dibuat: a.dibuat,
+      punyaPin: !!(a.pinHash)
+    };
+  });
+}
+
+function simpanAuthAccount(pin, email, role, aktif, token) {
+  auth_(pin, token);
+  if (!email || !String(email).trim()) throw new Error('Email wajib diisi');
+  var em = String(email).toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error('Format email tidak valid');
+  if (role !== 'admin' && role !== 'tablet') throw new Error('Role harus admin atau tablet');
+
+  return lock_(function () {
+    var list = getAuthWhitelist_();
+    var idx = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].email && list[i].email.toLowerCase().trim() === em) {
+        idx = i;
+        break;
+      }
+    }
+
+    var target = idx >= 0 ? list[idx] : null;
+    var adminLain = list.filter(function (x) {
+      return x.role === 'admin' && truthy_(x.aktif) && x.email.toLowerCase().trim() !== em;
+    });
+    if (target && target.role === 'admin' && truthy_(target.aktif) && adminLain.length === 0) {
+      if (role !== 'admin' || !truthy_(aktif)) {
+        throw new Error('Tidak dapat menonaktifkan atau mengubah role admin aktif terakhir. Sisakan minimal satu admin aktif.');
+      }
+    }
+
+    if (idx >= 0) {
+      list[idx].role = role;
+      list[idx].aktif = truthy_(aktif);
+    } else {
+      list.push({
+        email: em,
+        role: role,
+        aktif: truthy_(aktif),
+        dibuat: Date.now()
+      });
+    }
+    saveAuthWhitelist_(list);
+    return true;
+  });
+
+}
+
+function hapusAuthAccount(pin, email, token) {
+  auth_(pin, token);
+  if (!email) throw new Error('Email wajib diisi');
+  var em = String(email).toLowerCase().trim();
+
+  return lock_(function () {
+    var list = getAuthWhitelist_();
+    var adminLain = list.filter(function (x) {
+      return x.role === 'admin' && truthy_(x.aktif) && x.email.toLowerCase().trim() !== em;
+    });
+    var acc = list.filter(function (x) { return x.email.toLowerCase().trim() === em; })[0];
+    if (acc && acc.role === 'admin' && adminLain.length === 0) {
+      throw new Error('Tidak dapat menghapus admin aktif terakhir. Sisakan minimal satu admin.');
+    }
+
+    var baru = list.filter(function (x) {
+      return x.email.toLowerCase().trim() !== em;
+    });
+    saveAuthWhitelist_(baru);
+    return true;
+  });
+}
+
+function getLoginHistory(pin, limit, token) {
+  auth_(pin, token);
+  var max = Number(limit) || 100;
+  var rows = rows_('Log_Login');
+  rows.sort(function (a, b) { return num_(b.ts) - num_(a.ts); });
+  return rows.slice(0, max).map(clean_);
+}
+
+function simpanGoogleClientId(pin, clientId, token) {
+  auth_(pin, token);
+  var cid = String(clientId || '').trim();
+  PropertiesService.getScriptProperties().setProperty('GOOGLE_CLIENT_ID', cid);
+  return true;
 }
 
 /* ---------- Data Kedai Segara (Laporan Stock Agustus · CV. Dapur Rumah Rasa) ---------- */
@@ -815,6 +1619,78 @@ function imporDataSegara() {
     var hasil = baru.length + ' barang ditambahkan, ' + lewati + ' sudah ada (dilewati).';
     Logger.log(hasil);
     return hasil;
+  });
+}
+
+/**
+ * Buat data dummy rekap dan transaksi untuk testing di Google Sheets.
+ * Jalankan dari editor Apps Script: pilih "buatDummyRekap", lalu klik Run.
+ * Atau dipanggil via API admin.
+ */
+function buatDummyRekap(pin, token) {
+  auth_(pin, token);
+  return lock_(function () {
+    var barang = rows_('Barang');
+    var luarItems = barang.filter(function (b) { return b.alur === 'LUAR' && truthy_(b.aktif); });
+    if (!luarItems.length) throw new Error('Belum ada barang dengan alur LUAR. Jalankan imporDataSegara dulu.');
+    var karyawan = rows_('Karyawan').filter(function (k) { return truthy_(k.aktif); });
+    if (!karyawan.length) throw new Error('Belum ada karyawan aktif.');
+
+    var p1 = karyawan[0], p2 = karyawan[1] || karyawan[0], p3 = karyawan[2] || karyawan[0];
+    var dayMs = 86400000, now = Date.now();
+    var sisaMap = {};
+
+    var t3 = new Date(now - 3 * dayMs); t3.setHours(21, 0, 0, 0); var ts3 = t3.getTime();
+    var t2 = new Date(now - 2 * dayMs); t2.setHours(21, 0, 0, 0); var ts2 = t2.getTime();
+    var t1 = new Date(now - 1 * dayMs); t1.setHours(21, 0, 0, 0); var ts1 = t1.getTime();
+
+    // H-3
+    var id3 = uid_();
+    append_('Rekap', { id: id3, ts: ts3, waktu: fmt_(ts3), karyawan_id: String(p3.id), karyawan: p3.nama, diedit_admin: false });
+    luarItems.forEach(function (b, idx) {
+      var ambilJml = 10 + ((idx * 3) % 15);
+      var sisa = Math.max(1, Math.round(ambilJml * 0.2));
+      var terpakai = ambilJml - sisa;
+      append_('Transaksi', { id: uid_(), ts: ts3 - 9 * 3600000, waktu: fmt_(ts3 - 9 * 3600000), jenis: 'AMBIL',
+        barang_id: String(b.id), barang: b.nama, jumlah: ambilJml, karyawan_id: String(p3.id), karyawan: p3.nama,
+        alur: b.alur, status: 'AKTIF', dicatat_oleh: 'karyawan', catatan: 'Ambil dapur', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      append_('RekapBaris', { rekap_id: id3, barang_id: String(b.id), barang: b.nama, saldo_awal: 0, diambil: ambilJml, sisa: sisa, terpakai: terpakai, catatan: '' });
+      sisaMap[String(b.id)] = sisa;
+    });
+
+    // H-2
+    var id2 = uid_();
+    append_('Rekap', { id: id2, ts: ts2, waktu: fmt_(ts2), karyawan_id: String(p2.id), karyawan: p2.nama, diedit_admin: false });
+    luarItems.forEach(function (b, idx) {
+      var sa = sisaMap[String(b.id)] || 0;
+      var ambilJml = 12 + ((idx * 4) % 18);
+      var sisa = Math.max(1, Math.round((sa + ambilJml) * 0.25));
+      var terpakai = sa + ambilJml - sisa;
+      append_('Transaksi', { id: uid_(), ts: ts2 - 9 * 3600000, waktu: fmt_(ts2 - 9 * 3600000), jenis: 'AMBIL',
+        barang_id: String(b.id), barang: b.nama, jumlah: ambilJml, karyawan_id: String(p2.id), karyawan: p2.nama,
+        alur: b.alur, status: 'AKTIF', dicatat_oleh: 'karyawan', catatan: 'Ambil dapur', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      append_('RekapBaris', { rekap_id: id2, barang_id: String(b.id), barang: b.nama, saldo_awal: sa, diambil: ambilJml, sisa: sisa, terpakai: terpakai, catatan: '' });
+      sisaMap[String(b.id)] = sisa;
+    });
+
+    // H-1 (Kemarin)
+    var id1 = uid_();
+    append_('Rekap', { id: id1, ts: ts1, waktu: fmt_(ts1), karyawan_id: String(p1.id), karyawan: p1.nama, diedit_admin: false });
+    luarItems.forEach(function (b, idx) {
+      var sa = sisaMap[String(b.id)] || 0;
+      var ambilJml = 15 + ((idx * 5) % 20);
+      var sisa = Math.max(2, Math.round((sa + ambilJml) * 0.3));
+      var terpakai = sa + ambilJml - sisa;
+      append_('Transaksi', { id: uid_(), ts: ts1 - 9 * 3600000, waktu: fmt_(ts1 - 9 * 3600000), jenis: 'AMBIL',
+        barang_id: String(b.id), barang: b.nama, jumlah: ambilJml, karyawan_id: String(p1.id), karyawan: p1.nama,
+        alur: b.alur, status: 'AKTIF', dicatat_oleh: 'karyawan', catatan: 'Ambil dapur', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      append_('RekapBaris', { rekap_id: id1, barang_id: String(b.id), barang: b.nama, saldo_awal: sa, diambil: ambilJml, sisa: sisa, terpakai: terpakai, catatan: '' });
+      b.stok_luar = sisa;
+      update_('Barang', b);
+    });
+
+    Logger.log('3 sesi dummy rekap berhasil dibuat.');
+    return 3;
   });
 }
 

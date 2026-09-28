@@ -38,7 +38,7 @@ export function useMedia(q: string) {
 export interface Col<T> {
   label: string;
   cell: (r: T) => ComponentChildren;
-  align?: 'right';
+  align?: 'left' | 'center' | 'right';
   /** Lebar kolom di tabel, mis. "w-48". */
   w?: string;
   /** Sembunyikan label di kartu mobile (kolom judul/aksi). */
@@ -63,6 +63,7 @@ export function DataTable<T>({
   collapsible = true,
   groupBadge,
   searchQuery = '',
+  renderCard,
 }: {
   compact?: boolean;
   cols: Col<T>[];
@@ -74,13 +75,12 @@ export function DataTable<T>({
   collapsible?: boolean;
   groupBadge?: (group: { k: string; l: T[] }) => ComponentChildren;
   searchQuery?: string;
+  renderCard?: (row: T) => ComponentChildren;
 }) {
   const wide = useMedia('(min-width: 768px)');
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const gs = groups ?? [{ k: '', l: rows ?? [] }];
   if (!gs.some((g) => g.l.length)) return <Empty>{empty}</Empty>;
-
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-
   const isSearching = Boolean(searchQuery && searchQuery.trim().length > 0);
   const isGroupCollapsed = (k: string) => !isSearching && collapsible && Boolean(k && collapsed[k]);
 
@@ -183,39 +183,45 @@ export function DataTable<T>({
                       const info = compact ? rest.filter((c) => !c.bare) : rest;
                       return (
                         <div key={rowKey(r)} class={`rounded-card border border-line bg-card p-4 shadow-sm ${rowClass?.(r) ?? ''}`}>
-                          <div class="flex items-start gap-3">
-                            <div class="min-w-0 flex-1 font-bold">{head ? head.cell(r) : null}</div>
-                            {acts.map((c) => (
-                              <div key={c.label} class="shrink-0 -my-1.5 -mr-1.5">
-                                {c.cell(r)}
+                          {renderCard ? (
+                            renderCard(r)
+                          ) : (
+                            <>
+                              <div class="flex items-start gap-3">
+                                <div class="min-w-0 flex-1 font-bold">{head ? head.cell(r) : null}</div>
+                                {acts.map((c) => (
+                                  <div key={c.label} class="shrink-0 -my-1.5 -mr-1.5">
+                                    {c.cell(r)}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                          {compact ? (
-                            <div class="num mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-fg">
-                              {info.filter((c) => !c.hideCompact).map((c) => (
-                                 <span key={c.label}>
-                                   {c.label} <span class="font-semibold text-fg">{c.cell(r)}</span>
-                                 </span>
-                               ))}
-                             </div>
-                           ) : (
-                             <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-                               {info.map((c) =>
-                                 c.bare ? (
-                                   <dd key={c.label} class="col-span-2 mt-2.5 pt-2.5 border-t border-line/60">
-                                     {c.cell(r)}
-                                   </dd>
-                                 ) : (
-                                   <Fragment key={c.label}>
-                                     <dt class="text-muted-fg">{c.label}</dt>
-                                     <dd class="num min-w-0 text-right font-medium">{c.cell(r)}</dd>
-                                   </Fragment>
-                                 ),
-                               )}
-                             </dl>
-                           )}
-                         </div>
+                              {compact ? (
+                                <div class="num mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-fg">
+                                  {info.filter((c) => !c.hideCompact).map((c) => (
+                                    <span key={c.label}>
+                                      {c.label} <span class="font-semibold text-fg">{c.cell(r)}</span>
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+                                  {info.map((c) =>
+                                    c.bare ? (
+                                      <dd key={c.label} class="col-span-2 mt-2.5 pt-2.5 border-t border-line/60">
+                                        {c.cell(r)}
+                                      </dd>
+                                    ) : (
+                                      <Fragment key={c.label}>
+                                        <dt class="text-muted-fg">{c.label}</dt>
+                                        <dd class="num min-w-0 text-right font-medium">{c.cell(r)}</dd>
+                                      </Fragment>
+                                    ),
+                                  )}
+                                </dl>
+                              )}
+                            </>
+                          )}
+                        </div>
                        );
                      })}
                    </div>
@@ -235,7 +241,7 @@ export function DataTable<T>({
            <thead class="sticky top-0 bg-muted text-sm text-muted-fg">
              <tr>
                {cols.map((c) => (
-                 <th key={c.label} scope="col" class={`whitespace-nowrap px-4 py-3 font-semibold ${c.align === 'right' ? 'text-right' : ''} ${c.w ?? ''}`}>
+                <th key={c.label} scope="col" class={`whitespace-nowrap px-4 py-3 font-semibold ${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'text-right' : 'text-left'} ${c.w ?? ''}`}>
                    {c.bare && !c.label.trim() ? <span class="sr-only">Aksi</span> : c.label}
                  </th>
                ))}
@@ -291,7 +297,7 @@ export function DataTable<T>({
                    g.l.map((r) => (
                      <tr key={rowKey(r)} class={`transition-colors duration-150 hover:bg-bg ${rowClass?.(r) ?? ''}`}>
                        {cols.map((c) => (
-                         <td key={c.label} class={`px-4 py-3 align-middle ${c.align === 'right' ? 'num text-right' : ''}`}>
+                        <td key={c.label} class={`px-4 py-3 align-middle ${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'num text-right' : 'text-left'}`}>
                            {c.cell(r)}
                          </td>
                        ))}

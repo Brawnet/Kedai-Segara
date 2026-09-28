@@ -1,4 +1,5 @@
 import type { Api } from './types';
+import { authStorage } from './auth-storage.ts';
 
 type Fn = keyof Api;
 type Runner = Record<string, (...args: unknown[]) => void> & {
@@ -9,7 +10,29 @@ type Runner = Record<string, (...args: unknown[]) => void> & {
 declare global {
   interface Window {
     SEGARA_MODE?: string;
-    google?: { script?: { run: Runner } };
+    google?: {
+      script?: { run: Runner };
+      accounts?: {
+        id?: {
+          initialize(config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+            auto_select?: boolean;
+          }): void;
+          renderButton(
+            parent: HTMLElement,
+            options: {
+              theme?: 'outline' | 'filled_blue' | 'filled_black';
+              size?: 'large' | 'medium' | 'small';
+              text?: string;
+              shape?: 'rectangular' | 'pill' | 'circle';
+              width?: number;
+            },
+          ): void;
+          prompt(): void;
+        };
+      };
+    };
   }
 }
 
@@ -25,10 +48,25 @@ async function devMock(): Promise<Impl> {
 }
 
 /** Panggil fungsi di Kode.gs lewat google.script.run, dibungkus Promise. */
-const TIMEOUT_MS = 30_000;
+const TIMEOUT_MS = 60_000;
 
 /** Panggil fungsi di Kode.gs lewat google.script.run, dibungkus Promise. */
 export function call<K extends Fn>(fn: K, ...args: Parameters<Api[K]>): Promise<ReturnType<Api[K]>> {
+  const publicFns = new Set<string>([
+    'getPublicAuthConfig',
+    'requestOtp',
+    'verifyOtp',
+    'verifyGoogleCredential',
+    'verifySessionToken',
+  ]);
+  const finalArgs = [...args] as unknown[];
+  if (!publicFns.has(fn)) {
+    const tok = authStorage.getToken();
+    if (tok && !finalArgs.includes(tok)) {
+      finalArgs.push(tok);
+    }
+  }
+
   const run = window.google?.script?.run;
   if (!run) {
     if (import.meta.env.DEV) {
@@ -38,11 +76,15 @@ export function call<K extends Fn>(fn: K, ...args: Parameters<Api[K]>): Promise<
             // Latensi palsu agar state loading terlihat saat pengembangan.
             setTimeout(() => {
               try {
-                Promise.resolve((m[fn] as (...a: unknown[]) => unknown)(...args)).then(
+                Promise.resolve((m[fn] as (...a: unknown[]) => unknown)(...finalArgs)).then(
                   (v) => res(v as ReturnType<Api[K]>),
-                  rej,
+                  (e) => {
+                    periksaSesiExpired(e);
+                    rej(e);
+                  },
                 );
               } catch (e) {
+                periksaSesiExpired(e);
                 rej(e);
               }
             }, 250),
@@ -56,7 +98,7 @@ export function call<K extends Fn>(fn: K, ...args: Parameters<Api[K]>): Promise<
     const timer = setTimeout(() => {
       if (done) return;
       done = true;
-      rej(new Error('Koneksi timeout (30 detik). Periksa internet Anda lalu coba lagi.'));
+      rej(new Error('Koneksi timeout (60 detik). Periksa internet Anda lalu coba lagi.'));
     }, TIMEOUT_MS);
 
     try {
@@ -71,19 +113,32 @@ export function call<K extends Fn>(fn: K, ...args: Parameters<Api[K]>): Promise<
           if (done) return;
           done = true;
           clearTimeout(timer);
-          rej(e instanceof Error ? e : new Error(String((e as { message?: string })?.message ?? e)));
+          const errMsg = typeof e === 'object' && e !== null && 'message' in e ? String(e.message) : String(e);
+          const err = e instanceof Error ? e : new Error(errMsg);
+          periksaSesiExpired(err);
+          rej(err);
         });
       if (typeof r[fn] !== 'function') {
         clearTimeout(timer);
         rej(new Error(`Fungsi "${String(fn)}" tidak ditemukan di server Apps Script.`));
         return;
       }
-      r[fn](...args);
+      r[fn](...finalArgs);
     } catch (err) {
       clearTimeout(timer);
       rej(err instanceof Error ? err : new Error(String(err)));
     }
   });
+}
+
+function periksaSesiExpired(err: unknown) {
+  const msg = pesan(err);
+  if (/Akses ditolak|Sesi telah berakhir|sesi login wajib|sesi login tidak valid/i.test(msg)) {
+    authStorage.clear();
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('sg_session_expired', { detail: msg }));
+    }
+  }
 }
 
 /** Pesan error tanpa awalan "Error:"/"Exception:" dari Apps Script. */

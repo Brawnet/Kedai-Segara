@@ -25,7 +25,7 @@ import type { ComponentChildren } from 'preact';
 import { call, pesan } from '../lib/api';
 import { useApp } from '../lib/app';
 import { cocok, dekatTutup, inisial, katOf, nf, parseNum, r3, urutKat } from '../lib/format';
-import type { BarangTablet, Karyawan, RekapRow, TabletData } from '../lib/types';
+import type { AuthSession, BarangTablet, Karyawan, RekapRow, TabletData } from '../lib/types';
 import { Banner, Button, Dialog, Empty, Input, PageTitle, Skeleton, SyncStatusBadge, Tag, vibrate } from '../components/ui';
 import { Logo } from '../components/Logo';
 type Aksi = 'ambil' | 'masuk';
@@ -51,7 +51,15 @@ interface Last {
 const IDLE_MS = 120_000;
 const UNDO_MS = 60_000;
 
-export function Tablet({ onAdmin }: { onAdmin: () => void }) {
+export function Tablet({
+  onAdmin,
+  session,
+  onLogout,
+}: {
+  onAdmin: () => void;
+  session?: AuthSession;
+  onLogout?: () => void;
+}) {
   const { act, busy, toast, theme, toggleTheme } = useApp();
   const [d, setD] = useState<TabletData | null>(null);
   const [err, setErr] = useState('');
@@ -70,6 +78,7 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
   };
 
   const go = (s: Step) => {
+    if (s.s === 'home') setPinPrompt(null);
     setStep(s);
     window.scrollTo(0, 0);
   };
@@ -100,7 +109,10 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
   }, []);
   useEffect(() => {
     if (last && now - last.ts > UNDO_MS) setLast(null);
-    if (['menu', 'barang', 'jumlah', 'rekapNama'].includes(step.s) && now - lastAct.current > IDLE_MS) go({ s: 'home' });
+    if (['menu', 'barang', 'jumlah', 'rekapNama'].includes(step.s) && now - lastAct.current > IDLE_MS) {
+      setPinPrompt(null);
+      go({ s: 'home' });
+    }
   }, [now]);
 
   // Muat ulang data setiap 30 detik saat di beranda.
@@ -188,7 +200,7 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
         st={step}
         onBack={() => go({ s: 'barang', k: step.k, aksi: step.aksi, kat: step.kat, q: '' })}
         onDone={(j, tx) => {
-          if (tx) setLast({ id: tx.id, ts: Date.now(), karyawan: step.k.nama, barang: step.b.nama, jumlah: j, satuan: step.b.satuan });
+          if (tx) setLast({ id: tx.id, ts: tx.ts || Date.now(), karyawan: step.k.nama, barang: step.b.nama, jumlah: j, satuan: step.b.satuan });
           go({ s: 'sukses', k: step.k, aksi: step.aksi, kat: step.kat, b: step.b, j });
         }}
       />
@@ -226,31 +238,47 @@ export function Tablet({ onAdmin }: { onAdmin: () => void }) {
 
   return (
     <div class="min-h-dvh">
-      <header class="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
-        <div class="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-6">
-          <button type="button" onClick={selesai} class="-ml-1 min-w-0 rounded-ctl p-1" aria-label="Ke beranda">
+      <header class="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur safe-top">
+        <div class="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:px-4 md:px-6">
+          <button type="button" onClick={selesai} class="-ml-1 min-w-0 shrink rounded-ctl p-1" aria-label="Ke beranda">
             <Logo sub={step.s !== 'home' && 'k' in step ? step.k.nama : 'Tablet dapur'} />
           </button>
-          <div class="ml-auto flex shrink-0 items-center gap-2">
+          <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <SyncStatusBadge busy={busy} />
             {step.s !== 'home' && (
               <span class="hidden sm:block">
-                <Button variant="ghost" onClick={selesai}>
-                  <House size={20} aria-hidden /> Beranda
+                <Button size="sm" variant="ghost" onClick={selesai}>
+                  <House size={19} aria-hidden /> Beranda
                 </Button>
               </span>
             )}
             <Button
+              size="sm"
               variant="ghost"
               onClick={toggleTheme}
               title={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
               aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+              class="size-10 p-0 sm:size-auto sm:px-3 rounded-ctl"
             >
-              {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
+              {theme === 'dark' ? <Sun size={19} aria-hidden /> : <Moon size={19} aria-hidden />}
             </Button>
-            <Button variant="secondary" onClick={onAdmin} aria-label="Admin">
-              <ShieldCheck size={20} aria-hidden /> <span class="hidden sm:inline">Admin</span>
-            </Button>
+            {session?.role !== 'tablet' && (
+              <Button size="sm" variant="secondary" onClick={onAdmin} aria-label="Admin" class="h-10 px-2.5 sm:h-11 sm:px-3">
+                <ShieldCheck size={19} aria-hidden /> <span class="hidden sm:inline">Admin</span>
+              </Button>
+            )}
+            {onLogout && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onLogout}
+                title={`Keluar akun (${session?.email || ''})`}
+                aria-label="Keluar akun"
+                class="size-10 p-0 sm:size-auto sm:px-3 rounded-ctl text-danger hover:bg-danger-soft hover:text-danger"
+              >
+                <SignOut size={19} aria-hidden />
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -472,6 +500,7 @@ function Home({
     <section class="flex flex-col gap-6">
       {st.lewatHari ? (
         <Banner
+          key={`tablet-danger-${st.belumRekap}`}
           tone="danger"
           action={
             <Button variant="danger" size="md" onClick={onRekap}>
@@ -484,6 +513,7 @@ function Home({
         </Banner>
       ) : st.belumRekap > 0 && isDekatTutup ? (
         <Banner
+          key={`tablet-warning-${st.belumRekap}`}
           tone="warning"
           action={
             <Button variant="primary" size="md" onClick={onRekap}>
@@ -754,7 +784,7 @@ function PilihBarang({
             <button
               type="button"
               onClick={() => onChange({ kat: null })}
-              class={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors duration-150 cursor-pointer ${
+              class={`min-h-11 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-semibold transition-colors duration-150 cursor-pointer ${
                 !st.kat
                   ? 'bg-primary text-white shadow-sm'
                   : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
@@ -770,7 +800,7 @@ function PilihBarang({
                   key={c}
                   type="button"
                   onClick={() => onChange({ kat: c })}
-                  class={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors duration-150 cursor-pointer ${
+                  class={`min-h-11 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-semibold transition-colors duration-150 cursor-pointer ${
                     active
                       ? 'bg-primary text-white shadow-sm'
                       : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
@@ -815,10 +845,20 @@ function PilihBarang({
               <span class="min-w-0 flex-1">
                 <span class="block font-bold leading-snug">{b.nama}</span>
                 <span class="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-fg">
-                  <span>{b.satuan}</span>
-                  {b.kode && <Tag>{b.kode}</Tag>}
-                  {!st.kat && <span class="truncate">· {katOf(b)}</span>}
-                  {!masuk && b.alur === 'LANGSUNG_HABIS' && <Tag tone="warning">langsung habis</Tag>}
+                  {!st.kat && <span class="truncate">{katOf(b)}</span>}
+                  {b.alur === 'LUAR' ? (
+                    <span
+                      class={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        (b.stok_luar ?? 0) > 0
+                          ? 'bg-primary-soft text-primary font-bold'
+                          : 'bg-muted text-muted-fg'
+                      }`}
+                    >
+                      Di luar: <strong class="num">{(b.stok_luar ?? 0) > 0 ? nf(b.stok_luar) : '0'}</strong> {b.satuan}
+                    </span>
+                  ) : (
+                    !masuk && <Tag tone="warning">langsung habis</Tag>
+                  )}
                 </span>
               </span>
               <CaretRight size={22} class="shrink-0 text-muted-fg" aria-hidden />
@@ -843,7 +883,7 @@ function Jumlah({
 }: {
   st: Extract<Step, { s: 'jumlah' }>;
   onBack: () => void;
-  onDone: (j: number, tx?: { id: string }) => void;
+  onDone: (j: number, tx?: { id: string; ts?: number }) => void;
 }) {
   const { act, busy } = useApp();
   const [val, setVal] = useState('');
@@ -884,13 +924,16 @@ function Jumlah({
     return () => window.removeEventListener('keydown', h);
   }, [ok, busy, j, sup, masuk, st, b]);
 
+  const reqIdRef = useRef(Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+
   const kirim = async () => {
     if (!ok || busy) return;
     const n = r3(j);
+    const reqId = reqIdRef.current;
     if (masuk) {
-      if (await act('masukKaryawan', [st.k.id, b.id, n, sup.trim()])) onDone(n);
+      if (await act('masukKaryawan', [st.k.id, b.id, n, sup.trim(), reqId])) onDone(n);
     } else {
-      const r = await act('ambil', [st.k.id, b.id, n]);
+      const r = await act('ambil', [st.k.id, b.id, n, reqId]);
       if (r) onDone(n, r.tx);
     }
   };
@@ -903,6 +946,14 @@ function Jumlah({
       <div class="grid gap-6 md:grid-cols-[1fr_minmax(300px,380px)] md:items-start">
         <div class="flex flex-col gap-5">
           <PageTitle kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang' : 'Ambil dari gudang'}`} title={b.nama} sub={b.catatan || undefined} />
+          {b.alur === 'LUAR' && (
+            <div class="flex items-center justify-between rounded-card border border-primary/20 bg-primary-soft/50 px-4 py-2.5 text-sm">
+              <span class="font-medium text-muted-fg">Tersedia di luar / depan saat ini:</span>
+              <span class="num text-base font-extrabold text-primary">
+                {nf(b.stok_luar ?? 0)} {b.satuan}
+              </span>
+            </div>
+          )}
           <div
             class="rounded-card border-2 border-line bg-card px-5 py-4"
             aria-live="polite"
@@ -921,7 +972,7 @@ function Jumlah({
                 key={step}
                 type="button"
                 onClick={() => tambahCepat(step)}
-                class="min-h-10 min-w-12 rounded-ctl border border-line bg-card px-2.5 py-1 text-sm font-bold text-fg hover:border-primary hover:bg-primary-soft active:bg-primary-soft transition-colors select-none cursor-pointer"
+                class="min-h-11 min-w-12 rounded-ctl border border-line bg-card px-2.5 py-1 text-sm font-bold text-fg hover:border-primary hover:bg-primary-soft active:bg-primary-soft transition-colors select-none cursor-pointer"
               >
                 +{step}
               </button>
@@ -1053,7 +1104,8 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
       return;
     }
     const sisa = vals.map((v) => parseNum(v));
-    const r = await act('simpanRekap', [st.cutoff, st.k.id, st.rows.map((r, i) => ({ barang_id: r.barang_id, sisa: sisa[i]!, catatan: notes[i]! }))]);
+    const reqId = st.cutoff + '-' + st.k.id;
+    const r = await act('simpanRekap', [st.cutoff, st.k.id, st.rows.map((r, i) => ({ barang_id: r.barang_id, sisa: sisa[i]!, catatan: notes[i]! })), reqId]);
     if (r) onSaved(sisa);
   };
 

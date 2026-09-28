@@ -55,17 +55,29 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   body {
     @apply bg-bg font-sans text-fg antialiased;
     font-size: 16px;
     line-height: 1.5;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  .overflow-x-auto,
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
   }
   button,
   [role='button'],
   select,
   summary {
     cursor: pointer;
+    touch-action: manipulation;
   }
   button:disabled {
     cursor: not-allowed;
@@ -86,6 +98,18 @@
 
 @utility num {
   font-variant-numeric: tabular-nums;
+}
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+
+@utility safe-top {
+  padding-top: max(0rem, env(safe-area-inset-top, 0px));
 }
 
 @utility safe-bottom {

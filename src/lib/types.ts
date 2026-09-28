@@ -1,8 +1,8 @@
 // Bentuk data yang dikembalikan Kode.gs. Nama field mengikuti kolom sheet.
 
-export type Alur = 'LUAR' | 'LANGSUNG_HABIS';
+export type Alur = 'LUAR' | 'LANGSUNG_HABIS' | 'DALAM';
 
-/** Barang versi tablet — TANPA angka stok (karyawan tidak boleh melihat stok gudang). */
+/** Barang versi tablet — TANPA angka stok gudang (stok_luar di depan/dapur ditampilkan). */
 export interface BarangTablet {
   id: string;
   nama: string;
@@ -11,6 +11,8 @@ export interface BarangTablet {
   alur: Alur;
   kode: string;
   catatan: string;
+  stok_luar: number;
+  opname_rekap?: boolean;
 }
 
 /** Barang versi admin (pub_ di Kode.gs). */
@@ -19,6 +21,7 @@ export interface Barang extends BarangTablet {
   stok_luar: number;
   ambang_min: number;
   aktif: boolean;
+  opname_rekap?: boolean;
 }
 
 export interface Karyawan {
@@ -85,7 +88,7 @@ export interface Transaksi {
   alur: Alur | '';
   supplier: string;
   status: 'AKTIF' | 'BATAL';
-  dicatat_oleh: 'admin' | 'karyawan' | '';
+  dicatat_oleh: string;
   catatan: string;
   kategori: string;
   satuan: string;
@@ -146,6 +149,7 @@ export interface BarangInput {
   ambang_min: number | string;
   aktif: boolean;
   stok_awal?: number | string;
+  opname_rekap?: boolean;
 }
 
 export interface LaporanRow {
@@ -158,25 +162,83 @@ export interface LaporanRow {
   opname: number;
 }
 
+export interface AuthAccount {
+  email: string;
+  role: 'admin' | 'tablet';
+  aktif: boolean;
+  dibuat: number;
+  punyaPin?: boolean;
+}
+
+export interface LoginLog {
+  id: string;
+  ts: number;
+  waktu: string;
+  email: string;
+  metode: 'GOOGLE' | 'OTP' | string;
+  role: 'admin' | 'tablet' | string;
+  status: string;
+  user_agent?: string;
+}
+
+export interface PublicAuthConfig {
+  hasGoogleAuth: boolean;
+  googleClientId: string;
+}
+
+export interface AuthSession {
+  token: string;
+  email: string;
+  role: 'admin' | 'tablet';
+  exp: number;
+}
+
+export interface VerifySessionResult {
+  valid: boolean;
+  email?: string;
+  role?: 'admin' | 'tablet';
+  exp?: number;
+  error?: string;
+}
+
 /** Semua fungsi publik di Kode.gs beserta argumen dan hasilnya. */
 export interface Api {
-  getTablet(): TabletData;
-  ambil(karyawanId: string, barangId: string, jumlah: number): AmbilResult;
-  masukKaryawan(karyawanId: string, barangId: string, jumlah: number, supplier: string): boolean;
-  batalAmbil(txId: string, pin: string): boolean;
-  rekapDraf(): RekapDraf;
-  simpanRekap(cutoff: number, karyawanId: string, input: RekapInput[]): { id: string };
+  getTablet(token?: string): TabletData;
+  ambil(karyawanId: string, barangId: string, jumlah: number, clientTxId?: string, token?: string): AmbilResult;
+  masukKaryawan(karyawanId: string, barangId: string, jumlah: number, supplier: string, clientTxId?: string, token?: string): boolean;
+  batalAmbil(txId: string, pin: string, token?: string): boolean;
+  rekapDraf(token?: string): RekapDraf;
+  simpanRekap(cutoff: number, karyawanId: string, input: RekapInput[], clientTxId?: string, token?: string): { id: string };
 
-  adminData(pin: string): AdminData;
-  simpanBarang(pin: string, o: BarangInput): boolean;
-  hapusBarang(pin: string, id: string): { status: 'deleted' | 'archived'; nama: string; message: string };
-  simpanKaryawan(pin: string, o: { id?: string; nama: string; aktif?: boolean; pin?: string }): boolean;
+  adminData(pin: string, token?: string): AdminData;
+  simpanBarang(pin: string, o: BarangInput, token?: string): boolean;
+  hapusBarang(pin: string, id: string, token?: string): { status: 'deleted' | 'archived'; nama: string; message: string };
+  tambahKategori(pin: string, namaKategori: string, token?: string): { status: 'created'; nama: string; message: string };
+  hapusKategori(pin: string, namaKategori: string, token?: string): { status: 'deleted'; nama: string; jumlahBarang: number; message: string };
+  simpanKaryawan(pin: string, o: { id?: string; nama: string; aktif?: boolean; pin?: string }, token?: string): boolean;
+  hapusKaryawan(pin: string, id: string, token?: string): { status: 'deleted' | 'archived'; nama: string; message: string };
   verifikasiPinKaryawan(karyawanId: string, pin: string): boolean;
-  stokMasuk(pin: string, barangId: string, jumlah: number | string, supplier: string, catatan: string): boolean;
-  ambilAdmin(pin: string, karyawanId: string, barangId: string, jumlah: number | string, ts: number): AmbilResult;
-  simpanOpname(pin: string, items: { barang_id: string; fisik: string }[]): number;
-  editRekapTerakhir(pin: string, input: { barang_id: string; sisa: string }[]): number;
-  simpanPengaturan(pin: string, jamTutup: string, pinBaru: string): boolean;
-  laporan(pin: string, dari: string, sampai: string): LaporanRow[];
-  laporanKeSheet(pin: string, dari: string, sampai: string): string;
+  stokMasuk(pin: string, barangId: string, jumlah: number | string, supplier: string, catatan: string, clientTxId?: string, token?: string): boolean;
+  ambilAdmin(pin: string, karyawanId: string, barangId: string, jumlah: number | string, ts: number, token?: string): AmbilResult;
+  simpanOpname(pin: string, items: { barang_id: string; fisik: string }[], token?: string): number;
+  editRekapTerakhir(pin: string, input: { barang_id: string; sisa: string }[], token?: string): number;
+  buatDummyRekap(pin: string, token?: string): number;
+  simpanPengaturan(pin: string, jamTutup: string, pinBaru: string, token?: string): boolean;
+  laporan(pin: string, dari: string, sampai: string, token?: string): LaporanRow[];
+  laporanKeSheet(pin: string, dari: string, sampai: string, token?: string): string;
+  getPublicAuthConfig(): PublicAuthConfig;
+  requestOtp(email: string): { success: boolean; message: string; expSeconds: number };
+  verifyOtp(email: string, code: string, userAgent?: string): AuthSession;
+  verifyGoogleCredential(credential: string, userAgent?: string): AuthSession;
+  verifySessionToken(token: string): VerifySessionResult;
+  getAdminAuthStatus(token?: string): { email: string; punyaPin: boolean };
+  setupAdminPin(newPin: string, token?: string): boolean;
+  resetAdminPinWithOtp(email: string, code: string, newPin: string, token?: string): boolean;
+  gantiAdminPin(oldPin: string, newPin: string, token?: string): boolean;
+
+  getAuthAccounts(pin: string, token?: string): AuthAccount[];
+  simpanAuthAccount(pin: string, email: string, role: 'admin' | 'tablet', aktif: boolean, token?: string): boolean;
+  hapusAuthAccount(pin: string, email: string, token?: string): boolean;
+  getLoginHistory(pin: string, limit?: number, token?: string): LoginLog[];
+  simpanGoogleClientId(pin: string, clientId: string, token?: string): boolean;
 }

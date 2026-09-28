@@ -7,6 +7,7 @@ import {
   PencilSimple,
   Plus,
   ShieldCheck,
+  Trash,
   UserCheck,
   UserCircleMinus,
   UserCirclePlus,
@@ -53,6 +54,9 @@ export function KaryawanPage() {
 
   // Dialog Konfirmasi Nonaktifkan
   const [modalTog, setModalTog] = useState<KaryawanAdmin | null>(null);
+
+  // Dialog Konfirmasi Hapus Karyawan
+  const [modalHapus, setModalHapus] = useState<KaryawanAdmin | null>(null);
 
   // Metrik Ringkasan
   const total = d.karyawan.length;
@@ -167,6 +171,16 @@ export function KaryawanPage() {
     setModalTog(null);
   };
 
+  // Hapus karyawan
+  const konfirmasiHapus = async () => {
+    if (!modalHapus) return;
+    const targetId = modalHapus.id;
+    const res = await A('hapusKaryawan', [targetId], (r) => r.message);
+    if (res) {
+      setModalHapus(null);
+    }
+  };
+
   // Definisi Kolom Tabel
   const cols: Col<KaryawanAdmin>[] = [
     {
@@ -237,6 +251,15 @@ export function KaryawanPage() {
           >
             {k.aktif ? <UserCircleMinus size={17} aria-hidden /> : <UserCirclePlus size={17} aria-hidden />}
             {k.aktif ? 'Nonaktifkan' : 'Aktifkan'}
+          </Button>
+          <Button
+            size="sm"
+            variant="danger-ghost"
+            onClick={() => setModalHapus(k)}
+            aria-label={`Hapus ${k.nama}`}
+            title="Hapus karyawan"
+          >
+            <Trash size={17} aria-hidden /> Hapus
           </Button>
         </div>
       ),
@@ -580,12 +603,25 @@ export function KaryawanPage() {
         onClose={() => setModalRen(null)}
         title="Ubah Nama Karyawan"
         footer={
-          <>
-            <Button onClick={() => setModalRen(null)}>Batal</Button>
-            <Button variant="primary" guard type="submit" form="form-ren" disabled={!modalRen?.nama.trim()}>
-              Simpan
+          <div class="flex w-full items-center justify-between gap-2">
+            <Button
+              variant="danger-ghost"
+              onClick={() => {
+                const target = modalRen?.k;
+                setModalRen(null);
+                if (target) setModalHapus(target);
+              }}
+              type="button"
+            >
+              <Trash size={16} class="mr-1 inline" aria-hidden /> Hapus Karyawan
             </Button>
-          </>
+            <div class="flex items-center gap-2">
+              <Button onClick={() => setModalRen(null)}>Batal</Button>
+              <Button variant="primary" guard type="submit" form="form-ren" disabled={!modalRen?.nama.trim()}>
+                Simpan
+              </Button>
+            </div>
+          </div>
         }
       >
         {modalRen && (
@@ -619,6 +655,33 @@ export function KaryawanPage() {
         onOk={konfirmasiToggle}
       >
         Staf <strong class="text-fg">{modalTog?.nama}</strong> tidak akan muncul lagi di pilihan nama tablet kasir/dapur. Riwayat transaksi sebelumnya tetap tersimpan di sistem.
+      </Confirm>
+
+      {/* ================= Confirm: Hapus Karyawan ================= */}
+      <Confirm
+        open={!!modalHapus}
+        title={`Hapus Karyawan "${modalHapus?.nama}"?`}
+        okLabel="Hapus Karyawan"
+        tone="danger"
+        onCancel={() => setModalHapus(null)}
+        onOk={konfirmasiHapus}
+      >
+        <div class="flex flex-col gap-3 text-sm">
+          <p class="text-fg">
+            Apakah Anda yakin ingin menghapus staf <strong class="text-fg">{modalHapus?.nama}</strong>?
+          </p>
+          <div class="rounded-card border border-line bg-muted/60 p-3.5 space-y-2 text-xs text-muted-fg leading-relaxed">
+            <div class="font-bold text-fg flex items-center gap-1.5">
+              <ShieldCheck size={16} class="text-primary shrink-0" /> Keamanan Riwayat Transaksi:
+            </div>
+            <p>
+              • <strong>Jika belum pernah ada transaksi:</strong> Data karyawan akan <em>dihapus permanen</em> dari sistem dan Google Sheet.
+            </p>
+            <p>
+              • <strong>Jika sudah memiliki riwayat:</strong> Karyawan otomatis <em>dinonaktifkan (diarsipkan)</em> agar seluruh riwayat dan laporan transaksi terdahulu tetap terjaga utuh.
+            </p>
+          </div>
+        </div>
       </Confirm>
     </div>
   );
