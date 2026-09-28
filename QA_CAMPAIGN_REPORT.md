@@ -13,11 +13,11 @@
 
 | Lane | Subsystem | Canonical Owners | Scope & Invariants Under Audit | Status |
 |:---:|:---|:---|:---|:---:|
-| **1** | Master Barang & Kategori | `src/admin/Barang.tsx`, `apps-script/Kode.gs` | Kode uniqueness (case-insensitive), alur validation (`LUAR`, `LANGSUNG_HABIS`), ambang_min non-negative, category rename/delete cascade, opname_rekap toggle | **Verified & Fixed** |
+| **1** | Master Barang & Kategori | `src/admin/Barang.tsx`, `apps-script/Kode.gs` | Kode uniqueness (case-insensitive), alur validation (`LUAR`, `LANGSUNG_HABIS`), ambang_min non-negative, category rename/delete cascade | **Verified & Fixed** |
 | **2** | Karyawan & Auth PIN | `src/admin/Karyawan.tsx`, `apps-script/Kode.gs` | PIN 4–6 digit numeric validation, PIN hashing with salt, active state enforcement, collision detection, audit history preservation | **Verified Clean** |
 | **3** | Transaksi & Pembatalan | `src/admin/Stok.tsx`, `src/tablet/Tablet.tsx`, `apps-script/Kode.gs` | 60s cancellation grace window (65s server tolerance), stock rollback, alur transfer gudang→dapur, idempotency guards (`withIdempotency_`) | **Verified Clean** |
 | **4** | Opname Fisik & Draf | `src/admin/Opname.tsx`, `src/lib/opname-draft.ts`, `apps-script/Kode.gs` | Draft persistence (localStorage), 24h expiration, variance formula ($selisih = fisik - sistem$), non-negative physical count enforcement | **Verified Clean** |
-| **5** | Rekap Sisa Dapur & Visibility | `src/tablet/Tablet.tsx`, `src/admin/Rekap.tsx`, `apps-script/Kode.gs` | Closing rekap, $terpakai = saldo\_awal + diambil - sisa$, opname_rekap filtering, tablet cutoff, exclusion of archived items | **Verified & Fixed** |
+| **5** | Rekap Sisa Dapur & Visibility | `src/tablet/Tablet.tsx`, `src/admin/Rekap.tsx`, `apps-script/Kode.gs` | Closing rekap, $terpakai = saldo\_awal + diambil - sisa$, alur filtering, tablet cutoff, exclusion of archived items | **Verified & Fixed** |
 | **6** | Admin Session & Whitelist | `src/admin/Pengaturan.tsx`, `src/lib/api.ts`, `apps-script/Kode.gs` | Session expiration, whitelist matching, admin PIN hashing/salting, rate limiting lockouts, audit log (`Log_Login`) | **Verified Clean** |
 | **7** | Formatting & Locale | `src/lib/format.ts` | Indonesian locale formatting (`id-ID`), comma decimal parsing (`parseNum`), number bounds, time formatting in WITA (UTC+8), input sanitization | **Verified Clean** |
 | **8** | Dashboard & Alert Stok | `src/admin/Dashboard.tsx`, `src/lib/format.ts` | Stock gauges, low-stock threshold ($b.aktif \land b.ambang\_min > 0 \land total < ambang\_min$), category aggregations, search filters | **Verified & Fixed** |
@@ -61,11 +61,9 @@
 - **Baseline SHA**: `9d77d5aaee0b294b87254bb86a0814f2882e68ad`
 - **Affected Path**: `apps-script/Kode.gs` (line 532) & `src/lib/mock.ts` (line 221)
 - **Reproduction Before**:
-  In `hitungRekap_`:
-  `return rows_('Barang').filter(function (b) { return b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap); })`
-  The filter omitted checking `b.aktif`. Inactive/archived items with any calculated balance (`maks > 0`) could appear in kitchen closing rekap drafts.
+  The filter in `hitungRekap_` omitted checking `b.aktif`. Inactive/archived items with any calculated balance (`maks > 0`) could appear in kitchen closing rekap drafts.
 - **Root Cause**: Omission of active status verification in rekap draft generation query.
-- **Canonical Refactor**: Added `truthy_(b.aktif)` in `Kode.gs` and `b.aktif` in `mock.ts` alongside `opname_rekap !== false`.
+- **Canonical Refactor**: Added `truthy_(b.aktif)` in `Kode.gs` and `b.aktif` in `mock.ts` with direct alur check (`b.alur !== 'LANGSUNG_HABIS'`).
 - **Regression Proof**: `tests/qa-feature-invariants.test.ts` ("Lane 5: hitungRekap_ excludes inactive/archived items from closing rekap").
 - **Status**: Verified & Passed.
 
@@ -100,7 +98,7 @@
 - **Subsystem**: Lane 10 (Database) & `apps-script/Kode.gs`
 - **Affected Path**: `apps-script/Kode.gs` (`DATA_SEGARA` & `imporDataSegara`)
 - **Refactor**:
-  Synchronized `DATA_SEGARA` in `apps-script/Kode.gs` with the latest September 2026 dataset (119 active items across 8 categories). Added `opname_rekap: true` explicitly in `imporDataSegara`, and initialized default `urutan_kategori` in `setup()` if not already set. Rebuilt `apps-script/index.html` singlefile production bundle.
+  Synchronized `DATA_SEGARA` in `apps-script/Kode.gs` with the latest September 2026 dataset (119 active items across 8 categories), and initialized default `urutan_kategori` in `setup()` if not already set. Rebuilt `apps-script/index.html` singlefile production bundle.
 - **Regression Proof**: `tests/converted-database.test.ts`, `tests/apps-script.test.ts`.
 - **Status**: Verified & Passed.
 

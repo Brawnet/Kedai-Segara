@@ -12,7 +12,6 @@ export interface BarangTablet {
   kode: string;
   catatan: string;
   stok_luar: number;
-  opname_rekap?: boolean;
 }
 
 /** Barang versi admin (pub_ di Kode.gs). */
@@ -21,7 +20,6 @@ export interface Barang extends BarangTablet {
   stok_luar: number;
   ambang_min: number;
   aktif: boolean;
-  opname_rekap?: boolean;
 }
 
 export interface Karyawan {
@@ -150,7 +148,6 @@ export interface BarangInput {
   ambang_min: number | string;
   aktif: boolean;
   stok_awal?: number | string;
-  opname_rekap?: boolean;
 }
 
 export interface LaporanRow {

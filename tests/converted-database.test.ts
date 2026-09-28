@@ -27,7 +27,7 @@ describe('Database Stok Segara Converted Data Invariants', () => {
   it('struktur kolom pada CSV Barang harus persis mengikuti skema SHEETS.Barang', () => {
     const content = readFileSync('Data/csv/Barang.csv', 'utf-8');
     const firstLine = content.split(/\r?\n/)[0];
-    const expected = 'id,nama,satuan,kategori,stok_dalam,stok_luar,ambang_min,alur,aktif,kode,catatan,opname_rekap';
+    const expected = 'id,nama,satuan,kategori,stok_dalam,stok_luar,ambang_min,alur,aktif,kode,catatan';
     assert.equal(firstLine, expected);
   });
 

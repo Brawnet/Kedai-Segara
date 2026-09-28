@@ -7,7 +7,7 @@ import { runInContext } from 'node:vm';
 describe('Rekap & Stok Luar Visibility driven directly by Alur', () => {
   const pin = '12345';
 
-  it('mock backend: item with alur LUAR appears in rekapDraf when taken, regardless of legacy opname_rekap', () => {
+  it('mock backend: item with alur LUAR appears in rekapDraf when taken', () => {
     const mock = createMock();
     const tabletData = mock.getTablet();
     const employee = tabletData.karyawan[0]!;
@@ -88,7 +88,7 @@ describe('Rekap & Stok Luar Visibility driven directly by Alur', () => {
     const ambil = runInContext('ambil', context);
     const rekapDraf = runInContext('rekapDraf', context);
 
-    // 1. Buat barang alur LUAR (meskipun opname_rekap di legacy sheet sempat false)
+    // 1. Buat barang alur LUAR
     simpanBarang(pin, {
       nama: 'Sedotan Bubble',
       satuan: 'Pack',
@@ -98,7 +98,6 @@ describe('Rekap & Stok Luar Visibility driven directly by Alur', () => {
       stok_awal: 20,
       kode: 'SDB',
       catatan: '',
-      opname_rekap: false, // simulasikan legacy value
     });
 
     // 2. Buat barang alur LANGSUNG_HABIS

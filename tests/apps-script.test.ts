@@ -38,9 +38,9 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
   };
   const sheetsData: Record<string, Cell[][]> = {
     Barang: [
-      ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'opname_rekap'],
-      ['b1', 'Minyak goreng', 'liter', 'Bahan', 20, 0, 5, 'LUAR', true, 'MG', '', true],
-      ['b2', 'Plastik Sampah S', 'Lbr', 'Cleaning', 10, 0, 2, 'LANGSUNG_HABIS', true, 'PS', '', true],
+      ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
+      ['b1', 'Minyak goreng', 'liter', 'Bahan', 20, 0, 5, 'LUAR', true, 'MG', ''],
+      ['b2', 'Plastik Sampah S', 'Lbr', 'Cleaning', 10, 0, 2, 'LANGSUNG_HABIS', true, 'PS', ''],
     ],
     Karyawan: [
       ['id', 'nama', 'aktif', 'pin'],

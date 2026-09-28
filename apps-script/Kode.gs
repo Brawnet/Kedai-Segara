@@ -4,7 +4,7 @@
  * Alur: Stock Dalam (gudang) → Stock Luar (area kerja) → Rekap sisa akhir hari.
  */
 var SHEETS = {
-  Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'opname_rekap'],
+  Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
   Karyawan: ['id', 'nama', 'aktif', 'pin'],
   Transaksi: ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
   Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
@@ -397,7 +397,7 @@ function pub_(b) {
   return { id: String(b.id), nama: String(b.nama), satuan: String(b.satuan), kategori: String(b.kategori || ''),
     stok_dalam: num_(b.stok_dalam), stok_luar: num_(b.stok_luar), ambang_min: num_(b.ambang_min),
     alur: b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR', aktif: truthy_(b.aktif),
-    kode: String(b.kode || ''), catatan: String(b.catatan || ''), opname_rekap: b.opname_rekap === undefined || b.opname_rekap === '' ? true : truthy_(b.opname_rekap) };
+    kode: String(b.kode || ''), catatan: String(b.catatan || '') };
 }
 function lastRekapTs_() {
   return rows_('Rekap').reduce(function (m, r) { return Math.max(m, num_(r.ts)); }, 0);
@@ -425,7 +425,7 @@ function status_() {
 
 /* ---------- Tablet ---------- */
 // Karyawan tidak boleh melihat stok gudang (stok_dalam), tapi stok_luar (di depan/dapur) ditampilkan.
-function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar), opname_rekap: b.alur !== 'LANGSUNG_HABIS' }; }
+function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar) }; }
 function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token) {
   var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
   var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
@@ -621,7 +621,7 @@ function simpanBarang(pin, o, token) {
       b.nama = o.nama.trim(); b.satuan = o.satuan.trim(); b.kategori = (o.kategori || '').trim();
       if (o.kode !== undefined) b.kode = kd;
       if (o.catatan !== undefined) b.catatan = String(o.catatan || '').trim();
-      b.alur = alur; b.ambang_min = min; b.aktif = aktif; b.opname_rekap = true;
+      b.alur = alur; b.ambang_min = min; b.aktif = aktif;
       update_('Barang', b);
     } else {
       var awal = r_(num_(o.stok_awal));
@@ -629,7 +629,7 @@ function simpanBarang(pin, o, token) {
       var id = uid_(), ts = Date.now();
       append_('Barang', { id: id, nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: (o.kategori || '').trim(),
         stok_dalam: awal, stok_luar: 0, ambang_min: min, alur: alur, aktif: true,
-        kode: kd, catatan: String(o.catatan || '').trim(), opname_rekap: true });
+        kode: kd, catatan: String(o.catatan || '').trim() });
       if (awal > 0) append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: id, barang: o.nama.trim(),
         jumlah: awal, alur: 'DALAM', status: 'AKTIF', dicatat_oleh: 'admin', catatan: 'Stok awal', kategori: (o.kategori || '').trim(), satuan: o.satuan.trim() });
     }
@@ -1628,7 +1628,7 @@ function imporDataSegara() {
       g[1].forEach(function (r) {
         if (ada[r[0]]) { lewati++; return; }
         var o = { id: uid_(), nama: r[1], satuan: r[2], kategori: g[0], stok_dalam: 0, stok_luar: 0, ambang_min: 0,
-          alur: 'LUAR', aktif: true, kode: r[0], catatan: r[3] || '', opname_rekap: true };
+          alur: 'LUAR', aktif: true, kode: r[0], catatan: r[3] || '' };
         baru.push(SHEETS.Barang.map(function (k) { return safeCell_(o[k] === undefined ? '' : o[k]); }));
       });
     });

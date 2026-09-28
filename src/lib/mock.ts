@@ -171,7 +171,7 @@ export function createMock(): Impl {
   };
   const find = (id: string) => barang.find((b) => b.id === id);
   const findK = (id: string) => karyawan.find((k) => k.id === id);
-  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar, opname_rekap: b.alur !== 'LANGSUNG_HABIS' });
+  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar });
   const lastRekapTs = () => rekap.reduce((m, r) => Math.max(m, r.ts), 0);
   const openTx = (last: number) => {
     return transaksi.filter((t) => t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && t.ts > last);
@@ -525,13 +525,11 @@ export function createMock(): Impl {
         if (!b) throw new Error('Barang tidak ditemukan');
         const aktif = o.aktif !== false;
         if (!aktif && b.aktif && (b.stok_dalam > 0 || b.stok_luar > 0)) throw new Error('Barang hanya bisa diarsipkan jika stok dalam dan luar = 0');
-        const opname_rekap = true;
-        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif, opname_rekap });
+        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif });
       } else {
         const awal = r_(num(o.stok_awal));
         if (awal < 0) throw new Error('Stok awal tidak boleh negatif');
-        const opname_rekap = true;
-        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0, opname_rekap };
+        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0 };
         barang.push(b);
         if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, alur: 'DALAM', catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
       }
