@@ -26,7 +26,7 @@ import { call, pesan } from '../lib/api';
 import { useApp } from '../lib/app';
 import { cocok, dekatTutup, inisial, katOf, nf, parseNum, r3, urutKat } from '../lib/format';
 import type { AuthSession, BarangTablet, Karyawan, RekapRow, TabletData } from '../lib/types';
-import { Banner, Button, Dialog, Empty, Input, PageTitle, Skeleton, SyncStatusBadge, Tag, vibrate } from '../components/ui';
+import { Banner, Button, Dialog, Empty, Input, PageTitle, Skeleton, SyncStatusBadge, Tag, cx, vibrate } from '../components/ui';
 import { Logo } from '../components/Logo';
 type Aksi = 'ambil' | 'masuk';
 type Step =
@@ -1123,55 +1123,77 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
       <PageTitle
         kicker={`${st.k.nama} · Rekap`}
         title="Hitung sisa di area kerja"
-        sub="Isi jumlah yang masih tersisa di luar."
+        sub="Isi jumlah fisik sisa bahan yang ada di dapur saat ini."
       />
       <ul class="flex flex-col gap-3">
         {st.rows.map((r, i) => {
           const c = cek(i);
           const bad = c === 'salah' || (tried && c === 'kosong');
           return (
-            <li key={r.barang_id} class={`rounded-card border bg-card p-4 shadow-sm ${bad ? 'border-danger' : 'border-line'}`}>
-              <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_200px] sm:items-center">
-                <div class="min-w-0">
-                  <p class="font-bold">{r.nama}</p>
-                  <p class="num text-sm text-muted-fg">
-                    Di luar <strong class="text-fg">{nf(r.maks)} {r.satuan}</strong> · awal {nf(r.saldo_awal)} + diambil {nf(r.diambil)}
-                  </p>
+            <li
+              key={r.barang_id}
+              class={cx(
+                'rounded-card border bg-card p-4 sm:p-5 shadow-xs transition-all',
+                bad ? 'border-danger/80 ring-1 ring-danger/30' : 'border-line hover:border-line-strong/40',
+              )}
+            >
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {/* Kolom Kiri: Nama Barang & Info Total Stok */}
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-base sm:text-lg font-bold text-fg leading-snug">{r.nama}</h3>
+                  <div class="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 rounded-md border border-line/70 bg-muted/60 px-2.5 py-0.5 text-xs font-medium text-muted-fg">
+                      <span>Total tercatat:</span>
+                      <strong class="num font-bold text-fg">{nf(r.maks)} {r.satuan}</strong>
+                    </span>
+                  </div>
                 </div>
-                <div class="flex flex-col gap-1.5">
-                  <label for={'sisa-' + i} class="text-sm font-semibold">
+
+                {/* Kolom Kanan: Input Sisa */}
+                <div class="w-full sm:w-48 shrink-0">
+                  <label for={'sisa-' + i} class="block text-xs font-bold uppercase tracking-wider text-muted-fg mb-1">
                     Sisa ({r.satuan})
                   </label>
-                  <Input
-                    id={'sisa-' + i}
-                    type="text"
-                    inputmode="decimal"
-                    autocomplete="off"
-                    value={vals[i]}
-                    onInput={(e) => set(i, e.currentTarget.value)}
-                    aria-invalid={bad}
-                    aria-describedby={bad ? 'err-' + i : undefined}
-                    class="num min-h-12 text-lg font-bold"
-                  />
+                  <div class="relative">
+                    <Input
+                      id={'sisa-' + i}
+                      type="text"
+                      inputmode="decimal"
+                      autocomplete="off"
+                      value={vals[i]}
+                      onInput={(e) => set(i, e.currentTarget.value)}
+                      aria-invalid={bad}
+                      aria-describedby={bad ? 'err-' + i : undefined}
+                      class="num min-h-12 w-full text-lg font-bold pr-14"
+                      placeholder="0"
+                    />
+                    <span class="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-fg select-none">
+                      {r.satuan}
+                    </span>
+                  </div>
                   {bad && (
-                    <p id={'err-' + i} class="text-[13px] font-semibold text-danger">
-                      {c === 'kosong' ? 'Belum diisi' : `Isi 0 sampai ${nf(r.maks)}`}
+                    <p id={'err-' + i} class="mt-1 text-[13px] font-semibold text-danger">
+                      {c === 'kosong' ? 'Wajib diisi' : `Isi 0 sampai ${nf(r.maks)}`}
                     </p>
                   )}
                 </div>
               </div>
-              <label class="mt-3 block">
-                <span class="sr-only">Catatan untuk {r.nama}</span>
-                <Input
-                  value={notes[i]}
-                  onInput={(e) => {
-                    const v = e.currentTarget.value;
-                    setNotes((a) => a.map((x, j) => (j === i ? v : x)));
-                  }}
-                  placeholder="Catatan (opsional)"
-                  class="text-sm"
-                />
-              </label>
+
+              {/* Catatan (Opsional) */}
+              <div class="mt-3 border-t border-line/50 pt-2.5">
+                <label class="block">
+                  <span class="sr-only">Catatan untuk {r.nama}</span>
+                  <Input
+                    value={notes[i]}
+                    onInput={(e) => {
+                      const v = e.currentTarget.value;
+                      setNotes((a) => a.map((x, j) => (j === i ? v : x)));
+                    }}
+                    placeholder="Catatan tambahan (opsional)…"
+                    class="text-xs sm:text-sm h-9 bg-muted/30 border-transparent hover:border-line focus:border-primary focus:bg-card transition-colors"
+                  />
+                </label>
+              </div>
             </li>
           );
         })}
