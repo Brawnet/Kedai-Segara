@@ -1,5 +1,6 @@
-import { useState } from 'preact/hooks';
-import { cegahBukanAngka, hanyaAngka, nf, parseNum, ymdhm } from '../lib/format';
+import { useMemo, useState } from 'preact/hooks';
+import { CalendarBlank } from '@phosphor-icons/react';
+import { cegahBukanAngka, hanyaAngka, nf, parseNum, ymd, ymdhm } from '../lib/format';
 import { Banner, Button, Card, Field, Input, PageTitle, Select } from '../components/ui';
 import { Section, useAdmin } from './shared';
 import { BarangSelect, TxList } from './Tx';
@@ -10,7 +11,69 @@ export function MasukPage() {
   const [f, setF] = useState({ b: '', j: '', s: '', c: '' });
   const [err, setErr] = useState<{ b?: string; j?: string }>({});
   const b = aktif.find((x) => x.id === f.b);
+  const [filterWaktu, setFilterWaktu] = useState<string>('20');
+  const [tglDari, setTglDari] = useState(ymd(new Date()));
+  const [tglSampai, setTglSampai] = useState(ymd(new Date()));
 
+  const ambilTs = (t: { ts?: number | string; waktu?: string }): number => {
+    const n = Number(t.ts);
+    if (Number.isFinite(n) && n > 0) return n;
+    if (t.waktu) {
+      const m = t.waktu.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+      if (m) {
+        const d = Number(m[1]), mo = Number(m[2]) - 1, y = Number(m[3]);
+        const h = Number(m[4] || 0), mi = Number(m[5] || 0);
+        return new Date(y, mo, d, h, mi).getTime();
+      }
+    }
+    return 0;
+  };
+
+  const filteredMasuk = useMemo(() => {
+    const listMasuk = d.transaksi.filter((t) => t.jenis === 'MASUK');
+    if (filterWaktu === '20') {
+      return listMasuk.slice(0, 20);
+    }
+    if (filterWaktu === 'semua') {
+      return listMasuk;
+    }
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfToday = startOfToday + 86400000 - 1;
+
+    let minTs = 0;
+    let maxTs = Infinity;
+
+    if (filterWaktu === 'hari_ini') {
+      minTs = startOfToday;
+      maxTs = endOfToday;
+    } else if (filterWaktu === 'kemarin') {
+      minTs = startOfToday - 86400000;
+      maxTs = startOfToday - 1;
+    } else if (filterWaktu === '7_hari') {
+      minTs = startOfToday - 6 * 86400000;
+      maxTs = endOfToday;
+    } else if (filterWaktu === '30_hari') {
+      minTs = startOfToday - 29 * 86400000;
+      maxTs = endOfToday;
+    } else if (filterWaktu === 'bulan_ini') {
+      minTs = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      maxTs = endOfToday;
+    } else if (filterWaktu === 'kustom') {
+      if (tglDari) {
+        minTs = new Date(`${tglDari}T00:00:00`).getTime();
+      }
+      if (tglSampai) {
+        maxTs = new Date(`${tglSampai}T23:59:59.999`).getTime();
+      }
+    }
+
+    return listMasuk.filter((t) => {
+      const ts = ambilTs(t);
+      return ts >= minTs && ts <= maxTs;
+    });
+  }, [d.transaksi, filterWaktu, tglDari, tglSampai]);
   const simpan = async (e: Event) => {
     e.preventDefault();
     const er: typeof err = {};
@@ -58,8 +121,59 @@ export function MasukPage() {
           </div>
         </form>
       </Card>
-      <Section title="Terakhir masuk">
-        <TxList list={d.transaksi.filter((t) => t.jenis === 'MASUK').slice(0, 20)} />
+      <Section
+        title="Terakhir masuk"
+        actions={
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5">
+              <CalendarBlank size={18} class="text-muted-fg shrink-0" aria-hidden />
+              <Select
+                id="filter-waktu-masuk"
+                aria-label="Filter waktu transaksi masuk"
+                value={filterWaktu}
+                onChange={(e) => setFilterWaktu(e.currentTarget.value)}
+                class="min-h-9 py-1 text-xs sm:text-sm font-semibold pr-7"
+              >
+                <option value="20">20 Terakhir</option>
+                <option value="hari_ini">Hari ini</option>
+                <option value="kemarin">Kemarin</option>
+                <option value="7_hari">7 hari terakhir</option>
+                <option value="30_hari">30 hari terakhir</option>
+                <option value="bulan_ini">Bulan ini</option>
+                <option value="kustom">Pilih tanggal…</option>
+                <option value="semua">Semua waktu</option>
+              </Select>
+            </div>
+            {filterWaktu === 'kustom' && (
+              <div class="flex items-center gap-1.5">
+                <Input
+                  type="date"
+                  aria-label="Tanggal mulai"
+                  value={tglDari}
+                  onInput={(e) => setTglDari(e.currentTarget.value)}
+                  class="min-h-9 py-1 text-xs sm:text-sm w-auto font-medium"
+                />
+                <span class="text-xs text-muted-fg">s/d</span>
+                <Input
+                  type="date"
+                  aria-label="Tanggal akhir"
+                  value={tglSampai}
+                  onInput={(e) => setTglSampai(e.currentTarget.value)}
+                  class="min-h-9 py-1 text-xs sm:text-sm w-auto font-medium"
+                />
+              </div>
+            )}
+          </div>
+        }
+      >
+        <div class="flex flex-col gap-2">
+          {filterWaktu !== '20' && (
+            <p class="text-xs text-muted-fg" aria-live="polite">
+              Menampilkan <strong class="num text-fg">{filteredMasuk.length}</strong> transaksi stok masuk
+            </p>
+          )}
+          <TxList list={filteredMasuk} />
+        </div>
       </Section>
     </div>
   );

@@ -171,11 +171,10 @@ export function createMock(): Impl {
   };
   const find = (id: string) => barang.find((b) => b.id === id);
   const findK = (id: string) => karyawan.find((k) => k.id === id);
-  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar, opname_rekap: b.opname_rekap !== false });
+  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar, opname_rekap: b.alur !== 'LANGSUNG_HABIS' });
   const lastRekapTs = () => rekap.reduce((m, r) => Math.max(m, r.ts), 0);
   const openTx = (last: number) => {
-    const rekapIds = new Set(barang.filter((b) => b.opname_rekap !== false).map((b) => b.id));
-    return transaksi.filter((t) => t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && t.ts > last && rekapIds.has(t.barang_id));
+    return transaksi.filter((t) => t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && t.ts > last);
   };
   const status = () => {
     const last = lastRekapTs();
@@ -186,7 +185,7 @@ export function createMock(): Impl {
       belumRekap: tx.length,
       lewatHari: tx.some((t) => t.ts < d.getTime()),
       lastRekap: last ? fmt(last) : null,
-      barangLuar: barang.filter((b) => b.opname_rekap !== false && b.stok_luar > 0).length,
+      barangLuar: barang.filter((b) => b.alur !== 'LANGSUNG_HABIS' && b.stok_luar > 0).length,
     };
   };
   const tx = (o: Partial<Transaksi>): Transaksi => {
@@ -206,10 +205,10 @@ export function createMock(): Impl {
     if (!k || (oleh === 'karyawan' && !k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
     if (j > b.stok_dalam + 1e-9)
       throw new Error(oleh === 'admin' ? `Stok gudang tidak cukup. Sisa: ${b.stok_dalam} ${b.satuan}` : 'Jumlah melebihi stok gudang yang tercatat. Hubungi admin.');
+    const alur = b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     b.stok_dalam = r_(b.stok_dalam - j);
-    b.stok_luar = r_(b.stok_luar + j);
-    b.alur = 'LUAR';
-    const t = tx({ ts, jenis: 'AMBIL', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'LUAR', dicatat_oleh: oleh, kategori: b.kategori, satuan: b.satuan });
+    if (alur === 'LUAR') b.stok_luar = r_(b.stok_luar + j);
+    const t = tx({ ts, jenis: 'AMBIL', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur, dicatat_oleh: oleh, kategori: b.kategori, satuan: b.satuan });
     return { tx: { id: t.id, ts }, barang: oleh === 'admin' ? { ...b } : tab(b) };
   };
   const hitung = (cutoff: number, last = lastRekapTs()): RekapRow[] => {
@@ -219,7 +218,7 @@ export function createMock(): Impl {
       m[t.barang_id] = r_((m[t.barang_id] || 0) + t.jumlah);
     });
     return barang
-      .filter((b) => b.opname_rekap !== false)
+      .filter((b) => b.aktif && b.alur !== 'LANGSUNG_HABIS')
       .map((b) => {
         const d = before[b.id] || 0, a = after[b.id] || 0;
         const awal = Math.max(0, r_(b.stok_luar - d - a));
@@ -460,7 +459,7 @@ export function createMock(): Impl {
       const b = find(t.barang_id);
       if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + t.jumlah);
-      b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
+      if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
       if (adminEmail) t.dicatat_oleh = adminEmail;
       return true;
@@ -519,19 +518,19 @@ export function createMock(): Impl {
       const min = r_(num(o.ambang_min));
       if (min < 0) throw new Error('Ambang minimum tidak boleh negatif');
       const kd = o.kode.trim();
-      if (kd && barang.some((x) => x.kode === kd && x.id !== (o.id || ''))) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
+      if (kd && barang.some((x) => x.kode.toLowerCase() === kd.toLowerCase() && x.id !== (o.id || ''))) throw new Error('Kode ' + kd + ' sudah dipakai barang lain');
       const alur = o.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
       if (o.id) {
         const b = find(o.id);
         if (!b) throw new Error('Barang tidak ditemukan');
         const aktif = o.aktif !== false;
         if (!aktif && b.aktif && (b.stok_dalam > 0 || b.stok_luar > 0)) throw new Error('Barang hanya bisa diarsipkan jika stok dalam dan luar = 0');
-        const opname_rekap = o.opname_rekap !== false;
+        const opname_rekap = true;
         Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif, opname_rekap });
       } else {
         const awal = r_(num(o.stok_awal));
         if (awal < 0) throw new Error('Stok awal tidak boleh negatif');
-        const opname_rekap = o.opname_rekap !== false;
+        const opname_rekap = true;
         const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0, opname_rekap };
         barang.push(b);
         if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, alur: 'DALAM', catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
@@ -773,11 +772,18 @@ export function createMock(): Impl {
     },
     laporan: (pin, dari, sampai, token) => {
       auth(pin, token);
+      const sDari = String(dari || '').trim(), sSampai = String(sampai || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(sDari) || !/^\d{4}-\d{2}-\d{2}$/.test(sSampai)) {
+        throw new Error('Format tanggal laporan tidak valid (harus YYYY-MM-DD)');
+      }
+      if (sDari > sSampai) {
+        throw new Error('Tanggal awal tidak boleh melebihi tanggal akhir');
+      }
       const p = (s: string, add = 0) => {
         const a = s.split('-').map(Number);
         return new Date(a[0]!, a[1]! - 1, a[2]! + add).getTime();
       };
-      const t0 = p(dari), t1 = p(sampai, 1);
+      const t0 = p(sDari), t1 = p(sSampai, 1);
       const map: Record<string, { nama: string; satuan: string; masuk: number; rk: number; lh: number; op: number }> = {};
       const g = (id: string, nama: string) => {
         const b = find(id);
@@ -802,6 +808,7 @@ export function createMock(): Impl {
     getPublicAuthConfig: () => ({
       hasGoogleAuth: Boolean(googleClientId),
       googleClientId,
+      allowDummyAuth: true,
     }),
     requestOtp: (email: string) => {
       const em = email.toLowerCase().trim();
@@ -816,12 +823,19 @@ export function createMock(): Impl {
     },
     verifyOtp: (email: string, code: string, userAgent = '') => {
       const em = email.toLowerCase().trim();
+      const cd = code.trim();
+      const isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
       const stored = otpStore[em];
-      if (!stored || Date.now() > stored.exp) {
+      if (!stored && !isDummy) {
         catatLog(em, 'OTP', '-', 'GAGAL - OTP KADALUARSA', userAgent);
         throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
       }
-      if (stored.code !== code.trim()) {
+      if (stored && Date.now() > stored.exp && !isDummy) {
+        catatLog(em, 'OTP', '-', 'GAGAL - OTP KADALUARSA', userAgent);
+        throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
+      }
+      const validDummy = isDummy && cd === '123456';
+      if ((!stored || stored.code !== cd) && !validDummy) {
         catatLog(em, 'OTP', '-', 'GAGAL - OTP SALAH', userAgent);
         throw new Error('Kode verifikasi salah.');
       }

@@ -8,13 +8,12 @@ import {
   X,
 } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
-import { alurLabel, cocok, grupKat, katOf, nf, urutKat } from '../lib/format';
+import { alurLabel, cocok, grupKat, katOf, menipis, nf, total, urutKat } from '../lib/format';
 import type { Barang } from '../lib/types';
 import { Banner, Button, Card, Input, PageTitle, Select, StockGauge, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
 
-export const total = (b: Barang) => b.stok_dalam + b.stok_luar;
-export const menipis = (b: Barang) => total(b) < b.ambang_min;
+export { total, menipis };
 
 interface StatCardProps {
   icon: Icon;

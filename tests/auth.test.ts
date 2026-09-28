@@ -69,6 +69,36 @@ describe('Google & iCloud Authentication & Audit Log System', () => {
     assert.ok(sess.exp - Date.now() >= thirtyDays - 5000);
   });
 
+  it('supports direct dummy login for admin and tablet without requiring requestOtp step', () => {
+    const api = createMock();
+
+    // Direct Admin Dummy Login
+    const adminSess = api.verifyOtp('admin@segara.com', '123456', 'Test-Agent');
+    assert.equal(adminSess.email, 'admin@segara.com');
+    assert.equal(adminSess.role, 'admin');
+    assert.ok(adminSess.token);
+
+    const checkAdmin = api.verifySessionToken(adminSess.token);
+    assert.equal(checkAdmin.valid, true);
+    assert.equal(checkAdmin.role, 'admin');
+
+    // Direct Tablet Dummy Login
+    const tabletSess = api.verifyOtp('tablet@segara.com', '123456', 'Test-Agent');
+    assert.equal(tabletSess.email, 'tablet@segara.com');
+    assert.equal(tabletSess.role, 'tablet');
+    assert.ok(tabletSess.token);
+
+    const checkTablet = api.verifySessionToken(tabletSess.token);
+    assert.equal(checkTablet.valid, true);
+    assert.equal(checkTablet.role, 'tablet');
+
+    // Direct Dummy Login with wrong code must be rejected
+    assert.throws(
+      () => api.verifyOtp('admin@segara.com', '000000', 'Test-Agent'),
+      /Kode verifikasi salah/,
+    );
+  });
+
   it('rejects Google login for non-whitelisted email and accepts whitelisted', () => {
     const api = createMock();
 

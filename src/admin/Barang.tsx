@@ -24,7 +24,6 @@ import { KelolaKategoriDialog } from './KelolaKategoriDialog';
 type Form = Required<Omit<BarangInput, 'ambang_min' | 'stok_awal' | 'opname_rekap'>> & {
   ambang_min: string;
   stok_awal: string;
-  opname_rekap: boolean;
 };
 type StatusFilter = 'semua' | 'porsi' | 'aktif' | 'menipis' | 'arsip';
 
@@ -39,7 +38,6 @@ const kosong: Form = {
   ambang_min: '',
   aktif: true,
   stok_awal: '0',
-  opname_rekap: true,
 };
 
 export function BarangPage() {
@@ -141,7 +139,6 @@ export function BarangPage() {
             ...b,
             ambang_min: String(b.ambang_min),
             stok_awal: '',
-            opname_rekap: b.opname_rekap !== false,
           }
         : { ...kosong },
     );
@@ -166,7 +163,7 @@ export function BarangPage() {
       ...f,
       id: f.id || '',
       stok_awal: f.id ? undefined : f.stok_awal,
-      opname_rekap: f.opname_rekap !== false,
+      opname_rekap: true,
     };
     if (await A('simpanBarang', [o], 'Barang disimpan')) setF(null);
   };

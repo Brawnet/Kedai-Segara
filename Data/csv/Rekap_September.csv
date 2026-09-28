@@ -1,0 +1,121 @@
+kode,nama,satuan,kategori,stok_awal,stok_masuk,stok_keluar,stok_akhir,status
+AS,Ayam Suwir,Porsi,Freezer Protein,31,380,381,30,Aktif
+TK,Topping Kwetiau,Porsi,Freezer Protein,77,211,250,38,Aktif
+TM,Topping Mbakmoy,Porsi,Freezer Protein,20,72,72,20,Aktif
+AJ,Ayam Jamur,Porsi,Freezer Protein,22,145,165,2,Aktif
+DGM,Dada Gurih Manis,Porsi,Freezer Protein,28,70,59,39,Aktif
+PGM,Paha Gurih Manis,Porsi,Freezer Protein,4,122,96,30,Aktif
+P,Paha,Porsi,Freezer Protein,50,293,297,46,Aktif
+D,Dada,Porsi,Freezer Protein,8,204,195,17,Aktif
+Syp,Sayap Goreng,Porsi,Freezer Protein,55,52,88,19,Aktif
+Daging,Daging Slice,Porsi,Freezer Protein,41,70,90,21,Aktif
+C,Cumi,Porsi,Freezer Protein,146,245,247,144,Aktif
+K,Kulit,Porsi,Freezer Protein,63,147,147,63,Aktif
+L,Lidah,Porsi,Freezer Protein,106,124,169,61,Aktif
+LGS,Lidah Goreng Segara,Porsi,Freezer Protein,0,147,127,20,Aktif
+TP,Teri Pete,Porsi,Freezer Protein,31,61,76,16,Aktif
+TNG,Topping Nasi Gila,Porsi,Freezer Protein,30,48,58,20,Aktif
+PTA,Pete Add On,Porsi,Freezer Protein,0,10,3,7,Aktif
+PT,Pete,Porsi,Freezer Protein,4,15,11,8,Aktif
+B,Bagor,Porsi,Freezer Protein,45,265,246,64,Aktif
+DS,Daging Sambal HIjau,Porsi,Freezer Protein,27,139,116,50,Aktif
+BC,Sambal Baby Cumi,Porsi,Freezer Protein,201,164,305,60,Aktif
+TA,Tahu Aci,Pack,Freezer Protein,0,9,1,8,Aktif
+Cr,Cireng,Porsi,Freezer Protein,36,0,32,4,Aktif
+SB,Sambal Bawang,Pack,Freezer Bumbu,18,10,27,1,Aktif
+S.terasi,Sambal Terasi,Pack,Freezer Bumbu,4,7,6,5,Aktif
+SK,Sambal Kuning,Pack,Freezer Bumbu,4,17,17,4,Aktif
+SP,Sambal Petis,Pack,Freezer Bumbu,13,12,14,11,Aktif
+ST,Sambal Terong,Pack,Freezer Bumbu,5,2,4,3,Aktif
+BS,Bumbu Segara,Pack,Freezer Bumbu,7,3,4,6,Aktif
+BL,Bumbu Lidah,Pack,Freezer Bumbu,4,10,10,4,Aktif
+Serundeng,Bumbu Serundeng,Pack,Freezer Bumbu,0,59,39,20,Aktif
+BK,Bumbu Kwetiau,Pack,Freezer Bumbu,9,4,12,1,Aktif
+GM,Gorengan Mbakmoy,Pack,Freezer Bumbu,10,0,10,0,Aktif
+BUL,Bumbu Ungkep Lidah,Pack,Freezer Bumbu,0,9,4,5,Aktif
+BNG,Bumbu Nasi Gila,Pack,Freezer Bumbu,6,0,2,4,Aktif
+BT,Bumbu Teri,Pack,Freezer Bumbu,1,8,5,4,Aktif
+BMG,Bumbu Mie Goreng Jawa,Pack,Freezer Bumbu,6,0,5,1,Aktif
+RotiB,Roti Bakar,Pack,Freezer Roti & Juice,1,5,6,0,Aktif
+RotiA,Roti Angsle,Pack,Freezer Roti & Juice,1,2,3,0,Aktif
+Sirsak,Sirsak Juice,Pack,Freezer Roti & Juice,10,27,30,7,Aktif
+SM,Manggo Juice,Pack,Freezer Roti & Juice,12,43,53,2,Aktif
+Berries,Mix Berries,Pack,Freezer Roti & Juice,10,60,70,0,Aktif
+M,Mineral,Botol,Flavourful Drink,391,960,1022,329,Aktif
+AT,Air Tahu,Botol,Flavourful Drink,6,105,96,15,Aktif
+Polaris,Soda Polaris,Kaleng,Flavourful Drink,27,0,24,3,Aktif
+ZD,Zoda Water,Kaleng,Flavourful Drink,17,0,3,14,Aktif
+Kaleng,Lhychee Kaleng,Kaleng,Flavourful Drink,10,0,1,9,Aktif
+Apple,Apple Juice Diamond,Pcs,Flavourful Drink,3,7,7,3,Aktif
+DHT,Syrup Dht,Jug,Flavourful Drink,1,0,0,1,Aktif
+Butter,Dripp Butterschotch,Botol,Flavourful Drink,1,1,1,1,Aktif
+Pandan,Dripp Pandan,Botol,Flavourful Drink,2,1,1,2,Aktif
+Lhychee,Dripp Lhychee,Botol,Flavourful Drink,1,2,1,2,Aktif
+Sun,Sunquick Manggo,Botol,Flavourful Drink,1,1,1,1,Aktif
+Lemon,Ecolate Lemongrass,Pack,Flavourful Drink,3,0,2,1,Aktif
+Winter,Ecolate Wintermelon Tea,Pack,Flavourful Drink,3,0,1,2,Aktif
+Kopi,Kopi,Pack,Flavourful Drink,2,1,3,0,Aktif
+LT,Lemon Tea,Pack,Flavourful Drink,1,2,0,3,Aktif
+UHT,Diamond Milk,Pcs,Barang Kering (Dairy + Plant Base Milk),18,0,16,2,Aktif
+Cara1,Sun Cara 1L,Pcs,Barang Kering (Dairy + Plant Base Milk),14,0,3,11,Aktif
+Evap,Susu Evaporasi,Kaleng,Barang Kering (Dairy + Plant Base Milk),8,13,14,7,Aktif
+SKM,Susu Kental Manis Carnation,Pcs,Barang Kering (Dairy + Plant Base Milk),7,18,18,7,Aktif
+Oatside,Oatside Milk,Pcs,Barang Kering (Dairy + Plant Base Milk),5,0,3,2,Aktif
+Cashew,Cashew Milk,Pcs,Barang Kering (Dairy + Plant Base Milk),6,0,3,3,Aktif
+Cara200,Sun Cara 200Ml,Pcs,Barang Kering (Dairy + Plant Base Milk),3,10,5,8,Aktif
+Creamer,Max Creamer,Pcs,Barang Kering (Dairy + Plant Base Milk),1,6,5,2,Aktif
+Milo,Milo,Pcs,Barang Kering (Dairy + Plant Base Milk),1,3,2,2,Aktif
+Keju,Keju,Pcs,Barang Kering (Dairy + Plant Base Milk),4,2,4,2,Aktif
+MB,Minyak Beku,Pcs,Barang Kering (Dairy + Plant Base Milk),1,12,8,5,Aktif
+MC,Kunci Mas,Pcs,Barang Kering (Dairy + Plant Base Milk),6,12,12,6,Aktif
+Gula,Gula,Pack,Bahan Dasar + Kecap,10,30,22,18,Aktif
+Garam,Garam,Pack,Bahan Dasar + Kecap,7,0,2,5,Aktif
+BR,Bumbu Racik,Pack,Bahan Dasar + Kecap,24,30,40,14,Aktif
+BG,Bumbu Gule,Pack,Bahan Dasar + Kecap,6,12,15,3,Aktif
+T,Terasi,Pcs,Bahan Dasar + Kecap,40,80,43,77,Aktif
+GulaH,Gula Halus,Pack,Bahan Dasar + Kecap,1,2,1,2,Aktif
+Knor,Knorr,Pack,Bahan Dasar + Kecap,1,1,1,1,Aktif
+RR,Raja Rasa,Botol,Bahan Dasar + Kecap,2,5,5,2,Aktif
+Tipparos,Kecap Ikan Tipparos,Botol,Bahan Dasar + Kecap,3,1,2,2,Aktif
+Maggi,Kecap Maggi,Botol,Bahan Dasar + Kecap,2,1,2,1,Aktif
+SS,Saus Sambal,Pack,Bahan Dasar + Kecap,7,0,1,6,Aktif
+Tomat,Saus Tomat,Pack,Bahan Dasar + Kecap,8,0,1,7,Aktif
+Beras,Tepung Beras Bola,Pack,Bahan Snack / Dessert + Tepung,11,0,4,7,Aktif
+Ketan,Tepung Ketan,Pack,Bahan Snack / Dessert + Tepung,1,7,0,8,Aktif
+Maizena,Tepung Maizena,Pack,Bahan Snack / Dessert + Tepung,7,11,16,2,Aktif
+Terigu,Tepung Terigu,Pack,Bahan Snack / Dessert + Tepung,13,13,23,3,Aktif
+Tapioka,Tepung Tapioka,Pack,Bahan Snack / Dessert + Tepung,5,16,11,10,Aktif
+TT,Tepung Telur,Pack,Bahan Snack / Dessert + Tepung,18,84,66,36,Aktif
+Urai,Mie Urai,Pack,Bahan Snack / Dessert + Tepung,24,0,23,1,Aktif
+Plain,Nurtijel Plain,Pack,Bahan Snack / Dessert + Tepung,18,0,6,12,Aktif
+Sagu,Sagu Mutiara,Pack,Bahan Snack / Dessert + Tepung,4,6,8,2,Aktif
+Nata,Nata Decoco,Pack,Bahan Snack / Dessert + Tepung,2,2,3,1,Aktif
+Hijau,Pewarna Hijau,Btl,Bahan Snack / Dessert + Tepung,11,0,2,9,Aktif
+Pink,Pewarna Pink,Btl,Bahan Snack / Dessert + Tepung,3,0,1,2,Aktif
+V,Vanilli,Btl,Bahan Snack / Dessert + Tepung,6,12,5,13,Aktif
+Ps.ukS,Plastik Sampah S,Lbr,Cleaning Supplies + Utensils,133,0,85,48,Aktif
+Ps.ukM,Plastik Sampah M,Lbr,Cleaning Supplies + Utensils,80,0,57,23,Aktif
+Ps.ukL,Plastik Sampah L,Lbr,Cleaning Supplies + Utensils,71,0,40,31,Aktif
+Ps.ukXL,Plastik Sampah XL,Lbr,Cleaning Supplies + Utensils,50,0,32,18,Aktif
+Paper,Thermal Paper,Roll,Cleaning Supplies + Utensils,188,0,64,124,Aktif
+Eko,Ekonomi,Pcs,Cleaning Supplies + Utensils,157,0,106,51,Aktif
+Ice,Cup Ice,Pack,Cleaning Supplies + Utensils,14,0,8,6,Aktif
+SoupXS,Plastik Soup XS,Pack,Cleaning Supplies + Utensils,1,23,11,13,Aktif
+Tmeja,Tissue Meja,Pack,Cleaning Supplies + Utensils,3,12,11,4,Aktif
+TWC,Tissue Toilet,Pack,Cleaning Supplies + Utensils,7,40,40,7,Aktif
+Tbm,Take Away Box M,Pack,Cleaning Supplies + Utensils,1,10,4,7,Aktif
+CupS,Cup Sambal,Pack,Cleaning Supplies + Utensils,4,3,5,2,Aktif
+Bm24,Plastik Bima uk24,Pack,Cleaning Supplies + Utensils,1,5,4,2,Aktif
+Tbs,Take Away Box S,Pack,Cleaning Supplies + Utensils,15,0,3,12,Aktif
+TbL,Take Away Bocx L,Pack,Cleaning Supplies + Utensils,4,0,3,1,Aktif
+Bm28,Plastik Bima uk.28,Pack,Cleaning Supplies + Utensils,2,0,0,2,Aktif
+Sdt,Sedotan,Pack,Cleaning Supplies + Utensils,1,6,5,2,Aktif
+Bm15,Plastik Bima uk.15,Pack,Cleaning Supplies + Utensils,3,1,3,1,Aktif
+Sumpit,Sumpit,Pack,Cleaning Supplies + Utensils,4,0,1,3,Aktif
+Sbb,Sendok Bebek,Pack,Cleaning Supplies + Utensils,3,0,0,3,Aktif
+2in1,2in1 Sendok,Pack,Cleaning Supplies + Utensils,1,1,1,1,Aktif
+Hot,Cup Hot,Pack,Cleaning Supplies + Utensils,22,0,1,21,Aktif
+SoupM,Plastik Soup M,Roll,Cleaning Supplies + Utensils,4,0,1,3,Aktif
+SoupL,Plastik Soup L,Pack,Cleaning Supplies + Utensils,0,0,0,0,Aktif
+Lakban,Lakban Segara,Roll,Cleaning Supplies + Utensils,134,0,2,132,Aktif
+BU,Bumbu Ungkep,Pack,Freezer Bumbu,2,0,2,0,Nonaktif (Legacy)

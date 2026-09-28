@@ -26,7 +26,17 @@ export function App() {
   }
 
   return (
-    <AuthGate>
+    <AuthGate
+      onLogin={(session, preferredMode) => {
+        if (preferredMode) {
+          setMode(preferredMode);
+        } else if (session.role === 'admin' && !window.SEGARA_MODE) {
+          setMode('admin');
+        } else if (session.role === 'tablet' && !window.SEGARA_MODE) {
+          setMode('tablet');
+        }
+      }}
+    >
       {(session, logout) => {
         if (session.role === 'tablet' && mode === 'admin') {
           return (
