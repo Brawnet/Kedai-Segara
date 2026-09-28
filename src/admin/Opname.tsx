@@ -831,7 +831,7 @@ export function OpnamePage() {
               <Select
                 value={sort}
                 onChange={(e) => setSort(e.currentTarget.value as SortOpt)}
-                class="w-full text-xs sm:text-sm font-semibold truncate pl-2 pr-6"
+                class="w-full text-xs sm:text-sm font-semibold"
                 aria-label="Urutkan besar kecilnya stok"
               >
                 <option value="kategori">Kategori</option>
@@ -845,7 +845,7 @@ export function OpnamePage() {
             <Select
               value={katFilter}
               onChange={(e) => setKatFilter(e.currentTarget.value)}
-              class="w-full min-w-0 sm:min-w-[170px] text-xs sm:text-sm font-semibold flex-1 sm:flex-initial truncate pl-2 pr-6"
+              class="w-full min-w-0 sm:min-w-[170px] text-xs sm:text-sm font-semibold flex-1 sm:flex-initial"
               aria-label="Filter kategori"
             >
               <option value="semua">Semua Kategori ({aktif.length})</option>
