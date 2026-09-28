@@ -1003,6 +1003,7 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     const hapusKaryawan = runInContext('hapusKaryawan', context);
     const tambahKategori = runInContext('tambahKategori', context);
     const hapusKategori = runInContext('hapusKategori', context);
+    const tambahSupplier = runInContext('tambahSupplier', context);
     const buatSessionToken_ = runInContext('buatSessionToken_', context);
 
     // All operations without session token must be rejected
@@ -1013,11 +1014,14 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     assert.throws(() => hapusKaryawan('12345', 'k1'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => tambahKategori('12345', 'KategoriBaru'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => hapusKategori('12345', 'Bahan'), /Akses ditolak: sesi login wajib disertakan/);
-
+    assert.throws(() => tambahSupplier('12345', 'SupplierBaru'), /Akses ditolak: sesi login wajib disertakan/);
     // With valid admin token, succeeds
     const sess = buatSessionToken_('admin@segara.com', 'admin');
     const res = adminData('12345', sess.token);
     assert.ok(res.barang.length > 0);
+    const supRes = tambahSupplier('12345', 'Supplier Uji', sess.token);
+    assert.equal(supRes.status, 'created');
+    assert.ok(adminData('12345', sess.token).daftarSupplier.includes('Supplier Uji'));
   });
 
   it('buatDummyRekap requires valid admin credentials and rejects unauthenticated calls', () => {

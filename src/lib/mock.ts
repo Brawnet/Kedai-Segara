@@ -84,6 +84,7 @@ export function createMock(): Impl {
     });
   };
   const urutan = DATA.map((d) => d[0]);
+  const daftarSupplier: string[] = ['CV. Dapur Rumah Rasa'];
   const barang: Barang[] = [];
   DATA.forEach(([kat, items], gi) =>
     items.forEach(([kode, nama, satuan, catatan], i) =>
@@ -509,6 +510,14 @@ export function createMock(): Impl {
           urutan,
           jamTutup,
           url: 'https://docs.google.com/spreadsheets/',
+          daftarSupplier: (() => {
+            const set = new Set<string>(daftarSupplier);
+            transaksi.forEach((t) => {
+              const s = (t.supplier || '').trim();
+              if (s) set.add(s);
+            });
+            return Array.from(set);
+          })(),
         }),
       );
     },
@@ -576,6 +585,17 @@ export function createMock(): Impl {
       }
       urutan.push(kat);
       return { status: 'created', nama: kat, message: `Kategori "${kat}" berhasil ditambahkan` };
+    },
+    tambahSupplier: (pin, namaSupplier, token) => {
+      auth(pin, token);
+      const sup = String(namaSupplier || '').trim();
+      if (!sup) throw new Error('Nama supplier tidak boleh kosong');
+      const lower = sup.toLowerCase();
+      if (daftarSupplier.some((s) => s.toLowerCase() === lower)) {
+        throw new Error(`Supplier "${sup}" sudah ada`);
+      }
+      daftarSupplier.push(sup);
+      return { status: 'created', nama: sup, message: `Supplier "${sup}" berhasil ditambahkan` };
     },
     hapusKategori: (pin, namaKategori, token) => {
       auth(pin, token);
@@ -693,6 +713,12 @@ export function createMock(): Impl {
         if (!b) throw new Error('Barang tidak ditemukan');
         b.stok_dalam = r_(b.stok_dalam + n);
         tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: 'DALAM', supplier, catatan, kategori: b.kategori, satuan: b.satuan });
+        if (supplier && supplier.trim()) {
+          const supClean = supplier.trim();
+          if (!daftarSupplier.some((s) => s.toLowerCase() === supClean.toLowerCase())) {
+            daftarSupplier.push(supClean);
+          }
+        }
         return true;
       });
     },

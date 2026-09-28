@@ -23,7 +23,110 @@ var SKEMA_V = '5'; // naikkan jika kolom di SHEETS berubah
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
 // karena kode JS hasil build bisa mengandung "<?" — mode disisipkan lewat placeholder.
+function resetStokLuar() {
+  return lock_(function () {
+    var last = lastRekapTs_();
+    var open = openTx_(last);
+    var takenToday = {};
+    open.forEach(function (t) {
+      var id = String(t.barang_id);
+      takenToday[id] = r_((takenToday[id] || 0) + num_(t.jumlah));
+    });
+    var data = rows_('Barang');
+    var updated = 0;
+    data.forEach(function (b) {
+      var id = String(b.id);
+      var correctLuar = takenToday[id] || 0;
+      if (num_(b.stok_luar) !== correctLuar) {
+        b.stok_luar = correctLuar;
+        update_('Barang', b);
+        updated++;
+      }
+    });
+    return { ok: true, updated: updated, total_barang: data.length };
+  });
+}
+
+function tutupPeriodeSeptember() {
+  return lock_(function () {
+    var allTx = rows_('Transaksi');
+    var maxTs = 0;
+    allTx.forEach(function (t) {
+      if (num_(t.ts) > maxTs) maxTs = num_(t.ts);
+    });
+    if (!maxTs) maxTs = 1790599800000;
+    var rekapTs = maxTs + 10 * 60000;
+    var rekapWaktu = fmt_(rekapTs);
+    var rekapId = 'rekap_sept_2026';
+    var existingRekap = rows_('Rekap').filter(function (r) { return String(r.id) === rekapId || num_(r.ts) >= rekapTs; });
+    if (existingRekap.length === 0) {
+      append_('Rekap', {
+        id: rekapId,
+        ts: rekapTs,
+        waktu: rekapWaktu,
+        karyawan_id: 'admin',
+        karyawan: 'Admin (Tutup September)',
+        diedit_admin: false
+      });
+      var before = {};
+      allTx.forEach(function (t) {
+        if (t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && num_(t.ts) <= rekapTs) {
+          var id = String(t.barang_id);
+          before[id] = r_((before[id] || 0) + num_(t.jumlah));
+        }
+      });
+      rows_('Barang').forEach(function (b) {
+        var id = String(b.id);
+        var diambil = before[id] || 0;
+        if (diambil > 0) {
+          append_('RekapBaris', {
+            rekap_id: rekapId,
+            barang_id: id,
+            barang: b.nama,
+            saldo_awal: 0,
+            diambil: diambil,
+            sisa: 0,
+            terpakai: diambil,
+            catatan: 'Penutupan otomatis data September'
+          });
+        }
+      });
+    }
+    var barangList = rows_('Barang');
+    var updated = 0;
+    barangList.forEach(function (b) {
+      if (num_(b.stok_luar) !== 0) {
+        b.stok_luar = 0;
+        update_('Barang', b);
+        updated++;
+      }
+    });
+    return {
+      ok: true,
+      rekap_id: rekapId,
+      rekap_waktu: rekapWaktu,
+      stok_luar_dinolkan: updated,
+      transaksi_terakhir: fmt_(maxTs)
+    };
+  });
+}
+
 function doGet(e) {
+  if (e && e.parameter && e.parameter.aksi === 'reset_stok_luar') {
+    var res = resetStokLuar();
+    return ContentService.createTextOutput(JSON.stringify(res))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  if (e && e.parameter && e.parameter.aksi === 'tutup_september') {
+    var res = tutupPeriodeSeptember();
+    return ContentService.createTextOutput(JSON.stringify(res))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  if (e && e.parameter && e.parameter.aksi === 'cek_rekap_draf') {
+    var draf = hitungRekap_(Date.now());
+    return ContentService.createTextOutput(JSON.stringify({ total: draf.length, baris: draf }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
   var html = HtmlService.createHtmlOutputFromFile('index').getContent().replace('__SEGARA_MODE__', mode);
   return HtmlService.createHtmlOutput(html)
@@ -599,7 +702,8 @@ function adminData(pin, token) {
     lastRekap: lastRekapTs_(),
     urutan: urutanKategori_(),
     jamTutup: jamTutup_(),
-    url: ss_().getUrl()
+    url: ss_().getUrl(),
+    daftarSupplier: daftarSupplier_()
   };
 }
 
@@ -713,6 +817,44 @@ function tambahKategori(pin, namaKategori, token) {
     urut.push(kat);
     setSetting_('urutan_kategori', JSON.stringify(urut));
     return { status: 'created', nama: kat, message: 'Kategori "' + kat + '" berhasil ditambahkan' };
+  });
+}
+function daftarSupplier_() {
+  var s = getSetting_('daftar_supplier');
+  var list = [];
+  if (s) {
+    try { list = JSON.parse(s); } catch (e) {}
+  }
+  var set = {};
+  var res = [];
+  var tambah = function (nm) {
+    var clean = String(nm || '').trim();
+    if (!clean) return;
+    var lower = clean.toLowerCase();
+    if (!set[lower]) {
+      set[lower] = true;
+      res.push(clean);
+    }
+  };
+  tambah('CV. Dapur Rumah Rasa');
+  if (Array.isArray(list)) list.forEach(tambah);
+  rows_('Transaksi').forEach(function (t) {
+    tambah(t.supplier);
+  });
+  return res;
+}
+
+function tambahSupplier(pin, namaSupplier, token) {
+  auth_(pin, token);
+  var sup = String(namaSupplier || '').trim();
+  if (!sup) throw new Error('Nama supplier tidak boleh kosong');
+  return lock_(function () {
+    var list = daftarSupplier_();
+    var exists = list.some(function (s) { return s.toLowerCase() === sup.toLowerCase(); });
+    if (exists) throw new Error('Supplier "' + sup + '" sudah ada');
+    list.push(sup);
+    setSetting_('daftar_supplier', JSON.stringify(list));
+    return { status: 'created', nama: sup, message: 'Supplier "' + sup + '" berhasil ditambahkan' };
   });
 }
 
@@ -847,6 +989,14 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) 
       var ts = Date.now();
       append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
         alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      var supClean = String(supplier || '').trim();
+      if (supClean) {
+        var dSup = daftarSupplier_();
+        if (!dSup.some(function (s) { return s.toLowerCase() === supClean.toLowerCase(); })) {
+          dSup.push(supClean);
+          setSetting_('daftar_supplier', JSON.stringify(dSup));
+        }
+      }
       return true;
     });
   });

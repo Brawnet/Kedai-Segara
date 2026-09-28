@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'preact/hooks';
-import { CalendarBlank } from '@phosphor-icons/react';
+import { CalendarBlank, Plus } from '@phosphor-icons/react';
 import { cegahBukanAngka, hanyaAngka, nf, parseNum, ymd, ymdhm } from '../lib/format';
 import { Banner, Button, Card, Field, Input, PageTitle, Select } from '../components/ui';
 import { Section, useAdmin } from './shared';
 import { BarangSelect, TxList } from './Tx';
+import { TambahSupplierDialog } from './TambahSupplierDialog';
 
 export function MasukPage() {
   const { d, A } = useAdmin();
@@ -14,7 +15,25 @@ export function MasukPage() {
   const [filterWaktu, setFilterWaktu] = useState<string>('20');
   const [tglDari, setTglDari] = useState(ymd(new Date()));
   const [tglSampai, setTglSampai] = useState(ymd(new Date()));
+  const [modalSupplier, setModalSupplier] = useState(false);
 
+  const listSupplier = useMemo(() => {
+    const set = new Set<string>();
+    const list: string[] = [];
+    const tambah = (s?: string) => {
+      const clean = (s || '').trim();
+      if (!clean) return;
+      const lower = clean.toLowerCase();
+      if (!set.has(lower)) {
+        set.add(lower);
+        list.push(clean);
+      }
+    };
+    tambah('CV. Dapur Rumah Rasa');
+    (d.daftarSupplier || []).forEach(tambah);
+    (d.transaksi || []).forEach((t) => tambah(t.supplier));
+    return list;
+  }, [d.daftarSupplier, d.transaksi]);
   const ambilTs = (t: { ts?: number | string; waktu?: string }): number => {
     const n = Number(t.ts);
     if (Number.isFinite(n) && n > 0) return n;
@@ -110,7 +129,46 @@ export function MasukPage() {
               />
             )}
           </Field>
-          <Field label="Supplier (opsional)">{(id) => <Input id={id} value={f.s} onInput={(e) => setF({ ...f, s: e.currentTarget.value })} />}</Field>
+          <Field label="Supplier (opsional)">
+            {(id) => (
+              <div class="flex items-center gap-2">
+                <Select
+                  id={id}
+                  value={f.s}
+                  onChange={(e) => {
+                    const val = e.currentTarget.value;
+                    if (val === '__TAMBAH__') {
+                      setModalSupplier(true);
+                      return;
+                    }
+                    setF({ ...f, s: val });
+                  }}
+                  class="flex-1 font-medium"
+                >
+                  <option value="">Pilih supplier (opsional)...</option>
+                  {listSupplier.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                  {f.s && !listSupplier.includes(f.s) && (
+                    <option value={f.s}>{f.s} (Kustom)</option>
+                  )}
+                  <option value="__TAMBAH__">+ Tambah Supplier Baru...</option>
+                </Select>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setModalSupplier(true)}
+                  title="Tambah Supplier Baru"
+                  class="shrink-0 h-10 px-3 border border-line hover:border-primary/50 text-xs sm:text-sm font-semibold"
+                >
+                  <Plus size={16} class="mr-1 inline text-primary" aria-hidden />
+                  <span>Tambah</span>
+                </Button>
+              </div>
+            )}
+          </Field>
           <Field label="Catatan (opsional)" class="md:col-span-2">
             {(id) => <Input id={id} value={f.c} onInput={(e) => setF({ ...f, c: e.currentTarget.value })} />}
           </Field>
@@ -175,6 +233,11 @@ export function MasukPage() {
           <TxList list={filteredMasuk} />
         </div>
       </Section>
+      <TambahSupplierDialog
+        open={modalSupplier}
+        onClose={() => setModalSupplier(false)}
+        onSelect={(sup) => setF((prev) => ({ ...prev, s: sup }))}
+      />
     </div>
   );
 }
