@@ -10,3 +10,6 @@ dist/
 
 # clasp login token (jangan di-commit)
 .clasprc.json
+
+# File generator/dump impor sementara
+apps-script/ImporLengkap.gs
