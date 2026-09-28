@@ -4,7 +4,7 @@ import { runInContext } from 'node:vm';
 import { createAppsScriptEnvironment } from './apps-script.test.ts';
 import { createMock } from '../src/lib/mock.ts';
 import { cocok, katOf, menipis } from '../src/lib/format.ts';
-import type { Barang, Rekap } from '../src/lib/types.ts';
+import type { Barang, Rekap, Transaksi } from '../src/lib/types.ts';
 
 interface Row extends Record<string, unknown> {
   id?: string;
@@ -488,5 +488,105 @@ describe('QA Subsystem & Feature Invariants', () => {
 
     // Date with no records: 2026-09-22
     assert.equal(filter('2026-09-22', '2026-09-22').length, 0);
+  });
+
+  it('Lane 11: Riwayat Transaksi date filter filters transactions accurately by timestamp and formatted date', () => {
+    const sampleTx: Transaksi[] = [
+      {
+        id: 't1',
+        ts: new Date('2026-09-29T10:00:00').getTime(),
+        waktu: '29/09/2026 10:00',
+        jenis: 'AMBIL',
+        barang_id: 'b1',
+        barang: 'Ayam Suwir',
+        jumlah: 5,
+        karyawan_id: 'k1',
+        karyawan: 'Budi',
+        alur: 'LUAR',
+        supplier: '',
+        status: 'AKTIF',
+        dicatat_oleh: 'karyawan',
+        catatan: '',
+        kategori: 'Freezer Protein',
+        satuan: 'Porsi',
+      },
+      {
+        id: 't2',
+        ts: new Date('2026-09-25T14:30:00').getTime(),
+        waktu: '25/09/2026 14:30',
+        jenis: 'MASUK',
+        barang_id: 'b2',
+        barang: 'Mineral',
+        jumlah: 24,
+        karyawan_id: '',
+        karyawan: 'Admin',
+        alur: 'DALAM',
+        supplier: 'Vendor A',
+        status: 'AKTIF',
+        dicatat_oleh: 'admin',
+        catatan: '',
+        kategori: 'Flavourful Drink',
+        satuan: 'Botol',
+      },
+      {
+        id: 't3',
+        ts: new Date('2026-09-20T09:15:00').getTime(),
+        waktu: '20/09/2026 09:15',
+        jenis: 'OPNAME',
+        barang_id: 'b1',
+        barang: 'Ayam Suwir',
+        jumlah: 1,
+        karyawan_id: '',
+        karyawan: 'Admin',
+        alur: 'LUAR',
+        supplier: '',
+        status: 'AKTIF',
+        dicatat_oleh: 'admin',
+        catatan: 'Penyesuaian',
+        kategori: 'Freezer Protein',
+        satuan: 'Porsi',
+      },
+    ];
+
+    const txTgl = (t: Transaksi) => {
+      if (t.ts && !isNaN(t.ts)) {
+        const dt = new Date(t.ts);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+      }
+      const m = t.waktu ? t.waktu.match(/^(\d{2})\/(\d{2})\/(\d{4})/) : null;
+      return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+    };
+
+    const filter = (dari: string, sampai: string) =>
+      sampleTx.filter((t) => {
+        const tgl = txTgl(t);
+        if (!tgl) return true;
+        if (dari && tgl < dari) return false;
+        if (sampai && tgl > sampai) return false;
+        return true;
+      });
+
+    // No filter
+    assert.equal(filter('', '').length, 3);
+
+    // Exact date 2026-09-29
+    const only29 = filter('2026-09-29', '2026-09-29');
+    assert.equal(only29.length, 1);
+    assert.equal(only29[0]!.id, 't1');
+
+    // Date range 2026-09-25 to 2026-09-29
+    const range25to29 = filter('2026-09-25', '2026-09-29');
+    assert.equal(range25to29.length, 2);
+    assert.deepEqual(range25to29.map((t) => t.id), ['t1', 't2']);
+
+    // Start date only >= 2026-09-25
+    assert.equal(filter('2026-09-25', '').length, 2);
+
+    // End date only <= 2026-09-21
+    assert.equal(filter('', '2026-09-21').length, 1);
+
+    // Out of range date
+    assert.equal(filter('2026-09-22', '2026-09-23').length, 0);
   });
 });

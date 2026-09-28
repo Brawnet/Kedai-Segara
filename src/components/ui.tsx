@@ -1,6 +1,6 @@
-import type { ComponentChildren, JSX } from 'preact';
-import { useEffect, useId, useRef, useState } from 'preact/hooks';
-import { CircleNotch, Info, Warning, WarningOctagon, X } from '@phosphor-icons/react';
+import { isValidElement, type ComponentChildren, type JSX, type VNode } from 'preact';
+import { useEffect, useId, useMemo, useRef, useState } from 'preact/hooks';
+import { CaretDown, Check, CircleNotch, Info, MagnifyingGlass, Plus, Warning, WarningOctagon, X } from '@phosphor-icons/react';
 import { useApp } from '../lib/app';
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -83,9 +83,419 @@ export function Field({
 }
 
 export const Input = ({ class: c, ...p }: JSX.InputHTMLAttributes<HTMLInputElement>) => <input {...p} class={cx(ctl, c as string)} />;
-export const Select = ({ class: c, ...p }: JSX.SelectHTMLAttributes<HTMLSelectElement>) => (
-  <select {...p} class={cx(ctl, 'pr-8', c as string)} />
-);
+interface ParsedOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  isAction?: boolean;
+}
+
+interface ParsedGroup {
+  label: string;
+  options: ParsedOption[];
+}
+
+type ParsedItem = { type: 'option'; option: ParsedOption } | { type: 'group'; group: ParsedGroup };
+
+type OptionVNode = VNode<{ value?: string | number; children?: ComponentChildren; disabled?: boolean }>;
+type OptgroupVNode = VNode<{ label?: string; children?: ComponentChildren }>;
+
+function extractText(node: ComponentChildren): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join('');
+  if (isValidElement(node)) {
+    const p = node.props as { children?: ComponentChildren };
+    return extractText(p.children);
+  }
+  return '';
+}
+
+function parseItems(children: ComponentChildren): ParsedItem[] {
+  const items: ParsedItem[] = [];
+  const flat = Array.isArray(children) ? children.flat(Infinity) : [children];
+
+  for (const child of flat) {
+    if (!isValidElement(child)) continue;
+    if (child.type === 'option') {
+      const optNode = child as unknown as OptionVNode;
+      const val = optNode.props.value !== undefined ? String(optNode.props.value) : extractText(optNode.props.children);
+      const label = extractText(optNode.props.children) || val;
+      const isAction = val.startsWith('__') || label.startsWith('+ ');
+      items.push({
+        type: 'option',
+        option: {
+          value: val,
+          label,
+          disabled: !!optNode.props.disabled,
+          isAction,
+        },
+      });
+    } else if (child.type === 'optgroup') {
+      const grpNode = child as unknown as OptgroupVNode;
+      const gLabel = String(grpNode.props.label || '');
+      const gOptions: ParsedOption[] = [];
+      const gFlat = Array.isArray(grpNode.props.children) ? grpNode.props.children.flat(Infinity) : [grpNode.props.children];
+      for (const gChild of gFlat) {
+        if (!isValidElement(gChild) || gChild.type !== 'option') continue;
+        const gOptNode = gChild as unknown as OptionVNode;
+        const val = gOptNode.props.value !== undefined ? String(gOptNode.props.value) : extractText(gOptNode.props.children);
+        const label = extractText(gOptNode.props.children) || val;
+        const isAction = val.startsWith('__') || label.startsWith('+ ');
+        gOptions.push({
+          value: val,
+          label,
+          disabled: !!gOptNode.props.disabled,
+          isAction,
+        });
+      }
+      items.push({
+        type: 'group',
+        group: { label: gLabel, options: gOptions },
+      });
+    }
+  }
+  return items;
+}
+
+export interface SelectProps extends JSX.SelectHTMLAttributes<HTMLSelectElement> {
+  placeholder?: string;
+}
+
+export function Select({
+  class: c,
+  children,
+  value,
+  onChange,
+  id,
+  disabled,
+  placeholder,
+  ...p
+}: SelectProps) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const nativeRef = useRef<HTMLSelectElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const parsedItems = useMemo(() => parseItems(children), [children]);
+
+  const allOptions = useMemo(() => {
+    const list: ParsedOption[] = [];
+    parsedItems.forEach((item) => {
+      if (item.type === 'option') {
+        list.push(item.option);
+      } else {
+        item.group.options.forEach((opt) => list.push(opt));
+      }
+    });
+    return list;
+  }, [parsedItems]);
+
+  const currentVal = value !== undefined ? String(value) : '';
+  const selectedOption =
+    allOptions.find((o) => o.value === currentVal) ||
+    (allOptions.length && currentVal === '' ? allOptions.find((o) => o.value === '') || allOptions[0] : undefined);
+  const displayLabel = selectedOption ? selectedOption.label : (placeholder || 'Pilih...');
+  const isPlaceholder = !currentVal || (selectedOption && (selectedOption.value === '' || selectedOption.label.startsWith('Pilih')));
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
+  }, [open]);
+
+  // Focus search input when open
+  useEffect(() => {
+    if (open) {
+      setSearch('');
+      setHighlightIdx(-1);
+      if (allOptions.length > 7 && searchInputRef.current) {
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      }
+    }
+  }, [open, allOptions.length]);
+
+  const handleSelect = (newVal: string) => {
+    setOpen(false);
+    if (nativeRef.current) {
+      nativeRef.current.value = newVal;
+      const event = new Event('change', { bubbles: true });
+      nativeRef.current.dispatchEvent(event);
+    }
+    if (onChange) {
+      const synthetic = {
+        currentTarget: { value: newVal },
+        target: { value: newVal },
+        preventDefault: () => {},
+        stopPropagation: () => {},
+      } as unknown as JSX.TargetedEvent<HTMLSelectElement, Event>;
+      onChange(synthetic);
+    }
+  };
+
+  // Filtered items based on search
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return parsedItems;
+    const result: ParsedItem[] = [];
+    for (const item of parsedItems) {
+      if (item.type === 'option') {
+        if (item.option.label.toLowerCase().includes(q) || item.option.isAction) {
+          result.push(item);
+        }
+      } else {
+        const matching = item.group.options.filter((o) => o.label.toLowerCase().includes(q) || o.isAction);
+        if (matching.length) {
+          result.push({
+            type: 'group',
+            group: { label: item.group.label, options: matching },
+          });
+        }
+      }
+    }
+    return result;
+  }, [parsedItems, search]);
+
+  const visibleOptions = useMemo(() => {
+    const list: ParsedOption[] = [];
+    filteredItems.forEach((item) => {
+      if (item.type === 'option') list.push(item.option);
+      else item.group.options.forEach((o) => list.push(o));
+    });
+    return list;
+  }, [filteredItems]);
+
+  const handleKeyDown = (e: JSX.TargetedKeyboardEvent<HTMLElement>) => {
+    if (disabled) return;
+    if (!open) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
+
+    if (e.key === 'Escape' || e.key === 'Tab') {
+      setOpen(false);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightIdx((prev) => (prev < visibleOptions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightIdx((prev) => (prev > 0 ? prev - 1 : visibleOptions.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightIdx >= 0 && highlightIdx < visibleOptions.length) {
+        const target = visibleOptions[highlightIdx];
+        if (!target.disabled) handleSelect(target.value);
+      }
+    }
+  };
+
+  const showSearch = allOptions.length > 7;
+
+  return (
+    <div
+      ref={containerRef}
+      class={cx(
+        'relative text-left',
+        typeof c === 'string' && c.includes('w-full')
+          ? 'w-full'
+          : typeof c === 'string' && c.includes('flex-1')
+          ? 'flex-1 min-w-0'
+          : 'inline-block min-w-[140px]',
+      )}
+      onKeyDown={handleKeyDown}
+    >
+      {/* Hidden native select for form validation, accessibility & scripts */}
+      <select
+        ref={nativeRef}
+        id={id ? id + '-native' : undefined}
+        value={currentVal}
+        disabled={disabled}
+        tabIndex={-1}
+        aria-hidden="true"
+        class="sr-only pointer-events-none absolute"
+        {...p}
+      >
+        {children}
+      </select>
+
+      {/* Custom styled trigger button */}
+      <button
+        id={id}
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-invalid={p['aria-invalid']}
+        aria-describedby={p['aria-describedby']}
+        aria-label={p['aria-label']}
+        onClick={() => !disabled && setOpen(!open)}
+        class={cx(
+          ctl,
+          'cursor-pointer select-none text-left flex items-center justify-between gap-2 transition-all duration-150',
+          open && 'border-primary ring-2 ring-primary/25 bg-card',
+          disabled && 'opacity-50 cursor-not-allowed bg-muted',
+          typeof c === 'string' ? c : undefined,
+        )}
+      >
+        <span class={cx('truncate flex-1', isPlaceholder ? 'text-muted-fg font-normal' : 'text-fg font-medium')}>
+          {displayLabel}
+        </span>
+        <CaretDown
+          size={16}
+          weight="bold"
+          class={cx('shrink-0 text-muted-fg transition-transform duration-200', open && 'rotate-180 text-primary')}
+          aria-hidden
+        />
+      </button>
+
+      {/* Custom dropdown menu */}
+      {open && (
+        <div
+          role="listbox"
+          tabIndex={-1}
+          class="absolute left-0 top-full mt-1.5 w-full min-w-[200px] z-50 rounded-xl border border-line bg-card shadow-lg backdrop-blur-md p-1.5 flex flex-col gap-0.5 max-h-64 overflow-y-auto overscroll-contain animate-in fade-in-0 zoom-in-95"
+        >
+          {showSearch && (
+            <div class="p-1 border-b border-line/60 mb-1 sticky top-0 bg-card z-10 -mt-1.5 -mx-1.5 px-2.5 pt-2 pb-1.5">
+              <div class="relative">
+                <MagnifyingGlass size={14} class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-fg" aria-hidden />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Cari..."
+                  value={search}
+                  onInput={(e) => setSearch(e.currentTarget.value)}
+                  class="w-full text-xs h-8 pl-7 pr-2 rounded-md bg-muted/60 border border-line focus:border-primary focus:bg-card focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+          )}
+
+          {visibleOptions.length === 0 ? (
+            <div class="px-3 py-4 text-xs text-center text-muted-fg select-none">
+              Tidak ada hasil yang cocok.
+            </div>
+          ) : (
+            filteredItems.map((item, itemIdx) => {
+              if (item.type === 'option') {
+                const opt = item.option;
+                const isSelected = opt.value === currentVal;
+                const optGlobalIdx = visibleOptions.indexOf(opt);
+                const isHighlighted = optGlobalIdx === highlightIdx;
+
+                if (opt.isAction) {
+                  return (
+                    <div key={'action-' + opt.value + '-' + itemIdx}>
+                      <div class="border-t border-line/60 my-1 -mx-1" />
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        disabled={opt.disabled}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelect(opt.value);
+                        }}
+                        class={cx(
+                          'w-full min-h-10 px-3 py-2 text-sm font-semibold rounded-lg flex items-center gap-2 cursor-pointer transition-colors duration-100 text-primary hover:bg-primary-soft/80 select-none text-left',
+                          isHighlighted && 'bg-primary-soft/50',
+                        )}
+                      >
+                        <Plus size={16} weight="bold" class="shrink-0 text-primary" aria-hidden />
+                        <span class="flex-1 truncate">{opt.label.replace(/^\+\s*/, '')}</span>
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <button
+                    key={'opt-' + opt.value + '-' + itemIdx}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    disabled={opt.disabled}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelect(opt.value);
+                    }}
+                    class={cx(
+                      'w-full min-h-10 px-3 py-2 text-sm rounded-lg flex items-center justify-between gap-2 cursor-pointer transition-colors duration-100 text-left select-none',
+                      isSelected
+                        ? 'bg-primary-soft text-primary font-semibold'
+                        : isHighlighted
+                        ? 'bg-muted text-fg'
+                        : 'text-fg hover:bg-muted',
+                      opt.disabled && 'opacity-40 cursor-not-allowed',
+                    )}
+                  >
+                    <span class="truncate flex-1">{opt.label}</span>
+                    {isSelected && <Check size={16} weight="bold" class="text-primary shrink-0" aria-hidden />}
+                  </button>
+                );
+              }
+
+              // Group
+              return (
+                <div key={'grp-' + item.group.label + '-' + itemIdx} class="flex flex-col gap-0.5">
+                  <div class="text-[11px] font-bold uppercase tracking-wider text-muted-fg px-3 py-1.5 select-none bg-muted/60 rounded-md my-1">
+                    {item.group.label}
+                  </div>
+                  {item.group.options.map((opt, optIdx) => {
+                    const isSelected = opt.value === currentVal;
+                    const optGlobalIdx = visibleOptions.indexOf(opt);
+                    const isHighlighted = optGlobalIdx === highlightIdx;
+
+                    return (
+                      <button
+                        key={'grp-opt-' + opt.value + '-' + optIdx}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        disabled={opt.disabled}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelect(opt.value);
+                        }}
+                        class={cx(
+                          'w-full min-h-10 px-3 py-2 text-sm rounded-lg flex items-center justify-between gap-2 cursor-pointer transition-colors duration-100 text-left select-none',
+                          isSelected
+                            ? 'bg-primary-soft text-primary font-semibold'
+                            : isHighlighted
+                            ? 'bg-muted text-fg'
+                            : 'text-fg hover:bg-muted',
+                          opt.disabled && 'opacity-40 cursor-not-allowed',
+                        )}
+                      >
+                        <span class="truncate flex-1">{opt.label}</span>
+                        {isSelected && <Check size={16} weight="bold" class="text-primary shrink-0" aria-hidden />}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ---------- Layout bits ---------- */
 export const Card = ({ class: c, children }: { class?: string; children: ComponentChildren }) => (
