@@ -434,7 +434,10 @@ export function createMock(): Impl {
         if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
         if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
         b.stok_dalam = r_(b.stok_dalam + j);
-        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier, dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
+        if (b.alur === 'LUAR') {
+          b.stok_luar = Math.max(0, r_((b.stok_luar || 0) - j));
+        }
+        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', catatan: supplier || 'Kembali dari dapur', dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
         return true;
       }),
     batalAmbil: (txId, pin, _token) => {

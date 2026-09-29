@@ -568,11 +568,14 @@ function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token
       if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
       if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
       b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
+      if (b.alur === 'LUAR') {
+        b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - jumlah));
+      }
       update_('Barang', b);
       var ts = Date.now();
       append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
         karyawan_id: String(k.id), karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'karyawan',
-        kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+        kategori: String(b.kategori || ''), satuan: String(b.satuan || ''), catatan: supplier || 'Kembali dari dapur' });
       return true;
     });
   });

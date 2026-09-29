@@ -10,7 +10,6 @@ import {
   Clock,
   DownloadSimple,
   House,
-  Info,
   MagnifyingGlass,
   Moon,
   ShieldCheck,
@@ -20,6 +19,7 @@ import {
   UploadSimple,
   X,
   LockKey,
+  Plus,
 } from '@phosphor-icons/react';
 import type { ComponentChildren } from 'preact';
 import { call, pesan } from '../lib/api';
@@ -29,28 +29,22 @@ import type { AuthSession, BarangTablet, Karyawan, RekapRow, TabletData } from '
 import { Banner, Button, Dialog, Empty, Input, PageTitle, Skeleton, SyncStatusBadge, Tag, cx, vibrate } from '../components/ui';
 import { Logo } from '../components/Logo';
 type Aksi = 'ambil' | 'masuk';
+export type BatchItem = {
+  b: BarangTablet;
+  val: string;
+};
+
 type Step =
   | { s: 'home' }
   | { s: 'menu'; k: Karyawan }
   | { s: 'barang'; k: Karyawan; aksi: Aksi; kat: string | null; q: string }
-  | { s: 'jumlah'; k: Karyawan; aksi: Aksi; kat: string | null; b: BarangTablet }
-  | { s: 'sukses'; k: Karyawan; aksi: Aksi; kat: string | null; b: BarangTablet; j: number }
+  | { s: 'jumlah'; k: Karyawan; aksi: Aksi; kat: string | null; items: BatchItem[]; activeIdx: number }
+  | { s: 'sukses'; k: Karyawan; aksi: Aksi; kat: string | null; items: { b: BarangTablet; j: number }[] }
   | { s: 'rekapNama' }
   | { s: 'rekap'; k: Karyawan; cutoff: number; rows: RekapRow[] }
   | { s: 'rekapOk'; k: Karyawan; rows: RekapRow[]; sisa: number[] };
 
-interface Last {
-  id: string;
-  ts: number;
-  karyawan: string;
-  barang: string;
-  jumlah: number;
-  satuan: string;
-}
-
 const IDLE_MS = 120_000;
-const UNDO_MS = 60_000;
-
 export function Tablet({
   onAdmin,
   session,
@@ -60,11 +54,10 @@ export function Tablet({
   session?: AuthSession;
   onLogout?: () => void;
 }) {
-  const { act, busy, toast, theme, toggleTheme } = useApp();
+  const { act, busy, theme, toggleTheme } = useApp();
   const [d, setD] = useState<TabletData | null>(null);
   const [err, setErr] = useState('');
   const [step, setStep] = useState<Step>({ s: 'home' });
-  const [last, setLast] = useState<Last | null>(null);
   const [now, setNow] = useState(Date.now());
   const [pinPrompt, setPinPrompt] = useState<{ k: Karyawan; onOk: () => void } | null>(null);
   const lastAct = useRef(Date.now());
@@ -102,13 +95,12 @@ export function Tablet({
     };
   }, []);
 
-  // Detik berjalan: hitung mundur batal, kembali ke beranda saat diam.
+  // Detik berjalan: kembali ke beranda saat diam.
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
   useEffect(() => {
-    if (last && now - last.ts > UNDO_MS) setLast(null);
     if (['menu', 'barang', 'jumlah', 'rekapNama'].includes(step.s) && now - lastAct.current > IDLE_MS) {
       setPinPrompt(null);
       go({ s: 'home' });
@@ -137,19 +129,7 @@ export function Tablet({
     load();
   };
 
-  const batal = async () => {
-    if (!last) return;
-    const ok = await act('batalAmbil', [last.id, '']);
-    if (ok) {
-      setLast(null);
-      toast('Pengambilan dibatalkan');
-      selesai();
-    }
-  };
-
-  const undoLeft = last ? Math.max(0, Math.ceil((UNDO_MS - (now - last.ts)) / 1000)) : 0;
-  const undo = last && undoLeft > 0 ? { last, left: undoLeft, onUndo: batal } : null;
-
+  // (Undo dihapus sesuai instruksi)
   const mulaiRekap = async (k: Karyawan) => {
     const r = await act('rekapDraf', []);
     if (r) go({ s: 'rekap', k, cutoff: r.cutoff, rows: r.baris });
@@ -173,7 +153,7 @@ export function Tablet({
       </div>
     );
   else if (step.s === 'home')
-    body = <Home d={d} undo={undo} now={now} onPick={(k) => pilihKaryawan(k, () => go({ s: 'menu', k }))} onRekap={() => go({ s: 'rekapNama' })} />;
+    body = <Home d={d} now={now} onPick={(k) => pilihKaryawan(k, () => go({ s: 'menu', k }))} onRekap={() => go({ s: 'rekapNama' })} />;
   else if (step.s === 'menu')
     body = (
       <Menu
@@ -191,17 +171,17 @@ export function Tablet({
         st={step}
         onChange={(p) => setStep({ ...step, ...p })}
         onBack={() => (step.kat ? go({ ...step, kat: null, q: '' }) : go({ s: 'menu', k: step.k }))}
-        onPick={(b) => go({ s: 'jumlah', k: step.k, aksi: step.aksi, kat: step.kat, b })}
+        onPick={(b) => go({ s: 'jumlah', k: step.k, aksi: step.aksi, kat: step.kat, items: [{ b, val: '' }], activeIdx: 0 })}
       />
     );
   else if (step.s === 'jumlah')
     body = (
       <Jumlah
+        d={d}
         st={step}
         onBack={() => go({ s: 'barang', k: step.k, aksi: step.aksi, kat: step.kat, q: '' })}
-        onDone={(j, tx) => {
-          if (tx) setLast({ id: tx.id, ts: tx.ts || Date.now(), karyawan: step.k.nama, barang: step.b.nama, jumlah: j, satuan: step.b.satuan });
-          go({ s: 'sukses', k: step.k, aksi: step.aksi, kat: step.kat, b: step.b, j });
+        onDone={(items) => {
+          go({ s: 'sukses', k: step.k, aksi: step.aksi, kat: step.kat, items });
         }}
       />
     );
@@ -209,7 +189,6 @@ export function Tablet({
     body = (
       <Sukses
         st={step}
-        undo={step.aksi === 'ambil' ? undo : null}
         onLagi={() => go({ s: 'barang', k: step.k, aksi: step.aksi, kat: step.kat, q: '' })}
         onMenu={() => go({ s: 'menu', k: step.k })}
         onSelesai={selesai}
@@ -314,41 +293,6 @@ function BackBar({ onBack, label }: { onBack: () => void; label: string }) {
   );
 }
 
-type Undo = { last: Last; left: number; onUndo: () => void } | null;
-
-function UndoBar({ undo }: { undo: NonNullable<Undo> }) {
-  const { last, left, onUndo } = undo;
-  const handleUndo = () => {
-    vibrate(15);
-    onUndo();
-  };
-  const progressPct = Math.min(100, Math.max(0, (left / (UNDO_MS / 1000)) * 100));
-  return (
-    <div class="relative overflow-hidden rounded-card border-2 border-line bg-card p-3 shadow-md sm:p-4 animate-rise">
-      <div class="flex flex-wrap items-center gap-3">
-        <CheckCircle size={24} weight="fill" class="shrink-0 text-success" aria-hidden />
-        <p class="min-w-0 flex-1 text-[15px] sm:text-base">
-          <strong>{last.karyawan}</strong> ambil{' '}
-          <span class="num font-bold text-primary">
-            {nf(last.jumlah)} {last.satuan}
-          </span>{' '}
-          {last.barang}
-        </p>
-        <Button variant="danger-ghost" guard onClick={handleUndo} class="border-danger/30 text-danger hover:bg-danger-soft">
-          <ArrowCounterClockwise size={20} aria-hidden />
-          Batalkan <span class="num font-bold">({left}s)</span>
-        </Button>
-      </div>
-      <div class="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          class="h-full bg-primary transition-all duration-1000 ease-linear rounded-full"
-          style={{ width: `${progressPct}%` }}
-          aria-hidden
-        />
-      </div>
-    </div>
-  );
-}
 const AVATAR_TONES = [
   'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30',
   'bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-500/30',
@@ -463,13 +407,11 @@ function Tile({ onClick, children, class: c = '' }: { onClick: () => void; child
 
 function Home({
   d,
-  undo,
   onPick,
   onRekap,
   now,
 }: {
   d: TabletData;
-  undo: Undo;
   onPick: (k: Karyawan) => void;
   onRekap: () => void;
   now: number;
@@ -526,7 +468,6 @@ function Home({
         </Banner>
       ) : null}
 
-      {undo && <UndoBar undo={undo} />}
 
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6 lg:items-start">
         {/* Kolom Kiri: Pemilihan Staf */}
@@ -544,7 +485,7 @@ function Home({
                 {`${salam}, siapa yang pakai tablet?`}
               </h1>
               <p class="mt-2 text-sm text-muted-fg">
-                Sentuh nama Anda untuk mulai mencatat pengambilan bahan dari gudang, barang baru datang, atau rekap harian dapur.
+                Sentuh nama Anda untuk mulai mencatat pengambilan bahan dari gudang, pengembalian bahan ke gudang, atau rekap harian dapur.
               </p>
             </div>
 
@@ -553,13 +494,6 @@ function Home({
             </div>
           </div>
 
-          {/* Tips Info Bar */}
-          <div class="flex items-start gap-3 rounded-card border border-line bg-muted/50 p-3.5 text-sm text-muted-fg">
-            <Info size={20} class="mt-0.5 shrink-0 text-primary" aria-hidden />
-            <div class="min-w-0 flex-1 leading-relaxed">
-              <span class="font-semibold text-fg">Salah catat barang?</span> Setiap transaksi pengambilan dapat dibatalkan langsung dalam waktu 60 detik melalui tombol batalkan yang muncul di layar.
-            </div>
-          </div>
         </div>
 
         {/* Kolom Kanan: Status Operasional & Panduan */}
@@ -689,7 +623,7 @@ function Menu({ k, d, onBack, onAksi, onRekap }: { k: Karyawan; d: TabletData; o
   const st = d.status;
   const items = [
     { key: 'ambil', icon: UploadSimple, title: 'Ambil dari gudang', sub: 'Catat barang yang dibawa ke dapur', tone: 'bg-primary text-white', onClick: () => onAksi('ambil') },
-    { key: 'masuk', icon: DownloadSimple, title: 'Masukkan ke gudang', sub: 'Catat barang yang baru datang', tone: 'bg-success text-white', onClick: () => onAksi('masuk') },
+    { key: 'masuk', icon: DownloadSimple, title: 'Masukkan ke gudang', sub: 'Kembalikan bahan dari dapur ke gudang', tone: 'bg-success text-white', onClick: () => onAksi('masuk') },
     {
       key: 'rekap',
       icon: ClipboardText,
@@ -740,18 +674,31 @@ function PilihBarang({
   onPick: (b: BarangTablet) => void;
 }) {
   const masuk = st.aksi === 'masuk';
-  const kats = useMemo(() => urutKat(d.barang, d.urutan), [d]);
+  const availableBarang = useMemo(() => {
+    if (!masuk) return d.barang;
+    return d.barang.filter((b) => b.alur === 'LUAR' && (b.stok_luar ?? 0) > 0);
+  }, [d.barang, masuk]);
+
+  const kats = useMemo(() => urutKat(availableBarang, d.urutan), [availableBarang, d.urutan]);
   const q = st.q.trim();
-  const list = useMemo(() => d.barang.filter((b) => (!st.kat || katOf(b) === st.kat) && cocok(b, q)), [d, st.kat, q]);
+  const list = useMemo(() => availableBarang.filter((b) => (!st.kat || katOf(b) === st.kat) && cocok(b, q)), [availableBarang, st.kat, q]);
   const showKat = !st.kat && !q;
 
   return (
     <section class="flex flex-col gap-5">
       <BackBar onBack={onBack} label={st.kat ? 'Semua kategori' : 'Menu'} />
       <PageTitle
-        kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang' : 'Ambil dari gudang'}`}
-        title={st.kat ?? (masuk ? 'Barang apa yang datang?' : 'Ambil barang apa?')}
-        sub={showKat ? 'Pilih kategori, atau langsung cari nama/kode barang.' : undefined}
+        kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang (Dapur → Gudang)' : 'Ambil dari gudang'}`}
+        title={st.kat ?? (masuk ? 'Bahan apa yang dikembalikan ke gudang?' : 'Ambil barang apa?')}
+        sub={
+          availableBarang.length === 0
+            ? undefined
+            : showKat
+            ? masuk
+              ? 'Pilih kategori atau langsung cari bahan yang masih ada di dapur.'
+              : 'Pilih kategori, atau langsung cari nama/kode barang.'
+            : undefined
+        }
       />
       <div class="sticky top-16 z-20 -mx-4 bg-bg/95 px-4 py-2 backdrop-blur md:-mx-6 md:px-6">
         <label class="relative block">
@@ -778,7 +725,7 @@ function PilihBarang({
         </label>
       </div>
 
-      {!showKat && (
+      {!showKat && availableBarang.length > 0 && (
         <div class="flex flex-col gap-2 -mt-2">
           <div class="flex items-center gap-2 overflow-x-auto pb-1 text-sm no-scrollbar">
             <button
@@ -790,10 +737,10 @@ function PilihBarang({
                   : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
               }`}
             >
-              Semua ({d.barang.length})
+              Semua ({availableBarang.length})
             </button>
             {kats.map((c) => {
-              const count = d.barang.filter((b) => katOf(b) === c).length;
+              const count = availableBarang.filter((b) => katOf(b) === c).length;
               const active = st.kat === c;
               return (
                 <button
@@ -822,14 +769,20 @@ function PilihBarang({
         </div>
       )}
 
-      {showKat ? (
+      {availableBarang.length === 0 ? (
+        <Empty>
+          {masuk
+            ? 'Tidak ada stok bahan di luar dapur yang dapat dikembalikan ke gudang saat ini.'
+            : 'Belum ada barang. Tambahkan lewat menu Admin.'}
+        </Empty>
+      ) : showKat ? (
         kats.length ? (
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {kats.map((c) => (
               <Tile key={c} onClick={() => onChange({ kat: c, q: '' })} class="border-l-4 border-l-primary">
                 <span class="min-w-0 flex-1">
                   <span class="block font-bold leading-snug">{c}</span>
-                  <span class="block text-sm text-muted-fg">{d.barang.filter((b) => katOf(b) === c).length} barang</span>
+                  <span class="block text-sm text-muted-fg">{availableBarang.filter((b) => katOf(b) === c).length} barang</span>
                 </span>
                 <CaretRight size={22} class="shrink-0 text-muted-fg" aria-hidden />
               </Tile>
@@ -872,30 +825,283 @@ function PilihBarang({
   );
 }
 
+/* ================= Modal Tambah Barang (Searchable Combobox) ================= */
+
+function ModalTambahBarang({
+  d,
+  aksi,
+  selectedIds,
+  onPick,
+  onClose,
+}: {
+  d: TabletData;
+  aksi: Aksi;
+  selectedIds: Record<string, true>;
+  onPick: (b: BarangTablet) => void;
+  onClose: () => void;
+}) {
+  const masuk = aksi === 'masuk';
+  const [kat, setKat] = useState<string | null>(null);
+  const [q, setQ] = useState('');
+
+  const availableBarang = useMemo(() => {
+    if (!masuk) return d.barang;
+    return d.barang.filter((b) => b.alur === 'LUAR' && (b.stok_luar ?? 0) > 0);
+  }, [d.barang, masuk]);
+
+  const kats = useMemo(() => urutKat(availableBarang, d.urutan), [availableBarang, d.urutan]);
+  const query = q.trim();
+  const filtered = useMemo(
+    () => availableBarang.filter((b) => (!kat || katOf(b) === kat) && cocok(b, query)),
+    [availableBarang, kat, query]
+  );
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={masuk ? 'Tambah Bahan yang Dikembalikan' : 'Tambah Barang Lain'}
+      wide
+    >
+      <div class="flex flex-col gap-4">
+        {/* Search Input */}
+        <label class="relative block">
+          <span class="sr-only">Cari barang</span>
+          <MagnifyingGlass size={20} class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-fg" aria-hidden />
+          <Input
+            type="search"
+            value={q}
+            onInput={(e) => setQ(e.currentTarget.value)}
+            placeholder={kat ? `Cari di kategori ${kat}…` : 'Cari nama atau kode barang…'}
+            class="min-h-12 pl-10 pr-11"
+            autocomplete="off"
+            autoFocus
+          />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ('')}
+              class="absolute right-1 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-ctl text-muted-fg hover:bg-muted"
+              aria-label="Hapus pencarian"
+            >
+              <X size={18} aria-hidden />
+            </button>
+          )}
+        </label>
+
+        {/* Category Pills */}
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-sm no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setKat(null)}
+            class={`min-h-10 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer ${
+              !kat ? 'bg-primary text-white shadow-sm' : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
+            }`}
+          >
+            Semua ({availableBarang.length})
+          </button>
+          {kats.map((c) => {
+            const count = availableBarang.filter((b) => katOf(b) === c).length;
+            const active = kat === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setKat(c)}
+                class={`min-h-10 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-150 cursor-pointer ${
+                  active ? 'bg-primary text-white shadow-sm' : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:bg-muted'
+                }`}
+              >
+                <span>{c}</span>
+                <span class={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${active ? 'bg-white/20 text-white' : 'bg-muted text-muted-fg'}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Item List */}
+        <div class="max-h-[50vh] overflow-y-auto pr-1 flex flex-col gap-2">
+          {filtered.length ? (
+            filtered.map((b) => {
+              const already = Boolean(selectedIds[b.id]);
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  disabled={already}
+                  onClick={() => onPick(b)}
+                  class={`flex min-h-14 w-full items-center justify-between rounded-card border p-3 text-left transition-colors cursor-pointer select-none ${
+                    already
+                      ? 'border-line/60 bg-muted/40 opacity-60 cursor-not-allowed'
+                      : 'border-line bg-card hover:border-primary hover:bg-primary-soft/30 active:bg-primary-soft'
+                  }`}
+                >
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-fg leading-snug">{b.nama}</span>
+                      <span class="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-fg">{katOf(b)}</span>
+                    </div>
+                    <span class="mt-0.5 block text-xs text-muted-fg">
+                      {b.alur === 'LUAR' ? (
+                        <span>Di luar: <strong class="num">{nf(b.stok_luar ?? 0)}</strong> {b.satuan}</span>
+                      ) : (
+                        <span>Langsung habis</span>
+                      )}
+                    </span>
+                  </div>
+                  {already ? (
+                    <span class="rounded bg-muted px-2.5 py-1 text-xs font-semibold text-muted-fg">
+                      Sudah dipilih
+                    </span>
+                  ) : (
+                    <span class="grid size-8 place-items-center rounded-full bg-primary-soft text-primary">
+                      <Plus size={18} weight="bold" />
+                    </span>
+                  )}
+                </button>
+              );
+            })
+          ) : (
+            <Empty>Tidak ada barang yang cocok dengan pencarian.</Empty>
+          )}
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
+/* ================= Modal Verifikasi ================= */
+
+function ModalVerifikasi({
+  items,
+  aksi,
+  k,
+  busy,
+  onClose,
+  onRemoveItem,
+  onKonfirmasi,
+}: {
+  items: BatchItem[];
+  aksi: Aksi;
+  k: Karyawan;
+  busy: boolean;
+  onClose: () => void;
+  onRemoveItem: (index: number) => void;
+  onKonfirmasi: () => void;
+}) {
+  const masuk = aksi === 'masuk';
+  const totalItem = items.length;
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={masuk ? 'Verifikasi Pengembalian ke Gudang' : 'Verifikasi Pengambilan Barang'}
+      wide
+    >
+      <div class="flex flex-col gap-5">
+        <div class="rounded-card border border-primary/20 bg-primary-soft/30 p-3.5 text-sm">
+          <p class="font-bold text-fg">
+            {k.nama} akan {masuk ? 'mengembalikan' : 'mengambil'} {totalItem} macam bahan:
+          </p>
+          <p class="mt-0.5 text-xs text-muted-fg">
+            Pastikan nama barang dan jumlahnya sudah sesuai dengan fisik sebelum konfirmasi.
+          </p>
+        </div>
+
+        <div class="max-h-[45vh] overflow-y-auto divide-y divide-line rounded-card border border-line bg-card">
+          {items.map((it, idx) => {
+            const j = parseNum(it.val || '0');
+            return (
+              <div key={it.b.id} class="flex items-center justify-between p-3.5 gap-3">
+                <div class="min-w-0 flex-1">
+                  <span class="block font-bold text-fg leading-tight">{it.b.nama}</span>
+                  <span class="text-xs text-muted-fg">{katOf(it.b)}</span>
+                </div>
+                <div class="text-right">
+                  <span class="num text-lg font-extrabold text-primary">
+                    {nf(j)} {it.b.satuan}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onRemoveItem(idx)}
+                  class="grid size-9 shrink-0 place-items-center rounded-ctl text-muted-fg hover:text-danger hover:bg-danger-soft transition-colors cursor-pointer"
+                  aria-label={`Hapus ${it.b.nama}`}
+                  title="Hapus dari daftar"
+                >
+                  <X size={18} weight="bold" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-line">
+          <Button variant="ghost" size="lg" onClick={onClose} disabled={busy}>
+            Periksa Kembali
+          </Button>
+          <Button
+            variant={masuk ? 'success' : 'primary'}
+            size="lg"
+            guard
+            disabled={busy || items.length === 0}
+            onClick={onKonfirmasi}
+            class="font-bold"
+          >
+            {busy ? 'Menyimpan…' : `Konfirmasi ${masuk ? 'Kembalikan' : 'Ambil'}`}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
+  );
+}
+
 /* ================= Jumlah (numpad) ================= */
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', 'del'] as const;
 
 function Jumlah({
+  d,
   st,
   onBack,
   onDone,
 }: {
+  d: TabletData;
   st: Extract<Step, { s: 'jumlah' }>;
   onBack: () => void;
-  onDone: (j: number, tx?: { id: string; ts?: number }) => void;
+  onDone: (items: { b: BarangTablet; j: number }[]) => void;
 }) {
-  const { act, busy } = useApp();
-  const [val, setVal] = useState('');
-  const [sup, setSup] = useState('');
+  const { act, busy, toast } = useApp();
+  const [items, setItems] = useState<BatchItem[]>(st.items && st.items.length ? st.items : []);
+  const [activeIdx, setActiveIdx] = useState(st.activeIdx || 0);
+  const [showModalTambah, setShowModalTambah] = useState(false);
+  const [showModalVerifikasi, setShowModalVerifikasi] = useState(false);
+
   const masuk = st.aksi === 'masuk';
-  const b = st.b;
+
+  // Current active item
+  const curr = items[activeIdx] ?? items[0];
+  const b = curr?.b;
+  const val = curr?.val || '';
   const j = parseNum(val || '0');
   const ok = j > 0;
 
+  const setCurrVal = (updater: (prev: string) => string) => {
+    setItems((prev) => {
+      const next = [...prev];
+      if (next[activeIdx]) {
+        next[activeIdx] = { ...next[activeIdx], val: updater(next[activeIdx].val) };
+      }
+      return next;
+    });
+  };
+
   const press = (k: (typeof KEYS)[number]) => {
     vibrate(10);
-    setVal((v) => {
+    setCurrVal((v) => {
       if (k === 'del') return v.slice(0, -1);
       if (k === ',') return v.includes(',') ? v : (v || '0') + ',';
       if (v === '0') v = '';
@@ -905,98 +1111,257 @@ function Jumlah({
 
   const tambahCepat = (delta: number) => {
     vibrate(10);
-    const curr = parseNum(val || '0');
-    const next = Math.max(0, r3(curr + delta));
-    setVal(next === 0 ? '' : String(next).replace('.', ','));
+    const currNum = parseNum(val || '0');
+    const nextNum = Math.max(0, r3(currNum + delta));
+    setCurrVal(() => (nextNum === 0 ? '' : String(nextNum).replace('.', ',')));
   };
-  // Keyboard fisik juga bisa dipakai (kecuali saat mengetik supplier).
+
+  const handleReset = () => {
+    vibrate(10);
+    setCurrVal(() => '');
+  };
+
+  const handleRemoveItem = (idxToRemove: number) => {
+    vibrate(15);
+    const nextItems = items.filter((_, i) => i !== idxToRemove);
+    if (nextItems.length === 0) {
+      onBack();
+      return;
+    }
+    setItems(nextItems);
+    if (activeIdx >= nextItems.length) {
+      setActiveIdx(nextItems.length - 1);
+    } else if (activeIdx === idxToRemove && activeIdx > 0) {
+      setActiveIdx(activeIdx - 1);
+    }
+  };
+
+  const handleAddItem = (newBarang: BarangTablet) => {
+    vibrate(10);
+    setItems((prev) => [...prev, { b: newBarang, val: '' }]);
+    setActiveIdx(items.length); // Fokus ke barang baru
+    setShowModalTambah(false);
+  };
+
+  const handlePreVerify = () => {
+    if (items.length === 0) return;
+    const invalidIdx = items.findIndex((it) => !(parseNum(it.val || '0') > 0));
+    if (invalidIdx !== -1) {
+      vibrate(25);
+      setActiveIdx(invalidIdx);
+      toast(`Harap masukkan jumlah untuk ${items[invalidIdx].b.nama}`);
+      return;
+    }
+    setShowModalVerifikasi(true);
+  };
+
+  const reqIdBase = useRef(Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+
+  const handleKonfirmasiBatch = async () => {
+    if (busy || items.length === 0) return;
+    const invalidIdx = items.findIndex((it) => !(parseNum(it.val || '0') > 0));
+    if (invalidIdx !== -1) {
+      toast(`Harap masukkan jumlah untuk ${items[invalidIdx].b.nama}`);
+      setActiveIdx(invalidIdx);
+      return;
+    }
+
+    const baseId = reqIdBase.current;
+    const results: { b: BarangTablet; j: number }[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const n = r3(parseNum(item.val));
+      const reqId = `${baseId}-${i}`;
+      if (masuk) {
+        const okRes = await act('masukKaryawan', [st.k.id, item.b.id, n, '', reqId]);
+        if (!okRes) return;
+      } else {
+        const res = await act('ambil', [st.k.id, item.b.id, n, reqId]);
+        if (!res) return;
+      }
+      results.push({ b: item.b, j: n });
+    }
+
+    setShowModalVerifikasi(false);
+    onDone(results);
+  };
+
+  // Keyboard fisik
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       if (/^[0-9]$/.test(e.key)) press(e.key as (typeof KEYS)[number]);
       else if (e.key === ',' || e.key === '.') press(',');
       else if (e.key === 'Backspace') press('del');
-      else if (e.key === 'Enter' && ok && !busy) kirim();
-      else return;
+      else if (e.key === 'Enter' && !busy) {
+        if (showModalVerifikasi) handleKonfirmasiBatch();
+        else handlePreVerify();
+      } else return;
       e.preventDefault();
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [ok, busy, j, sup, masuk, st, b]);
+  }, [items, activeIdx, busy, showModalVerifikasi]);
 
-  const reqIdRef = useRef(Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+  if (!b) return null;
 
-  const kirim = async () => {
-    if (!ok || busy) return;
-    const n = r3(j);
-    const reqId = reqIdRef.current;
-    if (masuk) {
-      if (await act('masukKaryawan', [st.k.id, b.id, n, sup.trim(), reqId])) onDone(n);
-    } else {
-      const r = await act('ambil', [st.k.id, b.id, n, reqId]);
-      if (r) onDone(n, r.tx);
-    }
-  };
+  const ket = masuk
+    ? `Dikembalikan ke stok gudang (${items.length} barang)`
+    : `Dibawa ke dapur, direkap saat closing (${items.length} barang)`;
 
-  const ket = masuk ? 'Ditambahkan ke stok gudang' : 'Dibawa ke dapur, direkap saat closing';
+  const selectedIds: Record<string, true> = {};
+  items.forEach((it) => {
+    selectedIds[it.b.id] = true;
+  });
 
   return (
     <section class="flex flex-col gap-5">
-      <BackBar onBack={onBack} label="Pilih barang lain" />
+      <BackBar onBack={onBack} label="Kembali" />
+
+      {/* Header and Chips */}
+      <div class="flex flex-col gap-3">
+        <PageTitle
+          kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang (Dapur → Gudang)' : 'Ambil dari gudang'}`}
+          title={masuk ? 'Kembalikan Bahan ke Gudang' : 'Ambil Bahan dari Gudang'}
+          sub="Pilih chip barang di bawah untuk mengatur jumlahnya, atau tekan tombol tambah barang lain."
+        />
+
+        {/* Chips Bar */}
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          {items.map((it, idx) => {
+            const isActive = idx === activeIdx;
+            const itemVal = parseNum(it.val || '0');
+            const hasQty = itemVal > 0;
+            return (
+              <div
+                key={it.b.id}
+                onClick={() => {
+                  vibrate(10);
+                  setActiveIdx(idx);
+                }}
+                class={`group flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all cursor-pointer select-none ${
+                  isActive
+                    ? 'border-primary bg-primary text-white shadow-sm ring-2 ring-primary/30'
+                    : 'border-line bg-card text-fg hover:border-primary/50 hover:bg-muted'
+                }`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isActive}
+              >
+                <span>{it.b.nama}</span>
+                <span
+                  class={`num text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                    isActive
+                      ? 'bg-white/20 text-white'
+                      : hasQty
+                      ? 'bg-primary-soft text-primary font-extrabold'
+                      : 'bg-muted text-muted-fg'
+                  }`}
+                >
+                  {it.val ? `${it.val} ${it.b.satuan}` : `0 ${it.b.satuan}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveItem(idx);
+                  }}
+                  class={`grid size-5 place-items-center rounded-full transition-colors cursor-pointer ${
+                    isActive
+                      ? 'hover:bg-white/20 text-white'
+                      : 'hover:bg-danger-soft hover:text-danger text-muted-fg'
+                  }`}
+                  aria-label={`Hapus ${it.b.nama}`}
+                >
+                  <X size={13} weight="bold" />
+                </button>
+              </div>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => {
+              vibrate(10);
+              setShowModalTambah(true);
+            }}
+            class="min-h-9 inline-flex items-center gap-1.5 rounded-full border border-dashed border-primary/60 bg-primary-soft/40 px-3.5 py-1.5 text-xs font-bold text-primary hover:bg-primary-soft hover:border-primary transition-colors cursor-pointer select-none"
+          >
+            <Plus size={15} weight="bold" />
+            <span>Tambah barang lain</span>
+          </button>
+        </div>
+      </div>
+
       <div class="grid gap-6 md:grid-cols-[1fr_minmax(300px,380px)] md:items-start">
-        <div class="flex flex-col gap-5">
-          <PageTitle kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang' : 'Ambil dari gudang'}`} title={b.nama} sub={b.catatan || undefined} />
-          {!masuk && (
-            <div class="flex items-center justify-between rounded-card border border-primary/20 bg-primary-soft/50 px-4 py-2.5 text-sm">
+        {/* Kolom Kiri: Display Barang Aktif & Jumlah */}
+        <div class="flex flex-col gap-4">
+          <div class="rounded-card border border-line bg-card p-4 sm:p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-2 border-b border-line pb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-primary">
+                Barang yang sedang diisi ({activeIdx + 1} dari {items.length})
+              </span>
+              <span class="rounded bg-muted px-2 py-0.5 text-xs font-semibold text-muted-fg">
+                {katOf(b)}
+              </span>
+            </div>
+            <div class="mt-3">
+              <h2 class="text-2xl font-extrabold text-fg sm:text-3xl">{b.nama}</h2>
+              {b.catatan && <p class="mt-0.5 text-sm text-muted-fg">{b.catatan}</p>}
+            </div>
+
+            <div class="mt-4 flex items-center justify-between rounded-card border border-primary/20 bg-primary-soft/40 px-4 py-2.5 text-sm">
               <span class="font-medium text-muted-fg">Tersedia di dapur saat ini:</span>
               <span class="num text-base font-extrabold text-primary">
                 {nf(b.stok_luar ?? 0)} {b.satuan}
               </span>
             </div>
-          )}
-          <div
-            class="rounded-card border-2 border-line bg-card px-5 py-4"
-            aria-live="polite"
-            aria-label={`Jumlah ${val || '0'} ${b.satuan}`}
-          >
-            <p class="text-sm font-semibold text-muted-fg">Jumlah</p>
-            <p class="num flex items-baseline gap-2 break-all">
-              <span class={`text-5xl font-extrabold tracking-tight md:text-6xl ${ok ? 'text-fg' : 'text-muted-fg'}`}>{val || '0'}</span>
-              <span class="text-xl font-bold text-muted-fg">{b.satuan}</span>
-            </p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-semibold text-muted-fg">Tambah cepat:</span>
-            {[1, 2, 5, 10, 20].map((step) => (
-              <button
-                key={step}
-                type="button"
-                onClick={() => tambahCepat(step)}
-                class="min-h-11 min-w-12 rounded-ctl border border-line bg-card px-2.5 py-1 text-sm font-bold text-fg hover:border-primary hover:bg-primary-soft active:bg-primary-soft transition-colors select-none cursor-pointer"
-              >
-                +{step}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => {
-                vibrate(10);
-                setVal('');
-              }}
-              disabled={!val}
-              class="min-h-10 rounded-ctl border border-line bg-card px-3 py-1 text-xs font-bold text-muted-fg hover:text-danger hover:border-danger hover:bg-danger-soft transition-colors select-none disabled:opacity-40 cursor-pointer"
+            {masuk && j > (b.stok_luar ?? 0) && (
+              <p class="mt-2 text-xs font-medium text-warning">
+                Perhatian: Jumlah yang dimasukkan ({nf(j)} {b.satuan}) melebihi sisa fisik dapur ({nf(b.stok_luar ?? 0)} {b.satuan}).
+              </p>
+            )}
+
+            <div
+              class="mt-4 rounded-card border-2 border-line bg-card px-5 py-4"
+              aria-live="polite"
+              aria-label={`Jumlah ${val || '0'} ${b.satuan}`}
             >
-              Reset
-            </button>
+              <p class="text-sm font-semibold text-muted-fg">Jumlah yang {masuk ? 'dikembalikan' : 'diambil'}</p>
+              <p class="num flex items-baseline gap-2 break-all">
+                <span class={`text-5xl font-extrabold tracking-tight md:text-6xl ${ok ? 'text-fg' : 'text-muted-fg'}`}>
+                  {val || '0'}
+                </span>
+                <span class="text-xl font-bold text-muted-fg">{b.satuan}</span>
+              </p>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <span class="text-xs font-semibold text-muted-fg">Tambah cepat:</span>
+              {[1, 2, 5, 10, 20].map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => tambahCepat(step)}
+                  class="min-h-11 min-w-12 rounded-ctl border border-line bg-card px-2.5 py-1 text-sm font-bold text-fg hover:border-primary hover:bg-primary-soft active:bg-primary-soft transition-colors select-none cursor-pointer"
+                >
+                  +{step}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={!val}
+                class="min-h-10 rounded-ctl border border-line bg-card px-3 py-1 text-xs font-bold text-muted-fg hover:text-danger hover:border-danger hover:bg-danger-soft transition-colors select-none disabled:opacity-40 cursor-pointer"
+              >
+                Reset
+              </button>
+            </div>
           </div>
-          {masuk && (
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-semibold">Dari supplier (opsional)</span>
-              <Input value={sup} onInput={(e) => setSup(e.currentTarget.value)} placeholder="mis. Toko Makmur" autocomplete="off" />
-            </label>
-          )}
         </div>
 
+        {/* Kolom Kanan: Papan Angka (Numpad) */}
         <div class="flex flex-col gap-3">
           <div class="grid grid-cols-3 gap-2" role="group" aria-label="Papan angka">
             {KEYS.map((k) => (
@@ -1011,14 +1376,48 @@ function Jumlah({
               </button>
             ))}
           </div>
-          <Button variant={masuk ? 'success' : 'primary'} size="lg" guard disabled={!ok || busy} onClick={kirim} class="min-h-16 flex-col gap-0 text-lg">
+          <Button
+            variant={masuk ? 'success' : 'primary'}
+            size="lg"
+            guard
+            disabled={busy || items.length === 0}
+            onClick={handlePreVerify}
+            class="min-h-16 flex-col gap-0.5 text-lg"
+          >
             <span>
-              {masuk ? 'Masukkan' : 'Ambil'} {ok && <span class="num">{nf(j)} {b.satuan}</span>}
+              Periksa & {masuk ? 'Kembalikan' : 'Ambil'} ({items.length} barang)
             </span>
-            <span class="text-[13px] font-medium opacity-90">{ket}</span>
+            <span class="text-[12px] font-medium opacity-90">{ket}</span>
           </Button>
         </div>
       </div>
+
+      {showModalTambah && (
+        <ModalTambahBarang
+          d={d}
+          aksi={st.aksi}
+          selectedIds={selectedIds}
+          onPick={handleAddItem}
+          onClose={() => setShowModalTambah(false)}
+        />
+      )}
+
+      {showModalVerifikasi && (
+        <ModalVerifikasi
+          items={items}
+          aksi={st.aksi}
+          k={st.k}
+          busy={busy}
+          onClose={() => setShowModalVerifikasi(false)}
+          onRemoveItem={(idx) => {
+            handleRemoveItem(idx);
+            if (items.length <= 1) {
+              setShowModalVerifikasi(false);
+            }
+          }}
+          onKonfirmasi={handleKonfirmasiBatch}
+        />
+      )}
     </section>
   );
 }
@@ -1027,18 +1426,17 @@ function Jumlah({
 
 function Sukses({
   st,
-  undo,
   onLagi,
   onMenu,
   onSelesai,
 }: {
   st: Extract<Step, { s: 'sukses' }>;
-  undo: Undo;
   onLagi: () => void;
   onMenu: () => void;
   onSelesai: () => void;
 }) {
   const m = st.aksi === 'masuk';
+  const totalItem = st.items.length;
   return (
     <section class="mx-auto flex max-w-2xl flex-col items-center gap-6 py-6 text-center">
       <span class="grid size-20 place-items-center rounded-full bg-success-soft text-success">
@@ -1047,22 +1445,22 @@ function Sukses({
       <div>
         <p class="text-[13px] font-bold uppercase tracking-wide text-success">Tercatat</p>
         <h1 class="mt-1 text-2xl font-extrabold leading-tight text-balance md:text-3xl">
-          {st.k.nama} {m ? 'memasukkan' : 'ambil'}{' '}
-          <span class="num">
-            {nf(st.j)} {st.b.satuan}
-          </span>{' '}
-          {st.b.nama}
-          {m ? ' ke gudang' : ''}
+          {st.k.nama} berhasil {m ? 'mengembalikan' : 'mengambil'} {totalItem} macam barang {m ? 'ke gudang' : ''}
         </h1>
       </div>
-      {undo && (
-        <div class="w-full text-left">
-          <UndoBar undo={undo} />
-        </div>
-      )}
+      <div class="w-full rounded-card border border-line bg-card divide-y divide-line text-left shadow-sm">
+        {st.items.map((it) => (
+          <div key={it.b.id} class="flex items-center justify-between px-4 py-3">
+            <span class="font-bold text-fg">{it.b.nama}</span>
+            <span class="num font-extrabold text-primary">
+              {nf(it.j)} {it.b.satuan}
+            </span>
+          </div>
+        ))}
+      </div>
       <div class="grid w-full gap-3 sm:grid-cols-3">
         <Button variant="primary" size="lg" onClick={onLagi}>
-          <ArrowRight size={20} aria-hidden /> {m ? 'Masukkan lagi' : 'Ambil lagi'}
+          <ArrowRight size={20} aria-hidden /> {m ? 'Kembalikan lagi' : 'Ambil lagi'}
         </Button>
         <Button size="lg" onClick={onMenu}>
           Menu
@@ -1075,6 +1473,7 @@ function Sukses({
     </section>
   );
 }
+
 
 /* ================= Rekap ================= */
 
