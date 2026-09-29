@@ -12,6 +12,7 @@ export interface BarangTablet {
   kode: string;
   catatan: string;
   stok_luar: number;
+  bisa_produksi: boolean;
 }
 
 /** Barang versi admin (pub_ di Kode.gs). */
@@ -72,7 +73,7 @@ export interface RekapInput {
   catatan?: string;
 }
 
-export type Jenis = 'AMBIL' | 'MASUK' | 'OPNAME';
+export type Jenis = 'AMBIL' | 'MASUK' | 'OPNAME' | 'PRODUKSI';
 
 export interface Transaksi {
   id: string;
@@ -148,6 +149,7 @@ export interface BarangInput {
   alur: Alur;
   ambang_min: number | string;
   aktif: boolean;
+  bisa_produksi?: boolean;
   stok_awal?: number | string;
 }
 
@@ -155,6 +157,7 @@ export interface LaporanRow {
   nama: string;
   satuan: string;
   masuk: number;
+  produksi: number;
   terpakai_rekap: number;
   langsung_habis: number;
   total_terpakai: number;
@@ -206,7 +209,9 @@ export interface Api {
   getTablet(token?: string): TabletData;
   ambil(karyawanId: string, barangId: string, jumlah: number, clientTxId?: string, token?: string): AmbilResult;
   masukKaryawan(karyawanId: string, barangId: string, jumlah: number, supplier: string, clientTxId?: string, token?: string): boolean;
+  produksiKaryawan(karyawanId: string, barangId: string, jumlah: number, catatan?: string, clientTxId?: string, token?: string): boolean;
   batalAmbil(txId: string, pin: string, token?: string): boolean;
+  batalProduksi(txId: string, pin: string, token?: string): boolean;
   rekapDraf(token?: string): RekapDraf;
   simpanRekap(cutoff: number, karyawanId: string, input: RekapInput[], clientTxId?: string, token?: string): { id: string };
 
@@ -220,6 +225,7 @@ export interface Api {
   hapusKaryawan(pin: string, id: string, token?: string): { status: 'deleted' | 'archived'; nama: string; message: string };
   verifikasiPinKaryawan(karyawanId: string, pin: string): boolean;
   stokMasuk(pin: string, barangId: string, jumlah: number | string, supplier: string, catatan: string, clientTxId?: string, token?: string): boolean;
+  simpanProduksiAdmin(pin: string, barangId: string, jumlah: number | string, catatan?: string, clientTxId?: string, token?: string): boolean;
   ambilAdmin(pin: string, karyawanId: string, barangId: string, jumlah: number | string, ts: number, token?: string): AmbilResult;
   simpanOpname(pin: string, items: { barang_id: string; fisik: string }[], token?: string): number;
   editRekapTerakhir(pin: string, input: { barang_id: string; sisa: string }[], token?: string): number;

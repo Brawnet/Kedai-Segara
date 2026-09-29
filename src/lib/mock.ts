@@ -92,6 +92,7 @@ export function createMock(): Impl {
         id: uid(), nama, satuan, kategori: kat, kode, catatan: catatan || '',
         stok_dalam: 5 + ((i * 7 + gi * 3) % 25), stok_luar: 0, ambang_min: 8,
         alur: kat.startsWith('Cleaning') && i > 1 ? 'LANGSUNG_HABIS' : 'LUAR', aktif: true,
+        bisa_produksi: false,
       }),
     ),
   );
@@ -172,7 +173,7 @@ export function createMock(): Impl {
   };
   const find = (id: string) => barang.find((b) => b.id === id);
   const findK = (id: string) => karyawan.find((k) => k.id === id);
-  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar });
+  const tab = (b: Barang): BarangTablet => ({ id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: b.stok_luar, bisa_produksi: Boolean(b.bisa_produksi) });
   const lastRekapTs = () => rekap.reduce((m, r) => Math.max(m, r.ts), 0);
   const openTx = (last: number) => {
     return transaksi.filter((t) => t.jenis === 'AMBIL' && t.alur === 'LUAR' && t.status === 'AKTIF' && t.ts > last);
@@ -426,18 +427,29 @@ export function createMock(): Impl {
       jamTutup,
     }),
     ambil: (k, b, j, clientTxId) => withIdem(clientTxId, () => ambil_(k, b, j, Date.now(), 'karyawan')),
-    masukKaryawan: (kid, bid, j, supplier, clientTxId) =>
+    produksiKaryawan: (kid, bid, j, catatan, clientTxId) =>
       withIdem(clientTxId, () => {
         j = r_(num(j));
         if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
         const b = find(bid), k = findK(kid);
         if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
         if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+        if (!b.bisa_produksi) throw new Error('Barang ini tidak diatur untuk produksi karyawan');
         b.stok_dalam = r_(b.stok_dalam + j);
-        if (b.alur === 'LUAR') {
-          b.stok_luar = Math.max(0, r_((b.stok_luar || 0) - j));
-        }
-        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', catatan: supplier || 'Kembali dari dapur', dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
+        tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier: '', catatan: catatan || 'Hasil produksi', dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
+        return true;
+      }),
+    masukKaryawan: (kid, bid, j, supplier, clientTxId) =>
+      withIdem(clientTxId, () => {
+        const b = find(bid);
+        if (b && !b.bisa_produksi) b.bisa_produksi = true;
+        j = r_(num(j));
+        if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
+        const k = findK(kid);
+        if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
+        if (!k || !k.aktif) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+        b.stok_dalam = r_(b.stok_dalam + j);
+        tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier: '', catatan: supplier || 'Hasil produksi', dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
         return true;
       }),
     batalAmbil: (txId, pin, _token) => {
@@ -466,6 +478,22 @@ export function createMock(): Impl {
       if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
       if (adminEmail) t.dicatat_oleh = adminEmail;
+      return true;
+    },
+    batalProduksi: (txId, pin, token) => {
+      auth(pin, token);
+      const t = transaksi.find((x) => x.id === txId);
+      if (!t || t.jenis !== 'PRODUKSI' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
+      const b = find(t.barang_id);
+      if (!b) throw new Error('Barang tidak ditemukan');
+      if (b.stok_dalam < t.jumlah - 1e-9) {
+        throw new Error(
+          `Gagal membatalkan: Sisa stok gudang (${b.stok_dalam} ${b.satuan}) tidak mencukupi untuk menarik kembali ${t.jumlah} ${b.satuan} hasil produksi.`
+        );
+      }
+      b.stok_dalam = Math.max(0, r_(b.stok_dalam - t.jumlah));
+      t.status = 'BATAL';
+      t.catatan = (t.catatan ? t.catatan + ' · ' : '') + 'Dibatalkan admin';
       return true;
     },
     rekapDraf: () => {
@@ -537,11 +565,11 @@ export function createMock(): Impl {
         if (!b) throw new Error('Barang tidak ditemukan');
         const aktif = o.aktif !== false;
         if (!aktif && b.aktif && (b.stok_dalam > 0 || b.stok_luar > 0)) throw new Error('Barang hanya bisa diarsipkan jika stok dalam dan luar = 0');
-        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif });
+        Object.assign(b, { nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif, bisa_produksi: Boolean(o.bisa_produksi) });
       } else {
         const awal = r_(num(o.stok_awal));
         if (awal < 0) throw new Error('Stok awal tidak boleh negatif');
-        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0 };
+        const b: Barang = { id: uid(), nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: o.kategori.trim(), kode: kd, catatan: o.catatan.trim(), alur, ambang_min: min, aktif: true, stok_dalam: awal, stok_luar: 0, bisa_produksi: Boolean(o.bisa_produksi) };
         barang.push(b);
         if (awal > 0) tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: awal, alur: 'DALAM', catatan: 'Stok awal', kategori: b.kategori, satuan: b.satuan });
       }
@@ -725,6 +753,25 @@ export function createMock(): Impl {
         return true;
       });
     },
+    simpanProduksiAdmin: (pin, bid, j, catatan, clientTxId, token) => {
+      const tok =
+        token ||
+        (typeof clientTxId === 'string' &&
+        (clientTxId.startsWith('mock_tok_') || clientTxId.indexOf('.') > 0)
+          ? clientTxId
+          : undefined);
+      const idemKey = clientTxId && clientTxId !== tok ? clientTxId : undefined;
+      return withIdem(idemKey, () => {
+        auth(pin, tok);
+        const n = r_(num(j));
+        if (!(n > 0)) throw new Error('Jumlah harus lebih dari 0');
+        const b = find(bid);
+        if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
+        b.stok_dalam = r_(b.stok_dalam + n);
+        tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: n, karyawan_id: '', karyawan: 'Admin', alur: 'DALAM', supplier: '', catatan: catatan || 'Hasil produksi (Admin)', dicatat_oleh: 'admin', kategori: b.kategori, satuan: b.satuan });
+        return true;
+      });
+    },
     ambilAdmin: (pin, kid, bid, j, ts, token) => {
       auth(pin, token);
       ts = num(ts) || Date.now();
@@ -811,21 +858,22 @@ export function createMock(): Impl {
         return new Date(a[0]!, a[1]! - 1, a[2]! + add).getTime();
       };
       const t0 = p(sDari), t1 = p(sSampai, 1);
-      const map: Record<string, { nama: string; satuan: string; masuk: number; rk: number; lh: number; op: number }> = {};
+      const map: Record<string, { nama: string; satuan: string; masuk: number; produksi: number; rk: number; lh: number; op: number }> = {};
       const g = (id: string, nama: string) => {
         const b = find(id);
-        return (map[id] ??= { nama: b?.nama ?? nama, satuan: b?.satuan ?? '', masuk: 0, rk: 0, lh: 0, op: 0 });
+        return (map[id] ??= { nama: b?.nama ?? nama, satuan: b?.satuan ?? '', masuk: 0, produksi: 0, rk: 0, lh: 0, op: 0 });
       };
       const ids = new Set(rekap.filter((r) => r.ts >= t0 && r.ts < t1).map((r) => r.id));
       rekapBaris.forEach((x) => ids.has(x.rekap_id) && (g(x.barang_id, x.barang).rk += x.terpakai));
       transaksi.forEach((t) => {
         if (t.ts < t0 || t.ts >= t1 || t.status !== 'AKTIF') return;
         if (t.jenis === 'MASUK') g(t.barang_id, t.barang).masuk += t.jumlah;
+        else if (t.jenis === 'PRODUKSI') g(t.barang_id, t.barang).produksi += t.jumlah;
         else if (t.jenis === 'AMBIL' && t.alur === 'LANGSUNG_HABIS') g(t.barang_id, t.barang).lh += t.jumlah;
         else if (t.jenis === 'OPNAME') g(t.barang_id, t.barang).op += t.jumlah;
       });
       return Object.values(map)
-        .map((r) => ({ nama: r.nama, satuan: r.satuan, masuk: r_(r.masuk), terpakai_rekap: r_(r.rk), langsung_habis: r_(r.lh), total_terpakai: r_(r.rk + r.lh), opname: r_(r.op) }))
+        .map((r) => ({ nama: r.nama, satuan: r.satuan, masuk: r_(r.masuk), produksi: r_(r.produksi), terpakai_rekap: r_(r.rk), langsung_habis: r_(r.lh), total_terpakai: r_(r.rk + r.lh), opname: r_(r.op) }))
         .sort((a, b) => (a.nama < b.nama ? -1 : 1));
     },
     laporanKeSheet: (pin, _dari, _sampai, token) => {

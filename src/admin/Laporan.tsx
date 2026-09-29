@@ -44,7 +44,8 @@ export function LaporanPage() {
   const s = (r: LaporanRow) => ' ' + r.satuan;
   const cols: Col<LaporanRow>[] = [
     { label: 'Barang', cell: (r) => <span class="font-semibold">{r.nama}</span> },
-    { label: 'Masuk', align: 'right', cell: (r) => nf(r.masuk) + s(r) },
+    { label: 'Masuk (Supplier)', align: 'right', cell: (r) => nf(r.masuk) + s(r) },
+    { label: 'Hasil Produksi', align: 'right', cell: (r) => nf(r.produksi) + s(r) },
     { label: 'Terpakai (rekap)', align: 'right', cell: (r) => nf(r.terpakai_rekap) + s(r) },
     { label: 'Langsung habis', align: 'right', cell: (r) => nf(r.langsung_habis) + s(r) },
     { label: 'Total terpakai', align: 'right', cell: (r) => <strong>{nf(r.total_terpakai) + s(r)}</strong> },

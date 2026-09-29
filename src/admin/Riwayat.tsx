@@ -131,7 +131,8 @@ export function RiwayatPage() {
               <Select id={id} value={f.j} onChange={(e) => setF({ ...f, j: e.currentTarget.value })}>
                 <option value="">Semua</option>
                 <option value="AMBIL">Ambil</option>
-                <option value="MASUK">Masuk / tambah</option>
+                <option value="MASUK">Masuk / supplier</option>
+                <option value="PRODUKSI">Hasil produksi</option>
                 <option value="OPNAME">Opname</option>
               </Select>
             )}
@@ -177,7 +178,7 @@ export function RiwayatPage() {
       </Card>
       <p class="text-sm text-muted-fg" aria-live="polite">
         <strong class="num text-fg">{list.length}</strong> transaksi · <span class="num">{n('AMBIL')}</span> ambil · <span class="num">{n('MASUK')}</span> masuk ·{' '}
-        <span class="num">{n('OPNAME')}</span> opname
+        <span class="num">{n('PRODUKSI')}</span> produksi · <span class="num">{n('OPNAME')}</span> opname
         {(f.dari || f.sampai) && (
           <span> · Rentang: <strong>{f.dari || 'Awal'}</strong> s/d <strong>{f.sampai || 'Sekarang'}</strong></span>
         )}

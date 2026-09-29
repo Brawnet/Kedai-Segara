@@ -9,6 +9,7 @@ import { DataTable, useAdmin, type Col } from './shared';
 const JENIS: Record<string, [string, 'primary' | 'success' | 'warning']> = {
   AMBIL: ['Ambil', 'primary'],
   MASUK: ['Masuk', 'success'],
+  PRODUKSI: ['Produksi', 'primary'],
   OPNAME: ['Opname', 'warning'],
 };
 
@@ -65,12 +66,18 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
       label: ' ',
       bare: true,
       align: 'right',
-      cell: (t) =>
-        t.jenis === 'AMBIL' && t.status === 'AKTIF' && Number(t.ts) > d.lastRekap ? (
-          <Button size="sm" variant="danger-ghost" onClick={() => setBatal(t)} class="max-md:w-full">
-            <ArrowCounterClockwise size={18} aria-hidden /> Batalkan
-          </Button>
-        ) : null,
+      cell: (t) => {
+        const canCancelAmbil = t.jenis === 'AMBIL' && t.status === 'AKTIF' && Number(t.ts) > d.lastRekap;
+        const canCancelProduksi = t.jenis === 'PRODUKSI' && t.status === 'AKTIF';
+        if (canCancelAmbil || canCancelProduksi) {
+          return (
+            <Button size="sm" variant="danger-ghost" onClick={() => setBatal(t)} class="max-md:w-full">
+              <ArrowCounterClockwise size={18} aria-hidden /> Batalkan
+            </Button>
+          );
+        }
+        return null;
+      },
     });
 
   return (
@@ -78,21 +85,30 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
       <DataTable cols={cols} rows={list} rowKey={(t) => t.id} empty="Tidak ada transaksi." />
       <Confirm
         open={!!batal}
-        title="Batalkan pengambilan?"
+        title={batal?.jenis === 'PRODUKSI' ? 'Batalkan transaksi produksi?' : 'Batalkan pengambilan?'}
         okLabel="Ya, batalkan"
         tone="danger"
         onCancel={() => setBatal(null)}
         onOk={async () => {
-          // Admin mengirim PIN sehingga batas 60 detik tidak berlaku (tetap harus sebelum rekap).
-          if (batal) await run('batalAmbil', [batal.id, pin], 'Transaksi dibatalkan');
+          if (!batal) return;
+          if (batal.jenis === 'PRODUKSI') {
+            await run('batalProduksi', [batal.id, pin], 'Transaksi produksi dibatalkan');
+          } else {
+            await run('batalAmbil', [batal.id, pin], 'Transaksi dibatalkan');
+          }
           setBatal(null);
         }}
       >
-        {batal && (
-          <>
-            {batal.karyawan} ambil <strong class="num text-fg">{nf(batal.jumlah)} {batal.satuan}</strong> {batal.barang} ({batal.waktu}). Stok dikembalikan ke gudang.
-          </>
-        )}
+        {batal &&
+          (batal.jenis === 'PRODUKSI' ? (
+            <>
+              Produksi <strong class="num text-fg">{nf(batal.jumlah)} {batal.satuan}</strong> {batal.barang} ({batal.waktu}) oleh <strong>{batal.karyawan || 'Admin'}</strong>. Stok akan dikurangi kembali dari gudang.
+            </>
+          ) : (
+            <>
+              {batal.karyawan} ambil <strong class="num text-fg">{nf(batal.jumlah)} {batal.satuan}</strong> {batal.barang} ({batal.waktu}). Stok dikembalikan ke gudang.
+            </>
+          ))}
       </Confirm>
     </>
   );

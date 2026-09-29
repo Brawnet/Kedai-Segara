@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
-import { CalendarBlank, Plus } from '@phosphor-icons/react';
+import { CalendarBlank, CookingPot, Plus, Truck } from '@phosphor-icons/react';
 import { cegahBukanAngka, hanyaAngka, nf, parseNum, ymd, ymdhm } from '../lib/format';
-import { Banner, Button, Card, Field, Input, PageTitle, Select } from '../components/ui';
+import { Banner, Button, Card, Field, Input, PageTitle, Select, cx } from '../components/ui';
 import { Section, useAdmin } from './shared';
 import { BarangSelect, TxList } from './Tx';
 import { TambahSupplierDialog } from './TambahSupplierDialog';
@@ -9,9 +9,16 @@ import { TambahSupplierDialog } from './TambahSupplierDialog';
 export function MasukPage() {
   const { d, A } = useAdmin();
   const aktif = d.barang.filter((b) => b.aktif);
+  const [mode, setMode] = useState<'supplier' | 'produksi'>('supplier');
   const [f, setF] = useState({ b: '', j: '', s: '', c: '' });
   const [err, setErr] = useState<{ b?: string; j?: string }>({});
-  const b = aktif.find((x) => x.id === f.b);
+  const barangOpsi = useMemo(() => {
+    if (mode === 'produksi') {
+      return aktif.filter((item) => item.bisa_produksi);
+    }
+    return aktif;
+  }, [aktif, mode]);
+  const b = barangOpsi.find((x) => x.id === f.b);
   const [filterWaktu, setFilterWaktu] = useState<string>('20');
   const [tglDari, setTglDari] = useState(ymd(new Date()));
   const [tglSampai, setTglSampai] = useState(ymd(new Date()));
@@ -49,7 +56,7 @@ export function MasukPage() {
   };
 
   const filteredMasuk = useMemo(() => {
-    const listMasuk = d.transaksi.filter((t) => t.jenis === 'MASUK');
+    const listMasuk = d.transaksi.filter((t) => t.jenis === 'MASUK' || t.jenis === 'PRODUKSI');
     if (filterWaktu === '20') {
       return listMasuk.slice(0, 20);
     }
@@ -101,16 +108,92 @@ export function MasukPage() {
     setErr(er);
     if (Object.keys(er).length) return;
     const reqId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-    if (await A('stokMasuk', [f.b, parseNum(f.j), f.s.trim(), f.c.trim(), reqId], 'Stok masuk dicatat')) setF({ b: f.b, j: '', s: f.s, c: '' });
+    if (mode === 'produksi') {
+      if (await A('simpanProduksiAdmin', [f.b, parseNum(f.j), f.c.trim(), reqId], 'Hasil produksi dicatat')) {
+        setF({ b: f.b, j: '', s: '', c: '' });
+      }
+    } else {
+      if (await A('stokMasuk', [f.b, parseNum(f.j), f.s.trim(), f.c.trim(), reqId], 'Stok masuk dicatat')) {
+        setF({ b: f.b, j: '', s: f.s, c: '' });
+      }
+    }
   };
 
   return (
     <div class="flex flex-col gap-6">
-      <PageTitle kicker="Restock" title="Stok masuk" sub="Catat barang yang datang dari supplier ke gudang (Stock Dalam)." />
+      <PageTitle
+        kicker={mode === 'produksi' ? 'Produksi' : 'Restock'}
+        title={mode === 'produksi' ? 'Hasil produksi dapur' : 'Stok masuk'}
+        sub={
+          mode === 'produksi'
+            ? 'Catat hasil olahan/batching dapur ke gudang (Stock Dalam).'
+            : 'Catat barang yang datang dari supplier ke gudang (Stock Dalam).'
+        }
+      />
+
+      {/* Segmented Control Mode */}
+      <div class="flex items-center gap-1.5 rounded-xl bg-muted p-1 border border-line w-fit">
+        <button
+          type="button"
+          onClick={() => {
+            setMode('supplier');
+            setErr({});
+          }}
+          class={cx(
+            'flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer select-none',
+            mode === 'supplier'
+              ? 'bg-card text-fg shadow-xs border border-line'
+              : 'text-muted-fg hover:text-fg'
+          )}
+        >
+          <Truck size={18} weight="bold" class={mode === 'supplier' ? 'text-primary' : ''} aria-hidden />
+          <span>Datang dari Supplier</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode('produksi');
+            setErr({});
+            if (f.b && !aktif.find((x) => x.id === f.b)?.bisa_produksi) {
+              setF((prev) => ({ ...prev, b: '' }));
+            }
+          }}
+          class={cx(
+            'flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer select-none',
+            mode === 'produksi'
+              ? 'bg-card text-fg shadow-xs border border-line'
+              : 'text-muted-fg hover:text-fg'
+          )}
+        >
+          <CookingPot size={18} weight="bold" class={mode === 'produksi' ? 'text-primary' : ''} aria-hidden />
+          <span>Hasil Produksi Dapur</span>
+        </button>
+      </div>
+
+      {mode === 'produksi' && barangOpsi.length === 0 && (
+        <Banner tone="warning">
+          Belum ada barang dengan status <strong>Bisa Diproduksi Karyawan</strong>. Buka menu{' '}
+          <strong>Barang</strong> lalu edit barang dan aktifkan opsi produksinya.
+        </Banner>
+      )}
+
       <Card class="p-4 md:p-5">
         <form onSubmit={simpan} class="grid gap-4 md:grid-cols-2" noValidate>
-          <Field label="Barang" error={err.b} class="md:col-span-2" hint={b ? `Stok gudang sekarang: ${nf(b.stok_dalam)} ${b.satuan}` : undefined}>
-            {(id) => <BarangSelect id={id} value={f.b} onChange={(v) => setF({ ...f, b: v })} list={aktif} invalid={!!err.b} />}
+          <Field
+            label={mode === 'produksi' ? 'Barang Hasil Produksi' : 'Barang'}
+            error={err.b}
+            class="md:col-span-2"
+            hint={b ? `Stok gudang sekarang: ${nf(b.stok_dalam)} ${b.satuan}` : undefined}
+          >
+            {(id) => (
+              <BarangSelect
+                id={id}
+                value={f.b}
+                onChange={(v) => setF({ ...f, b: v })}
+                list={barangOpsi}
+                invalid={!!err.b}
+              />
+            )}
           </Field>
           <Field label={`Jumlah datang${b ? ` (${b.satuan})` : ''}`} error={err.j}>
             {(id, dId) => (
@@ -129,9 +212,10 @@ export function MasukPage() {
               />
             )}
           </Field>
-          <Field label="Supplier (opsional)">
-            {(id) => (
-              <div class="flex items-center gap-2">
+          {mode === 'supplier' && (
+            <Field label="Supplier (opsional)">
+              {(id) => (
+                <div class="flex items-center gap-2">
                 <Select
                   id={id}
                   value={f.s}
@@ -166,21 +250,32 @@ export function MasukPage() {
                   <Plus size={16} class="mr-1 inline text-primary" aria-hidden />
                   <span>Tambah</span>
                 </Button>
-              </div>
+                </div>
+              )}
+            </Field>
+          )}
+          <Field
+            label={mode === 'produksi' ? 'Keterangan / Batch (opsional)' : 'Catatan (opsional)'}
+            class={mode === 'produksi' ? 'md:col-span-1' : 'md:col-span-2'}
+          >
+            {(id) => (
+              <Input
+                id={id}
+                value={f.c}
+                placeholder={mode === 'produksi' ? 'mis. Batch 1, Marinasi sore' : ''}
+                onInput={(e) => setF({ ...f, c: e.currentTarget.value })}
+              />
             )}
-          </Field>
-          <Field label="Catatan (opsional)" class="md:col-span-2">
-            {(id) => <Input id={id} value={f.c} onInput={(e) => setF({ ...f, c: e.currentTarget.value })} />}
           </Field>
           <div class="md:col-span-2">
             <Button type="submit" variant="success" size="lg" guard class="w-full md:w-auto">
-              Simpan stok masuk
+              {mode === 'produksi' ? 'Simpan hasil produksi' : 'Simpan stok masuk'}
             </Button>
           </div>
         </form>
       </Card>
       <Section
-        title="Terakhir masuk"
+        title={mode === 'produksi' ? 'Terakhir Masuk & Produksi' : 'Terakhir masuk'}
         actions={
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-1.5">
@@ -227,7 +322,7 @@ export function MasukPage() {
         <div class="flex flex-col gap-2">
           {filterWaktu !== '20' && (
             <p class="text-xs text-muted-fg" aria-live="polite">
-              Menampilkan <strong class="num text-fg">{filteredMasuk.length}</strong> transaksi stok masuk
+              Menampilkan <strong class="num text-fg">{filteredMasuk.length}</strong> transaksi stok masuk & produksi
             </p>
           )}
           <TxList list={filteredMasuk} />

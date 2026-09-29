@@ -4,7 +4,7 @@
  * Alur: Stock Dalam (gudang) → Stock Luar (area kerja) → Rekap sisa akhir hari.
  */
 var SHEETS = {
-  Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
+  Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'bisa_produksi'],
   Karyawan: ['id', 'nama', 'aktif', 'pin'],
   Transaksi: ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
   Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
@@ -18,7 +18,7 @@ var SS_ = null;
 // Opsional: Isi ID spreadsheet jika script dibuat terpisah dari script.google.com.
 // Jika dibuka dari spreadsheet langsung (Ekstensi → Apps Script), biarkan kosong ('').
 var DEFAULT_SS_ID = '';
-var SKEMA_V = '5'; // naikkan jika kolom di SHEETS berubah
+var SKEMA_V = '6'; // naikkan jika kolom di SHEETS berubah
 
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
@@ -527,7 +527,8 @@ function pub_(b) {
   return { id: String(b.id), nama: String(b.nama), satuan: String(b.satuan), kategori: String(b.kategori || ''),
     stok_dalam: num_(b.stok_dalam), stok_luar: num_(b.stok_luar), ambang_min: num_(b.ambang_min),
     alur: b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR', aktif: truthy_(b.aktif),
-    kode: String(b.kode || ''), catatan: String(b.catatan || '') };
+    kode: String(b.kode || ''), catatan: String(b.catatan || ''),
+    bisa_produksi: truthy_(b.bisa_produksi) };
 }
 function lastRekapTs_() {
   return rows_('Rekap').reduce(function (m, r) { return Math.max(m, num_(r.ts)); }, 0);
@@ -555,8 +556,8 @@ function status_() {
 
 /* ---------- Tablet ---------- */
 // Karyawan tidak boleh melihat stok gudang (stok_dalam), tapi stok_luar (di depan/dapur) ditampilkan.
-function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar) }; }
-function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token) {
+function tab_(b) { return { id: b.id, nama: b.nama, satuan: b.satuan, kategori: b.kategori, alur: b.alur, kode: b.kode, catatan: b.catatan, stok_luar: num_(b.stok_luar), bisa_produksi: truthy_(b.bisa_produksi) }; }
+function produksiKaryawan(karyawanId, barangId, jumlah, catatan, clientTxId, token) {
   var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
   var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
   requireSession_(tok, 'tablet');
@@ -567,18 +568,19 @@ function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token
       var b = find_('Barang', barangId), k = find_('Karyawan', karyawanId);
       if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
       if (!k || !truthy_(k.aktif)) throw new Error('Karyawan tidak aktif atau tidak ditemukan');
+      if (!truthy_(b.bisa_produksi)) throw new Error('Barang ini tidak diatur untuk produksi karyawan');
       b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
-      if (b.alur === 'LUAR') {
-        b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - jumlah));
-      }
       update_('Barang', b);
       var ts = Date.now();
-      append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-        karyawan_id: String(k.id), karyawan: k.nama, alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'karyawan',
-        kategori: String(b.kategori || ''), satuan: String(b.satuan || ''), catatan: supplier || 'Kembali dari dapur' });
+      append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'PRODUKSI', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
+        karyawan_id: String(k.id), karyawan: k.nama, alur: 'DALAM', supplier: '', status: 'AKTIF', dicatat_oleh: 'karyawan',
+        kategori: String(b.kategori || ''), satuan: String(b.satuan || ''), catatan: String(catatan || 'Hasil produksi').trim() });
       return true;
     });
   });
+}
+function masukKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token) {
+  return produksiKaryawan(karyawanId, barangId, jumlah, supplier, clientTxId, token);
 }
 function getTablet(token) {
   requireSession_(token, 'tablet');
@@ -647,6 +649,26 @@ function batalAmbil(txId, pin, token) {
     update_('Barang', b);
     t.status = 'BATAL';
     if (adminEmail) t.dicatat_oleh = adminEmail;
+    update_('Transaksi', t);
+    return true;
+  });
+}
+
+function batalProduksi(txId, pin, token) {
+  auth_(pin, token);
+  return lock_(function () {
+    var t = find_('Transaksi', txId);
+    if (!t || t.jenis !== 'PRODUKSI' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
+    var b = find_('Barang', t.barang_id);
+    if (!b) throw new Error('Barang tidak ditemukan');
+    var j = num_(t.jumlah);
+    if (num_(b.stok_dalam) < j - 1e-9) {
+      throw new Error('Gagal membatalkan: Sisa stok gudang (' + num_(b.stok_dalam) + ' ' + b.satuan + ') tidak mencukupi untuk menarik kembali ' + j + ' ' + b.satuan + ' hasil produksi.');
+    }
+    b.stok_dalam = Math.max(0, r_(num_(b.stok_dalam) - j));
+    update_('Barang', b);
+    t.status = 'BATAL';
+    t.catatan = (t.catatan ? String(t.catatan).trim() + ' · ' : '') + 'Dibatalkan admin';
     update_('Transaksi', t);
     return true;
   });
@@ -756,6 +778,7 @@ function simpanBarang(pin, o, token) {
       if (o.kode !== undefined) b.kode = kd;
       if (o.catatan !== undefined) b.catatan = String(o.catatan || '').trim();
       b.alur = alur; b.ambang_min = min; b.aktif = aktif;
+      b.bisa_produksi = truthy_(o.bisa_produksi);
       update_('Barang', b);
     } else {
       var awal = r_(num_(o.stok_awal));
@@ -763,7 +786,7 @@ function simpanBarang(pin, o, token) {
       var id = uid_(), ts = Date.now();
       append_('Barang', { id: id, nama: o.nama.trim(), satuan: o.satuan.trim(), kategori: (o.kategori || '').trim(),
         stok_dalam: awal, stok_luar: 0, ambang_min: min, alur: alur, aktif: true,
-        kode: kd, catatan: String(o.catatan || '').trim() });
+        kode: kd, catatan: String(o.catatan || '').trim(), bisa_produksi: truthy_(o.bisa_produksi) });
       if (awal > 0) append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: id, barang: o.nama.trim(),
         jumlah: awal, alur: 'DALAM', status: 'AKTIF', dicatat_oleh: 'admin', catatan: 'Stok awal', kategori: (o.kategori || '').trim(), satuan: o.satuan.trim() });
     }
@@ -1032,6 +1055,26 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) 
   });
 }
 
+function simpanProduksiAdmin(pin, barangId, jumlah, catatan, clientTxId, token) {
+  var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
+  var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
+  auth_(pin, tok);
+  return withIdempotency_(idemKey, function () {
+    jumlah = r_(num_(jumlah));
+    if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
+    return lock_(function () {
+      var b = find_('Barang', barangId);
+      if (!b || !truthy_(b.aktif)) throw new Error('Barang tidak ditemukan');
+      b.stok_dalam = r_(num_(b.stok_dalam) + jumlah);
+      update_('Barang', b);
+      var ts = Date.now();
+      append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'PRODUKSI', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
+        karyawan_id: '', karyawan: 'Admin', alur: 'DALAM', supplier: '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || 'Hasil produksi (Admin)', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+      return true;
+    });
+  });
+}
+
 function ambilAdmin(pin, karyawanId, barangId, jumlah, ts, token) {
   auth_(pin, token);
   ts = num_(ts) || Date.now();
@@ -1124,7 +1167,7 @@ function laporan(pin, dari, sampai, token) {
     id = String(id);
     if (!map[id]) {
       var b = barang.filter(function (x) { return x.id === id; })[0];
-      map[id] = { nama: b ? b.nama : nama, satuan: b ? b.satuan : '', masuk: 0, terpakai_rekap: 0, langsung_habis: 0, opname: 0 };
+      map[id] = { nama: b ? b.nama : nama, satuan: b ? b.satuan : '', masuk: 0, produksi: 0, terpakai_rekap: 0, langsung_habis: 0, opname: 0 };
     }
     return map[id];
   };
@@ -1135,12 +1178,13 @@ function laporan(pin, dari, sampai, token) {
     var ts = num_(t.ts);
     if (ts < t0 || ts >= t1 || t.status !== 'AKTIF') return;
     if (t.jenis === 'MASUK') g(t.barang_id, t.barang).masuk += num_(t.jumlah);
+    else if (t.jenis === 'PRODUKSI') g(t.barang_id, t.barang).produksi += num_(t.jumlah);
     else if (t.jenis === 'AMBIL' && t.alur === 'LANGSUNG_HABIS') g(t.barang_id, t.barang).langsung_habis += num_(t.jumlah);
     else if (t.jenis === 'OPNAME') g(t.barang_id, t.barang).opname += num_(t.jumlah);
   });
   return Object.keys(map).map(function (k) {
     var r = map[k];
-    return { nama: r.nama, satuan: r.satuan, masuk: r_(r.masuk), terpakai_rekap: r_(r.terpakai_rekap), langsung_habis: r_(r.langsung_habis),
+    return { nama: r.nama, satuan: r.satuan, masuk: r_(r.masuk), produksi: r_(r.produksi), terpakai_rekap: r_(r.terpakai_rekap), langsung_habis: r_(r.langsung_habis),
       total_terpakai: r_(r.terpakai_rekap + r.langsung_habis), opname: r_(r.opname) };
   }).sort(function (a, b) { return a.nama < b.nama ? -1 : 1; });
 }
@@ -1149,9 +1193,9 @@ function laporanKeSheet(pin, dari, sampai, token) {
   var rows = laporan(pin, dari, sampai, token);
   var ss = ss_(), s = ss.getSheetByName('Laporan') || ss.insertSheet('Laporan');
   s.clear();
-  var head = ['Barang', 'Satuan', 'Masuk', 'Terpakai (rekap)', 'Langsung habis', 'Total terpakai', 'Selisih opname'];
-  var data = [[safeCell_('Laporan ' + dari + ' s/d ' + sampai), '', '', '', '', '', ''], head].concat(rows.map(function (r) {
-    return [safeCell_(r.nama), safeCell_(r.satuan), r.masuk, r.terpakai_rekap, r.langsung_habis, r.total_terpakai, r.opname];
+  var head = ['Barang', 'Satuan', 'Masuk (Supplier)', 'Hasil Produksi', 'Terpakai (rekap)', 'Langsung habis', 'Total terpakai', 'Selisih opname'];
+  var data = [[safeCell_('Laporan ' + dari + ' s/d ' + sampai), '', '', '', '', '', '', ''], head].concat(rows.map(function (r) {
+    return [safeCell_(r.nama), safeCell_(r.satuan), r.masuk, r.produksi, r.terpakai_rekap, r.langsung_habis, r.total_terpakai, r.opname];
   }));
   s.getRange(1, 1, data.length, head.length).setValues(data);
   s.getRange(1, 1, 2, head.length).setFontWeight('bold');
