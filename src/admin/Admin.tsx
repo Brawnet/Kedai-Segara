@@ -347,15 +347,6 @@ export function Admin({
             <div class="min-w-0 shrink lg:hidden">
               <Logo sub={cur.label} />
             </div>
-            <button
-              type="button"
-              onClick={() => toggleSidebar()}
-              title={sidebarCollapsed ? 'Buka menu sidebar' : 'Tutup menu sidebar'}
-              aria-label={sidebarCollapsed ? 'Buka menu sidebar' : 'Tutup menu sidebar'}
-              class="hidden lg:flex size-9 shrink-0 items-center justify-center rounded-ctl border border-line text-muted-fg hover:bg-muted hover:text-fg transition-colors cursor-pointer mr-1"
-            >
-              <SidebarSimple size={18} weight="bold" aria-hidden />
-            </button>
             <p class="hidden text-sm font-semibold text-muted-fg lg:block">{cur.label}</p>
             <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
               <SyncStatusBadge busy={busy} />
