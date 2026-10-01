@@ -31,8 +31,9 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
     },
     {
       label: 'Jenis',
+      align: 'center',
       cell: (t) => (
-        <span class="inline-flex flex-wrap justify-end gap-1">
+        <span class="inline-flex flex-wrap items-center justify-center gap-1.5">
           <Tag tone={JENIS[t.jenis]?.[1] ?? 'primary'}>{JENIS[t.jenis]?.[0] ?? t.jenis}</Tag>
           {t.status === 'BATAL' && <Tag tone="danger">Batal</Tag>}
         </span>
