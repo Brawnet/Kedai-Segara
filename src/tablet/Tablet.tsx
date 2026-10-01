@@ -26,7 +26,7 @@ import {
 import type { ComponentChildren } from 'preact';
 import { call, pesan } from '../lib/api';
 import { useApp } from '../lib/app';
-import { cocok, dekatTutup, inisial, katOf, nf, parseNum, r3, urutKat, gabungCatatan } from '../lib/format';
+import { cocok, dekatTutup, inisial, katOf, nf, parseNum, r3, urutKat } from '../lib/format';
 import type { AuthSession, BarangTablet, Karyawan, RekapRow, TabletData } from '../lib/types';
 import { Banner, Button, Dialog, Empty, Input, PageTitle, Skeleton, SyncStatusBadge, Tag, cx, vibrate } from '../components/ui';
 import { Logo } from '../components/Logo';
@@ -984,10 +984,6 @@ function ModalVerifikasi({
   setBatchNote,
   showBatchNote,
   setShowBatchNote,
-  itemNotes,
-  setItemNotes,
-  showItemNotes,
-  setShowItemNotes,
   onClose,
   onRemoveItem,
   onKonfirmasi,
@@ -1000,35 +996,24 @@ function ModalVerifikasi({
   setBatchNote: (n: string) => void;
   showBatchNote: boolean;
   setShowBatchNote: (s: boolean) => void;
-  itemNotes: Record<string, string>;
-  setItemNotes: (updater: (prev: Record<string, string>) => Record<string, string>) => void;
-  showItemNotes: Record<string, boolean>;
-  setShowItemNotes: (updater: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   onClose: () => void;
   onRemoveItem: (index: number) => void;
-  onKonfirmasi: (batchNote: string, itemNotes: Record<string, string>) => void;
+  onKonfirmasi: (batchNote: string) => void;
 }) {
   const masuk = aksi === 'masuk';
   const totalItem = items.length;
 
-  const toggleItemNote = (id: string) => {
-    setShowItemNotes((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const setItemNote = (id: string, note: string) => {
-    setItemNotes((prev) => ({ ...prev, [id]: note }));
-  };
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       if (e.key === 'Enter' && !busy && items.length > 0) {
         e.preventDefault();
-        onKonfirmasi(batchNote, itemNotes);
+        onKonfirmasi(batchNote);
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [busy, items.length, batchNote, itemNotes, onKonfirmasi]);
+  }, [busy, items.length, batchNote, onKonfirmasi]);
 
   return (
     <Dialog
@@ -1054,60 +1039,28 @@ function ModalVerifikasi({
         <div class="max-h-[40vh] overflow-y-auto divide-y divide-line rounded-card border border-line bg-card">
           {items.map((it, idx) => {
             const j = parseNum(it.val || '0');
-            const hasNote = Boolean(itemNotes[it.b.id]?.trim());
-            const isOpen = Boolean(showItemNotes[it.b.id]);
             return (
-              <div key={it.b.id} class="p-3.5 flex flex-col gap-2">
-                <div class="flex items-center justify-between gap-3">
-                  <div class="min-w-0 flex-1">
-                    <span class="block font-bold text-fg leading-tight">{it.b.nama}</span>
-                    <span class="text-xs text-muted-fg">{katOf(it.b)}</span>
-                  </div>
-                  <div class="text-right">
-                    <span class="num text-lg font-extrabold text-primary">
-                      {nf(j)} {it.b.satuan}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => toggleItemNote(it.b.id)}
-                      class={cx(
-                        'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-ctl text-xs font-semibold transition-colors cursor-pointer',
-                        hasNote || isOpen
-                          ? 'bg-primary-soft text-primary font-bold border border-primary/30'
-                          : 'text-muted-fg hover:text-fg hover:bg-muted border border-transparent'
-                      )}
-                      title="Tambah/edit catatan untuk barang ini"
-                      aria-label={`Catatan untuk ${it.b.nama}`}
-                    >
-                      <ChatCenteredText size={15} weight="bold" />
-                      <span>{hasNote ? 'Edit Catatan' : '+ Catatan'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveItem(idx)}
-                      class="grid size-9 shrink-0 place-items-center rounded-ctl text-muted-fg hover:text-danger hover:bg-danger-soft transition-colors cursor-pointer"
-                      aria-label={`Hapus ${it.b.nama}`}
-                      title="Hapus dari daftar"
-                    >
-                      <X size={18} weight="bold" />
-                    </button>
-                  </div>
+              <div key={it.b.id} class="p-3.5 flex items-center justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <span class="block font-bold text-fg leading-tight">{it.b.nama}</span>
+                  <span class="text-xs text-muted-fg">{katOf(it.b)}</span>
                 </div>
-
-                {(isOpen || hasNote) && (
-                  <div class="flex items-center gap-2 pt-1 border-t border-line/60">
-                    <input
-                      type="text"
-                      maxLength={150}
-                      value={itemNotes[it.b.id] || ''}
-                      onInput={(e) => setItemNote(it.b.id, (e.target as HTMLInputElement).value)}
-                      placeholder={`Catatan khusus ${it.b.nama} (maks. 150 karakter)…`}
-                      class="w-full text-xs rounded-ctl border border-line bg-muted/30 px-3 py-1.5 text-fg placeholder:text-muted-fg focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
-                )}
+                <div class="text-right">
+                  <span class="num text-lg font-extrabold text-primary">
+                    {nf(j)} {it.b.satuan}
+                  </span>
+                </div>
+                <div class="flex items-center shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(idx)}
+                    class="grid size-9 shrink-0 place-items-center rounded-ctl text-muted-fg hover:text-danger hover:bg-danger-soft transition-colors cursor-pointer"
+                    aria-label={`Hapus ${it.b.nama}`}
+                    title="Hapus dari daftar"
+                  >
+                    <X size={18} weight="bold" />
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -1156,7 +1109,7 @@ function ModalVerifikasi({
             size="lg"
             guard
             disabled={busy || items.length === 0}
-            onClick={() => onKonfirmasi(batchNote, itemNotes)}
+            onClick={() => onKonfirmasi(batchNote)}
             class="font-bold"
           >
             {busy ? 'Menyimpan…' : masuk ? 'Simpan Hasil Produksi' : 'Konfirmasi Ambil'}
@@ -1189,8 +1142,6 @@ function Jumlah({
   const [showModalVerifikasi, setShowModalVerifikasi] = useState(false);
   const [batchNote, setBatchNote] = useState('');
   const [showBatchNote, setShowBatchNote] = useState(false);
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
-  const [showItemNotes, setShowItemNotes] = useState<Record<string, boolean>>({});
   const masuk = st.aksi === 'masuk';
 
   // Current active item
@@ -1268,10 +1219,7 @@ function Jumlah({
 
   const reqIdBase = useRef(Date.now() + '-' + Math.random().toString(36).slice(2, 8));
 
-  const handleKonfirmasiBatch = async (
-    bNote = batchNote,
-    iNotes = itemNotes,
-  ) => {
+  const handleKonfirmasiBatch = async (bNote = batchNote) => {
     if (busy || items.length === 0) return;
     const invalidIdx = items.findIndex((it) => !(parseNum(it.val || '0') > 0));
     if (invalidIdx !== -1) {
@@ -1282,12 +1230,12 @@ function Jumlah({
 
     const baseId = reqIdBase.current;
     const results: { b: BarangTablet; j: number }[] = [];
+    const finalCatatan = (bNote || '').trim().slice(0, 150);
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const n = r3(parseNum(item.val));
       const reqId = `${baseId}-${i}`;
-      const finalCatatan = gabungCatatan(bNote, iNotes[item.b.id]);
 
       if (masuk) {
         const catatanProd = finalCatatan || 'Hasil produksi';
@@ -1529,10 +1477,6 @@ function Jumlah({
           setBatchNote={setBatchNote}
           showBatchNote={showBatchNote}
           setShowBatchNote={setShowBatchNote}
-          itemNotes={itemNotes}
-          setItemNotes={setItemNotes}
-          showItemNotes={showItemNotes}
-          setShowItemNotes={setShowItemNotes}
           onClose={() => setShowModalVerifikasi(false)}
           onRemoveItem={(idx) => {
             handleRemoveItem(idx);

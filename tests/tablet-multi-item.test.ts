@@ -212,4 +212,41 @@ describe('Tablet Multi-Item Batch & Masuk Hasil Produksi', () => {
     assert.equal(lastTx[6], 1.5);
     assert.equal(lastTx[13], 'Kemasan 1.5 kg bocor. Mohon dicek.');
   });
+
+  it('records batch note directly across all items in multi-item ambil & defaults to Hasil produksi for produksi', () => {
+    const api = createMock();
+    const pin = '12345';
+    const admin = api.adminData(pin);
+    const employee = admin.karyawan[0]!;
+    const item1 = admin.barang[0]!;
+    const item2 = admin.barang[1]!;
+
+    // 1. Batch Ambil with batch note
+    const batchNote = 'Bahan baku event bazar akhir pekan';
+    const resAmbil1 = api.ambil(employee.id, item1.id, 2, batchNote, 'batch-tx-1');
+    const resAmbil2 = api.ambil(employee.id, item2.id, 3, batchNote, 'batch-tx-2');
+    assert.ok(resAmbil1?.tx && resAmbil2?.tx);
+
+    const tx1 = api.adminData(pin).transaksi.find((t) => t.id === resAmbil1.tx.id)!;
+    const tx2 = api.adminData(pin).transaksi.find((t) => t.id === resAmbil2.tx.id)!;
+    assert.equal(tx1.catatan, batchNote);
+    assert.equal(tx2.catatan, batchNote);
+
+    // 2. Batch Produksi with empty batch note -> default 'Hasil produksi'
+    api.simpanBarang(pin, { ...item1, bisa_produksi: true });
+    const prodItem = api.adminData(pin).barang.find((b) => b.id === item1.id)!;
+    const emptyBatchNote = '';
+    const finalProdNote = emptyBatchNote.trim() || 'Hasil produksi';
+    const ok1 = api.produksiKaryawan(employee.id, prodItem.id, 5, finalProdNote, 'batch-prod-1');
+    assert.equal(ok1, true);
+    const txProd1 = api.adminData(pin).transaksi.find((t) => t.jenis === 'PRODUKSI' && t.barang_id === prodItem.id && t.jumlah === 5)!;
+    assert.equal(txProd1.catatan, 'Hasil produksi');
+
+    // 3. Batch Produksi with custom batch note
+    const customProdNote = 'Batch 20 porsi sambal terasi';
+    const ok2 = api.produksiKaryawan(employee.id, prodItem.id, 20, customProdNote, 'batch-prod-2');
+    assert.equal(ok2, true);
+    const txProd2 = api.adminData(pin).transaksi.find((t) => t.jenis === 'PRODUKSI' && t.barang_id === prodItem.id && t.jumlah === 20)!;
+    assert.equal(txProd2.catatan, customProdNote);
+  });
 });

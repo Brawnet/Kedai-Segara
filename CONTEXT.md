@@ -13,13 +13,8 @@ Keterangan tekstual opsional (maks. 150 karakter) yang menyertai mutasi stok unt
 _Avoid_: Memo, pesan, keterangan bebas tak terstruktur
 
 **Catatan Batch**:
-Catatan tingkat sesi konfirmasi di tablet yang berlaku untuk seluruh barang yang diambil atau diproduksi dalam satu waktu.
-_Avoid_: Catatan global, session note
-
-**Catatan Item**:
-Catatan khusus pada satu baris barang tertentu dalam sesi konfirmasi, yang jika diisi bersama Catatan Batch akan digabungkan dengan format `[Catatan Batch] - [Catatan Item]`.
-_Avoid_: Item note, keterangan barang
-
+Catatan tingkat sesi konfirmasi di tablet yang berlaku langsung sebagai catatan mutasi untuk seluruh barang yang diambil atau diproduksi dalam satu waktu (maks. 150 karakter).
+_Avoid_: Catatan global, session note, catatan per item
 **Ambil Barang**:
 Pengambilan stok fisik bahan dari gudang oleh karyawan untuk operasional atau rekap.
 _Avoid_: Checkout, withdraw, pengeluaran
