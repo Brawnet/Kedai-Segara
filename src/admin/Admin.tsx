@@ -297,16 +297,6 @@ export function Admin({
           <div class={`flex flex-col gap-1 border-t border-line ${sidebarCollapsed ? 'p-2 items-center' : 'p-3'}`}>
             <Button
               variant="ghost"
-              onClick={toggleTheme}
-              title={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
-              aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
-              class={sidebarCollapsed ? 'size-11 justify-center p-0' : 'justify-start'}
-            >
-              {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
-              {!sidebarCollapsed && <span>{theme === 'dark' ? 'Mode terang' : 'Mode gelap'}</span>}
-            </Button>
-            <Button
-              variant="ghost"
               onClick={onTablet}
               title="Mode tablet"
               aria-label="Mode tablet"
@@ -327,16 +317,6 @@ export function Admin({
             >
               <SignOut size={20} aria-hidden />
               {!sidebarCollapsed && <span>Keluar Akun</span>}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => toggleSidebar()}
-              title={sidebarCollapsed ? 'Buka menu sidebar' : 'Tutup menu sidebar'}
-              aria-label={sidebarCollapsed ? 'Buka menu sidebar' : 'Tutup menu sidebar'}
-              class={`text-muted-fg hover:text-fg ${sidebarCollapsed ? 'size-11 justify-center p-0' : 'justify-start'}`}
-            >
-              <SidebarSimple size={20} weight="bold" aria-hidden />
-              {!sidebarCollapsed && <span>Ciutkan menu</span>}
             </Button>
           </div>
         </aside>
