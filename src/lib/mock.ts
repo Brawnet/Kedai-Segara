@@ -14,6 +14,7 @@ import type {
   RekapRow,
   Transaksi,
 } from './types';
+import { formatNamaAdmin } from './format.ts';
 type Impl = { [K in keyof Api]: (...a: Parameters<Api[K]>) => ReturnType<Api[K]> };
 
 const r_ = (x: number) => Math.round(x * 1000) / 1000;
@@ -777,12 +778,14 @@ export function createMock(): Impl {
           const parts = tok.split('_');
           if (parts[3]) email = parts[3];
         }
+        const acc = authWhitelist.find((a) => a.email.toLowerCase() === email.toLowerCase());
+        const adminNama = formatNamaAdmin(acc?.nama, email);
         const n = r_(num(j));
         if (!(n > 0)) throw new Error('Jumlah harus lebih dari 0');
         const b = find(bid);
         if (!b) throw new Error('Barang tidak ditemukan');
         b.stok_dalam = r_(b.stok_dalam + n);
-        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: 'DALAM', supplier, catatan, dicatat_oleh: email, kategori: b.kategori, satuan: b.satuan });
+        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, karyawan: adminNama, alur: 'DALAM', supplier, catatan, dicatat_oleh: email, kategori: b.kategori, satuan: b.satuan });
         if (supplier && supplier.trim()) {
           const supClean = supplier.trim();
           if (!daftarSupplier.some((s) => s.toLowerCase() === supClean.toLowerCase())) {
@@ -802,12 +805,19 @@ export function createMock(): Impl {
       const idemKey = clientTxId && clientTxId !== tok ? clientTxId : undefined;
       return withIdem(idemKey, () => {
         auth(pin, tok);
+        let email = 'admin';
+        if (tok) {
+          const parts = tok.split('_');
+          if (parts[3]) email = parts[3];
+        }
+        const acc = authWhitelist.find((a) => a.email.toLowerCase() === email.toLowerCase());
+        const adminNama = formatNamaAdmin(acc?.nama, email);
         const n = r_(num(j));
         if (!(n > 0)) throw new Error('Jumlah harus lebih dari 0');
         const b = find(bid);
         if (!b || !b.aktif) throw new Error('Barang tidak ditemukan');
         b.stok_dalam = r_(b.stok_dalam + n);
-        tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: n, karyawan_id: '', karyawan: 'Admin', alur: 'DALAM', supplier: '', catatan: catatan || 'Hasil produksi (Admin)', dicatat_oleh: 'admin', kategori: b.kategori, satuan: b.satuan });
+        tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: n, karyawan_id: '', karyawan: adminNama, alur: 'DALAM', supplier: '', catatan: catatan || 'Hasil produksi (Admin)', dicatat_oleh: email, kategori: b.kategori, satuan: b.satuan });
         return true;
       });
     },
@@ -1001,8 +1011,21 @@ export function createMock(): Impl {
         punyaPin: Boolean(a.pinHash && String(a.pinHash).trim() !== ''),
       }));
     },
-    simpanAuthAccount: (pin: string, email: string, role: 'admin' | 'tablet', aktif: boolean, token?: string) => {
-      auth(pin, token);
+    simpanAuthAccount: (pin: string, email: string, role: 'admin' | 'tablet', aktif: boolean, namaOrToken?: string, token?: string) => {
+      let nama: string | undefined;
+      let tok: string | undefined;
+      if (token !== undefined) {
+        nama = namaOrToken;
+        tok = token;
+      } else if (
+        namaOrToken !== undefined &&
+        (namaOrToken.startsWith('mock_tok_') || /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(namaOrToken))
+      ) {
+        tok = namaOrToken;
+      } else {
+        nama = namaOrToken;
+      }
+      auth(pin, tok);
       if (!email || !email.trim()) throw new Error('Email wajib diisi');
       const em = email.toLowerCase().trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error('Format email tidak valid');
@@ -1016,12 +1039,14 @@ export function createMock(): Impl {
         }
       }
 
+      const cleanNama = nama !== undefined ? nama.trim() : (target?.nama || '');
       const idx = authWhitelist.findIndex((a) => a.email.toLowerCase() === em);
       if (idx >= 0) {
         authWhitelist[idx]!.role = role;
         authWhitelist[idx]!.aktif = aktif;
+        authWhitelist[idx]!.nama = cleanNama;
       } else {
-        authWhitelist.push({ email: em, role, aktif, dibuat: Date.now() });
+        authWhitelist.push({ email: em, nama: cleanNama, role, aktif, dibuat: Date.now() });
       }
       return true;
     },

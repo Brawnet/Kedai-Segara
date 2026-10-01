@@ -131,3 +131,13 @@ export const gabungCatatan = (batch?: string, item?: string): string => {
   if (i) return i.slice(0, 150);
   return '';
 };
+
+/** Format nama admin: pakai nama profil jika ada, atau fallback nama depan email berhuruf kapital. */
+export const formatNamaAdmin = (nama?: string, email?: string): string => {
+  if (nama && nama.trim()) return nama.trim();
+  if (!email || !email.trim()) return 'Admin';
+  const userPart = email.split('@')[0] || '';
+  const firstName = userPart.split(/[._-]/)[0] || '';
+  if (!firstName) return 'Admin';
+  return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+};

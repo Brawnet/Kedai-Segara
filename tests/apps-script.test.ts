@@ -839,6 +839,30 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     );
   });
 
+  it('simpanAuthAccount persists custom nama and stokMasuk writes admin name in Transaksi', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const simpanAuthAccount = runInContext('simpanAuthAccount', context);
+    const getAuthAccounts = runInContext('getAuthAccounts', context);
+    const stokMasuk = runInContext('stokMasuk', context);
+
+    // 1. Simpan akun dengan nama
+    simpanAuthAccount(pin, 'budi@segara.com', 'admin', true, 'Budi Santoso');
+    const accs = getAuthAccounts(pin);
+    const budi = accs.find((a: { email: string; nama?: string }) => a.email === 'budi@segara.com');
+    assert.ok(budi);
+    assert.equal(budi.nama, 'Budi Santoso');
+
+    // 2. Transaksi stokMasuk dengan token milik budi
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+    const sess = buatSessionToken_('budi@segara.com', 'admin');
+    stokMasuk(pin, 'b1', 10, 'Supplier Utama', 'Catatan masuk', 'client-tx-budi', sess.token);
+
+    const lastTx = sheetsData.Transaksi[sheetsData.Transaksi.length - 1];
+    assert.equal(lastTx[3], 'MASUK');
+    assert.equal(lastTx[8], 'Budi Santoso'); // Column 8 is karyawan in sheet Transaksi
+    assert.equal(lastTx[12], 'budi@segara.com'); // Column 12 is dicatat_oleh
+  });
+
   it('hapusAuthAccount prevents deleting the last active admin', () => {
     const { context, properties } = createAppsScriptEnvironment();
     properties.AUTH_WHITELIST = JSON.stringify([

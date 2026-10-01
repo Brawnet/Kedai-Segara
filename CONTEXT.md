@@ -27,3 +27,11 @@ _Avoid_: Checkout, withdraw, pengeluaran
 **Hasil Produksi**:
 Pencatatan penambahan stok barang olahan ke gudang oleh karyawan dengan catatan default 'Hasil produksi' bila tidak diisi catatan khusus.
 _Avoid_: Masuk pabrik, restock internal
+
+**Akun Auth**:
+Akun terautentikasi (Google / OTP) yang terdaftar di whitelist sistem dengan role admin atau tablet.
+_Avoid_: User profile, member, credentials
+
+**Nama Admin**:
+Nama penanggung jawab operasional yang dikonfigurasi per Akun Auth di Pengaturan Akses Akun, dicatat ke kolom karyawan pada transaksi yang diinput admin.
+_Avoid_: Nama toko, user display name, author

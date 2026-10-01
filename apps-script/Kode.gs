@@ -1091,7 +1091,14 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) 
   if (!skipAuth) {
     var sess = requireSession_(tok, 'admin');
     if (sess && sess.email) sessEmail = sess.email;
+  } else if (tok) {
+    try {
+      var sessTest = verifySessionToken(tok);
+      if (sessTest && sessTest.email) sessEmail = sessTest.email;
+    } catch (e) {}
   }
+  var acc = findAuthAccount_(sessEmail);
+  var adminNama = formatNamaAdmin_(acc ? acc.nama : '', sessEmail);
   return withIdempotency_(idemKey, function () {
     jumlah = r_(num_(jumlah));
     if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
@@ -1102,7 +1109,7 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) 
       update_('Barang', b);
       var ts = Date.now();
       append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-        alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: sessEmail, catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+        karyawan: adminNama, alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: sessEmail, catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
       var supClean = String(supplier || '').trim();
       if (supClean) {
         var dSup = daftarSupplier_();
@@ -1120,6 +1127,20 @@ function simpanProduksiAdmin(pin, barangId, jumlah, catatan, clientTxId, token) 
   var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
   var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
   auth_(pin, tok);
+  var p = PropertiesService.getScriptProperties();
+  var skipAuth = p && p.getProperty('SKIP_AUTH_SESSION') === '1';
+  var sessEmail = 'admin';
+  if (!skipAuth) {
+    var sess = requireSession_(tok, 'admin');
+    if (sess && sess.email) sessEmail = sess.email;
+  } else if (tok) {
+    try {
+      var sessTest = verifySessionToken(tok);
+      if (sessTest && sessTest.email) sessEmail = sessTest.email;
+    } catch (e) {}
+  }
+  var acc = findAuthAccount_(sessEmail);
+  var adminNama = formatNamaAdmin_(acc ? acc.nama : '', sessEmail);
   return withIdempotency_(idemKey, function () {
     jumlah = r_(num_(jumlah));
     if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
@@ -1130,8 +1151,7 @@ function simpanProduksiAdmin(pin, barangId, jumlah, catatan, clientTxId, token) 
       update_('Barang', b);
       var ts = Date.now();
       append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'PRODUKSI', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-        karyawan_id: '', karyawan: 'Admin', alur: 'DALAM', supplier: '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || 'Hasil produksi (Admin)', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
-      return true;
+        karyawan_id: '', karyawan: adminNama, alur: 'DALAM', supplier: '', status: 'AKTIF', dicatat_oleh: sessEmail, catatan: catatan || 'Hasil produksi (Admin)', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
     });
   });
 }
@@ -1311,6 +1331,15 @@ function findAuthAccount_(email) {
     if (list[i].email && list[i].email.toLowerCase().trim() === em) return list[i];
   }
   return null;
+}
+
+function formatNamaAdmin_(nama, email) {
+  if (nama && String(nama).trim()) return String(nama).trim();
+  if (!email || !String(email).trim()) return 'Admin';
+  var userPart = String(email).split('@')[0] || '';
+  var firstName = userPart.split(/[._-]/)[0] || '';
+  if (!firstName) return 'Admin';
+  return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
 }
 
 function catatLogLogin_(email, metode, role, status, userAgent) {
@@ -1667,6 +1696,7 @@ function getAuthAccounts(pin, token) {
   return list.map(function (a) {
     return {
       email: a.email,
+      nama: a.nama || '',
       role: a.role,
       aktif: truthy_(a.aktif),
       dibuat: a.dibuat,
@@ -1675,8 +1705,19 @@ function getAuthAccounts(pin, token) {
   });
 }
 
-function simpanAuthAccount(pin, email, role, aktif, token) {
-  auth_(pin, token);
+function simpanAuthAccount(pin, email, role, aktif, arg5, arg6) {
+  var nama = undefined;
+  var tok = null;
+  if (arg6 !== undefined) {
+    nama = String(arg5 || '').trim();
+    tok = arg6;
+  } else if (typeof arg5 === 'string' && (/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(arg5) || arg5.indexOf('mock_tok_') === 0)) {
+    tok = arg5;
+  } else if (arg5 !== undefined) {
+    nama = String(arg5 || '').trim();
+  }
+
+  auth_(pin, tok);
   if (!email || !String(email).trim()) throw new Error('Email wajib diisi');
   var em = String(email).toLowerCase().trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error('Format email tidak valid');
@@ -1702,12 +1743,15 @@ function simpanAuthAccount(pin, email, role, aktif, token) {
       }
     }
 
+    var cleanNama = nama !== undefined ? nama : (target && target.nama ? target.nama : '');
     if (idx >= 0) {
       list[idx].role = role;
       list[idx].aktif = truthy_(aktif);
+      list[idx].nama = cleanNama;
     } else {
       list.push({
         email: em,
+        nama: cleanNama,
         role: role,
         aktif: truthy_(aktif),
         dibuat: Date.now()
@@ -1716,7 +1760,6 @@ function simpanAuthAccount(pin, email, role, aktif, token) {
     saveAuthWhitelist_(list);
     return true;
   });
-
 }
 
 function hapusAuthAccount(pin, email, token) {

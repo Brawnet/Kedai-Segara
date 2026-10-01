@@ -233,4 +233,42 @@ describe('Google & iCloud Authentication & Audit Log System', () => {
     assert.throws(() => api.resetAdminPinWithOtp('newadmin@segara.com', '000000', '777777', sess.token), /Kode verifikasi salah/);
     assert.ok(api.resetAdminPinWithOtp('newadmin@segara.com', '123456', '777777', sess.token));
   });
+
+  it('saves and updates custom nama in auth account and falls back to capitalized first name', () => {
+    const api = createMock();
+
+    // 1. Simpan akun dengan nama khusus
+    api.simpanAuthAccount(pin, 'budi.santoso@segara.com', 'admin', true, 'Budi');
+    const accs1 = api.getAuthAccounts(pin);
+    const acc1 = accs1.find((a) => a.email === 'budi.santoso@segara.com');
+    assert.ok(acc1);
+    assert.equal(acc1.nama, 'Budi');
+
+    // 2. Update nama akun yang ada
+    // 2. Update nama akun yang ada (termasuk nama dengan titik seperti Dr. Budi S.)
+    api.simpanAuthAccount(pin, 'budi.santoso@segara.com', 'admin', true, 'Dr. Budi S.');
+    const accs2 = api.getAuthAccounts(pin);
+    const acc2 = accs2.find((a) => a.email === 'budi.santoso@segara.com');
+    assert.equal(acc2?.nama, 'Dr. Budi S.');
+
+    // 3. Login as budi dan rekam stokMasuk -> transaksi mencatat nama admin
+    api.requestOtp('budi.santoso@segara.com');
+    const sess1 = api.verifyOtp('budi.santoso@segara.com', '123456');
+    const item = api.adminData(pin).barang[0]!;
+    api.stokMasuk(pin, item.id, 10, 'Supplier A', 'Batch stok baru', 'tx-stok-budi', sess1.token);
+
+    const txStok = api.adminData(pin).transaksi.find((t) => t.id && t.jenis === 'MASUK')!;
+    assert.equal(txStok.karyawan, 'Dr. Budi S.');
+    assert.equal(txStok.dicatat_oleh, 'budi.santoso@segara.com');
+
+    // 4. Akun tanpa nama khusus -> otomatis fallback nama depan email berhuruf kapital
+    api.simpanAuthAccount(pin, 'siti.aminah@segara.com', 'admin', true, '');
+    api.requestOtp('siti.aminah@segara.com');
+    const sess2 = api.verifyOtp('siti.aminah@segara.com', '123456');
+    api.stokMasuk(pin, item.id, 5, 'Supplier B', '', 'tx-stok-siti', sess2.token);
+
+    const txStokSiti = api.adminData(pin).transaksi.find((t) => t.dicatat_oleh === 'siti.aminah@segara.com')!;
+    assert.equal(txStokSiti.karyawan, 'Siti');
+    assert.equal(txStokSiti.dicatat_oleh, 'siti.aminah@segara.com');
+  });
 });

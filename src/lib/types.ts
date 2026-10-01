@@ -166,6 +166,7 @@ export interface LaporanRow {
 
 export interface AuthAccount {
   email: string;
+  nama?: string;
   role: 'admin' | 'tablet';
   aktif: boolean;
   dibuat: number;
@@ -252,7 +253,7 @@ export interface Api {
   gantiAdminPin(oldPin: string, newPin: string, token?: string): boolean;
 
   getAuthAccounts(pin: string, token?: string): AuthAccount[];
-  simpanAuthAccount(pin: string, email: string, role: 'admin' | 'tablet', aktif: boolean, token?: string): boolean;
+  simpanAuthAccount(pin: string, email: string, role: 'admin' | 'tablet', aktif: boolean, namaOrToken?: string, token?: string): boolean;
   hapusAuthAccount(pin: string, email: string, token?: string): boolean;
   getLoginHistory(pin: string, limit?: number, token?: string): LoginLog[];
   simpanGoogleClientId(pin: string, clientId: string, token?: string): boolean;
