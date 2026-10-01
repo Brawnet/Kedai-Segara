@@ -18,15 +18,6 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
   const { d, run, pin } = useAdmin();
   const [batal, setBatal] = useState<Transaksi | null>(null);
 
-  const ket = (t: Transaksi) =>
-    [
-      t.jenis === 'AMBIL' ? (t.alur === 'LUAR' ? 'lewat luar' : 'langsung habis') : '',
-      t.supplier,
-      t.catatan,
-      t.dicatat_oleh === 'admin' && t.jenis === 'AMBIL' ? 'input admin' : '',
-    ]
-      .filter(Boolean)
-      .join(' · ');
 
   const cols: Col<Transaksi>[] = [
     {
@@ -59,7 +50,30 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
     },
     { label: 'Waktu', cell: (t) => <span class="num whitespace-nowrap text-sm">{t.waktu}</span> },
     { label: 'Oleh', cell: (t) => t.karyawan || 'Admin' },
-    { label: 'Keterangan', cell: (t) => <span class="text-sm text-muted-fg">{ket(t) || '—'}</span> },
+    {
+      label: 'Keterangan',
+      cell: (t) => {
+        const info = [
+          t.jenis === 'AMBIL' ? (t.alur === 'LUAR' ? 'lewat luar' : 'langsung habis') : '',
+          t.supplier,
+          t.dicatat_oleh === 'admin' && t.jenis === 'AMBIL' ? 'input admin' : '',
+        ]
+          .filter(Boolean)
+          .join(' · ');
+
+        return (
+          <div class="flex flex-col gap-0.5 text-sm">
+            {t.catatan && (
+              <span class="font-medium text-fg italic leading-snug">
+                "{t.catatan}"
+              </span>
+            )}
+            {info && <span class="text-xs text-muted-fg">{info}</span>}
+            {!t.catatan && !info && <span class="text-muted-fg">—</span>}
+          </div>
+        );
+      },
+    },
   ];
   if (withAct)
     cols.push({
@@ -69,7 +83,8 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
       cell: (t) => {
         const canCancelAmbil = t.jenis === 'AMBIL' && t.status === 'AKTIF' && Number(t.ts) > d.lastRekap;
         const canCancelProduksi = t.jenis === 'PRODUKSI' && t.status === 'AKTIF';
-        if (canCancelAmbil || canCancelProduksi) {
+        const canCancelMasuk = t.jenis === 'MASUK' && t.status === 'AKTIF';
+        if (canCancelAmbil || canCancelProduksi || canCancelMasuk) {
           return (
             <Button size="sm" variant="danger-ghost" onClick={() => setBatal(t)} class="max-md:w-full">
               <ArrowCounterClockwise size={18} aria-hidden /> Batalkan
@@ -85,7 +100,7 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
       <DataTable cols={cols} rows={list} rowKey={(t) => t.id} empty="Tidak ada transaksi." />
       <Confirm
         open={!!batal}
-        title={batal?.jenis === 'PRODUKSI' ? 'Batalkan transaksi produksi?' : 'Batalkan pengambilan?'}
+        title={batal?.jenis === 'PRODUKSI' ? 'Batalkan transaksi produksi?' : batal?.jenis === 'MASUK' ? 'Batalkan stok masuk?' : 'Batalkan pengambilan?'}
         okLabel="Ya, batalkan"
         tone="danger"
         onCancel={() => setBatal(null)}
@@ -93,6 +108,8 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
           if (!batal) return;
           if (batal.jenis === 'PRODUKSI') {
             await run('batalProduksi', [batal.id, pin], 'Transaksi produksi dibatalkan');
+          } else if (batal.jenis === 'MASUK') {
+            await run('batalMasuk', [batal.id, pin], 'Stok masuk dibatalkan');
           } else {
             await run('batalAmbil', [batal.id, pin], 'Transaksi dibatalkan');
           }
@@ -103,6 +120,10 @@ export function TxList({ list, withAct }: { list: Transaksi[]; withAct?: boolean
           (batal.jenis === 'PRODUKSI' ? (
             <>
               Produksi <strong class="num text-fg">{nf(batal.jumlah)} {batal.satuan}</strong> {batal.barang} ({batal.waktu}) oleh <strong>{batal.karyawan || 'Admin'}</strong>. Stok akan dikurangi kembali dari gudang.
+            </>
+          ) : batal.jenis === 'MASUK' ? (
+            <>
+              Stok masuk <strong class="num text-fg">{nf(batal.jumlah)} {batal.satuan}</strong> {batal.barang} ({batal.waktu}). Stok akan dikurangi kembali dari gudang.
             </>
           ) : (
             <>

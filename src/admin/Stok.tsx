@@ -325,7 +325,7 @@ export function MasukPage() {
               Menampilkan <strong class="num text-fg">{filteredMasuk.length}</strong> transaksi stok masuk & produksi
             </p>
           )}
-          <TxList list={filteredMasuk} />
+          <TxList list={filteredMasuk} withAct />
         </div>
       </Section>
       <TambahSupplierDialog

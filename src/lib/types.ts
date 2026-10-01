@@ -207,10 +207,18 @@ export interface VerifySessionResult {
 /** Semua fungsi publik di Kode.gs beserta argumen dan hasilnya. */
 export interface Api {
   getTablet(token?: string): TabletData;
-  ambil(karyawanId: string, barangId: string, jumlah: number, clientTxId?: string, token?: string): AmbilResult;
+  ambil(
+    karyawanId: string,
+    barangId: string,
+    jumlah: number,
+    catatanOrClientTxId?: string,
+    clientTxId?: string,
+    token?: string,
+  ): AmbilResult;
   masukKaryawan(karyawanId: string, barangId: string, jumlah: number, supplier: string, clientTxId?: string, token?: string): boolean;
   produksiKaryawan(karyawanId: string, barangId: string, jumlah: number, catatan?: string, clientTxId?: string, token?: string): boolean;
   batalAmbil(txId: string, pin: string, token?: string): boolean;
+  batalMasuk(txId: string, pin: string, token?: string): boolean;
   batalProduksi(txId: string, pin: string, token?: string): boolean;
   rekapDraf(token?: string): RekapDraf;
   simpanRekap(cutoff: number, karyawanId: string, input: RekapInput[], clientTxId?: string, token?: string): { id: string };

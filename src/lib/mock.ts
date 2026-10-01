@@ -199,7 +199,7 @@ export function createMock(): Impl {
     transaksi.push(t);
     return t;
   };
-  const ambil_ = (kid: string, bid: string, j: number, ts: number, oleh: 'admin' | 'karyawan') => {
+  const ambil_ = (kid: string, bid: string, j: number, ts: number, oleh: 'admin' | 'karyawan', catatan = '') => {
     j = r_(num(j));
     if (!(j > 0)) throw new Error('Jumlah harus lebih dari 0');
     const b = find(bid), k = findK(kid);
@@ -210,7 +210,7 @@ export function createMock(): Impl {
     const alur = b.alur === 'LANGSUNG_HABIS' ? 'LANGSUNG_HABIS' : 'LUAR';
     b.stok_dalam = r_(b.stok_dalam - j);
     if (alur === 'LUAR') b.stok_luar = r_(b.stok_luar + j);
-    const t = tx({ ts, jenis: 'AMBIL', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur, dicatat_oleh: oleh, kategori: b.kategori, satuan: b.satuan });
+    const t = tx({ ts, jenis: 'AMBIL', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur, dicatat_oleh: oleh, kategori: b.kategori, satuan: b.satuan, catatan: String(catatan || '').trim() });
     return { tx: { id: t.id, ts }, barang: oleh === 'admin' ? { ...b } : tab(b) };
   };
   const hitung = (cutoff: number, last = lastRekapTs()): RekapRow[] => {
@@ -426,7 +426,17 @@ export function createMock(): Impl {
       urutan,
       jamTutup,
     }),
-    ambil: (k, b, j, clientTxId) => withIdem(clientTxId, () => ambil_(k, b, j, Date.now(), 'karyawan')),
+    ambil: (k, b, j, catatanOrClientTxId, clientTxId) => {
+      let catatan = '';
+      let idemKey: string | undefined;
+      if (clientTxId !== undefined) {
+        catatan = String(catatanOrClientTxId || '');
+        idemKey = clientTxId;
+      } else if (catatanOrClientTxId !== undefined) {
+        idemKey = catatanOrClientTxId;
+      }
+      return withIdem(idemKey, () => ambil_(k, b, j, Date.now(), 'karyawan', catatan));
+    },
     produksiKaryawan: (kid, bid, j, catatan, clientTxId) =>
       withIdem(clientTxId, () => {
         j = r_(num(j));
@@ -478,6 +488,30 @@ export function createMock(): Impl {
       if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
       if (adminEmail) t.dicatat_oleh = adminEmail;
+      return true;
+    },
+    batalMasuk: (txId, pin, token) => {
+      let email = 'admin';
+      if (token) {
+        const parts = token.split('_');
+        if (parts[3]) email = parts[3];
+      }
+      auth(pin, token);
+      const t = transaksi.find((x) => x.id === txId);
+      if (!t || t.jenis !== 'MASUK' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
+      if (t.dicatat_oleh !== 'admin' && t.dicatat_oleh !== email) {
+        throw new Error(`Hanya bisa membatalkan stok masuk yang dicatat oleh akun Anda sendiri (${email}).`);
+      }
+      const b = find(t.barang_id);
+      if (!b) throw new Error('Barang tidak ditemukan');
+      if (b.stok_dalam < t.jumlah - 1e-9) {
+        throw new Error(
+          `Gagal membatalkan: Sisa stok gudang (${b.stok_dalam} ${b.satuan}) tidak mencukupi untuk menarik kembali ${t.jumlah} ${b.satuan} stok masuk.`
+        );
+      }
+      b.stok_dalam = Math.max(0, r_(b.stok_dalam - t.jumlah));
+      t.status = 'BATAL';
+      t.catatan = (t.catatan ? t.catatan + ' · ' : '') + 'Dibatalkan admin';
       return true;
     },
     batalProduksi: (txId, pin, token) => {
@@ -738,12 +772,17 @@ export function createMock(): Impl {
       const idemKey = clientTxId && clientTxId !== tok ? clientTxId : undefined;
       return withIdem(idemKey, () => {
         auth(pin, tok);
+        let email = 'admin';
+        if (tok) {
+          const parts = tok.split('_');
+          if (parts[3]) email = parts[3];
+        }
         const n = r_(num(j));
         if (!(n > 0)) throw new Error('Jumlah harus lebih dari 0');
         const b = find(bid);
         if (!b) throw new Error('Barang tidak ditemukan');
         b.stok_dalam = r_(b.stok_dalam + n);
-        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: 'DALAM', supplier, catatan, kategori: b.kategori, satuan: b.satuan });
+        tx({ jenis: 'MASUK', barang_id: b.id, barang: b.nama, jumlah: n, alur: 'DALAM', supplier, catatan, dicatat_oleh: email, kategori: b.kategori, satuan: b.satuan });
         if (supplier && supplier.trim()) {
           const supClean = supplier.trim();
           if (!daftarSupplier.some((s) => s.toLowerCase() === supClean.toLowerCase())) {

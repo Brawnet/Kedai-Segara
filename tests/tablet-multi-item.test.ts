@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createMock } from '../src/lib/mock.ts';
+import { gabungCatatan } from '../src/lib/format.ts';
 import { runInContext } from 'node:vm';
 import { createAppsScriptEnvironment } from './apps-script.test.ts';
 
@@ -146,5 +147,69 @@ describe('Tablet Multi-Item Batch & Masuk Hasil Produksi', () => {
       () => api.batalProduksi(txProd2.id, pin),
       /tidak mencukupi untuk menarik kembali/
     );
+  });
+
+  it('gabungCatatan correctly merges batch note and item note with 150-char cap', () => {
+    assert.equal(gabungCatatan('Event Bazar', 'Kemasan penyok'), 'Event Bazar - Kemasan penyok');
+    assert.equal(gabungCatatan('Event Bazar', ''), 'Event Bazar');
+    assert.equal(gabungCatatan('', 'Kemasan penyok'), 'Kemasan penyok');
+    assert.equal(gabungCatatan('  Event Bazar  ', '  '), 'Event Bazar');
+    assert.equal(gabungCatatan('', ''), '');
+    assert.equal(gabungCatatan(undefined, undefined), '');
+
+    // Capped at 150 chars
+    const longBatch = 'A'.repeat(100);
+    const longItem = 'B'.repeat(100);
+    const merged = gabungCatatan(longBatch, longItem);
+    assert.equal(merged.length, 150);
+    assert.equal(merged.startsWith('A'.repeat(100) + ' - '), true);
+  });
+
+  it('records catatan on ambil in mock and supports backward-compatibility', () => {
+    const api = createMock();
+    const pin = '12345';
+    const admin = api.adminData(pin);
+    const employee = admin.karyawan[0]!;
+    const item = admin.barang[0]!;
+
+    // 1. Ambil with explicit note
+    const res1 = api.ambil(employee.id, item.id, 1, 'Persiapan Event - Kaleng penyok', 'tx-1');
+    assert.ok(res1?.tx?.id);
+    const tx1 = api.adminData(pin).transaksi.find((t) => t.id === res1.tx.id)!;
+    assert.equal(tx1.catatan, 'Persiapan Event - Kaleng penyok');
+
+    // 2. Ambil without note (backward-compatible call where 4th argument is clientTxId)
+    const res2 = api.ambil(employee.id, item.id, 1, 'tx-2');
+    assert.ok(res2?.tx?.id);
+    const tx2 = api.adminData(pin).transaksi.find((t) => t.id === res2.tx.id)!;
+    assert.equal(tx2.catatan, '');
+  });
+
+  it('records catatan on ambil in Apps Script (Kode.gs) and supports backward-compatibility', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const ambil = runInContext('ambil', context);
+
+    // 1. Ambil with note
+    ambil('k1', 'b1', 1, 'Catatan Dapur Khusus', 'client-tx-note-1');
+    const lastTx1 = sheetsData.Transaksi[sheetsData.Transaksi.length - 1];
+    assert.equal(lastTx1[3], 'AMBIL');
+    assert.equal(lastTx1[13], 'Catatan Dapur Khusus'); // Column 13 is catatan in Transaksi sheet
+
+    // 2. Ambil without note (backward compatible, 4th arg is clientTxId)
+    ambil('k1', 'b1', 1, 'client-tx-legacy-2');
+    const lastTx2 = sheetsData.Transaksi[sheetsData.Transaksi.length - 1];
+    assert.equal(lastTx2[3], 'AMBIL');
+    assert.equal(lastTx2[13], '');
+  });
+
+  it('handles notes with periods and abbreviations without failing auth token checks in Kode.gs', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const ambil = runInContext('ambil', context);
+
+    ambil('k1', 'b1', 1.5, 'Kemasan 1.5 kg bocor. Mohon dicek.', 'client-tx-period-1');
+    const lastTx = sheetsData.Transaksi[sheetsData.Transaksi.length - 1];
+    assert.equal(lastTx[3], 'AMBIL');
+    assert.equal(lastTx[6], 1.5);
+    assert.equal(lastTx[13], 'Kemasan 1.5 kg bocor. Mohon dicek.');
   });
 });

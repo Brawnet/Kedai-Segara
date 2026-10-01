@@ -595,7 +595,7 @@ function getTablet(token) {
   };
 }
 
-function ambil_(karyawanId, barangId, jumlah, ts, oleh) {
+function ambil_(karyawanId, barangId, jumlah, ts, oleh, catatan) {
   jumlah = r_(num_(jumlah));
   if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
   return lock_(function () {
@@ -609,17 +609,41 @@ function ambil_(karyawanId, barangId, jumlah, ts, oleh) {
     update_('Barang', b);
     var t = { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'AMBIL', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
       karyawan_id: String(k.id), karyawan: k.nama, alur: alur, status: 'AKTIF', dicatat_oleh: oleh,
-      kategori: String(b.kategori || ''), satuan: String(b.satuan || '') };
+      kategori: String(b.kategori || ''), satuan: String(b.satuan || ''), catatan: String(catatan || '').trim() };
     append_('Transaksi', t);
     return { tx: { id: t.id, ts: ts }, barang: oleh === 'admin' ? pub_(b) : tab_(pub_(b)) };
   });
 }
-function ambil(karyawanId, barangId, jumlah, clientTxId, token) {
-  var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
-  var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
+function ambil(karyawanId, barangId, jumlah, arg4, arg5, arg6) {
+  var catatan = '';
+  var idemKey = null;
+  var tok = null;
+
+  if (arguments.length >= 6) {
+    catatan = String(arg4 || '');
+    idemKey = arg5;
+    tok = arg6;
+  } else if (arguments.length === 5) {
+    if (typeof arg5 === 'string' && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(arg5)) {
+      // Pemanggilan lama: (k, b, j, clientTxId, token)
+      idemKey = arg4;
+      tok = arg5;
+    } else {
+      // Pemanggilan baru tanpa token (mis. test): (k, b, j, catatan, clientTxId)
+      catatan = String(arg4 || '');
+      idemKey = arg5;
+    }
+  } else if (arguments.length === 4) {
+    if (typeof arg4 === 'string' && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(arg4)) {
+      tok = arg4;
+    } else {
+      idemKey = arg4;
+    }
+  }
+
   requireSession_(tok, 'tablet');
   return withIdempotency_(idemKey, function () {
-    return ambil_(karyawanId, barangId, jumlah, Date.now(), 'karyawan');
+    return ambil_(karyawanId, barangId, jumlah, Date.now(), 'karyawan', catatan);
   });
 }
 
@@ -664,6 +688,36 @@ function batalProduksi(txId, pin, token) {
     var j = num_(t.jumlah);
     if (num_(b.stok_dalam) < j - 1e-9) {
       throw new Error('Gagal membatalkan: Sisa stok gudang (' + num_(b.stok_dalam) + ' ' + b.satuan + ') tidak mencukupi untuk menarik kembali ' + j + ' ' + b.satuan + ' hasil produksi.');
+    }
+    b.stok_dalam = Math.max(0, r_(num_(b.stok_dalam) - j));
+    update_('Barang', b);
+    t.status = 'BATAL';
+    t.catatan = (t.catatan ? String(t.catatan).trim() + ' · ' : '') + 'Dibatalkan admin';
+    update_('Transaksi', t);
+    return true;
+  });
+}
+
+function batalMasuk(txId, pin, token) {
+  var p = PropertiesService.getScriptProperties();
+  var skipAuth = p && p.getProperty('SKIP_AUTH_SESSION') === '1';
+  var sessEmail = 'admin';
+  if (!skipAuth) {
+    var sess = requireSession_(token, 'admin');
+    if (sess && sess.email) sessEmail = sess.email;
+  }
+  auth_(pin, token);
+  return lock_(function () {
+    var t = find_('Transaksi', txId);
+    if (!t || t.jenis !== 'MASUK' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
+    if (t.dicatat_oleh !== 'admin' && t.dicatat_oleh !== sessEmail) {
+      throw new Error('Hanya bisa membatalkan stok masuk yang dicatat oleh akun Anda sendiri (' + sessEmail + ').');
+    }
+    var b = find_('Barang', t.barang_id);
+    if (!b) throw new Error('Barang tidak ditemukan');
+    var j = num_(t.jumlah);
+    if (num_(b.stok_dalam) < j - 1e-9) {
+      throw new Error('Gagal membatalkan: Sisa stok gudang (' + num_(b.stok_dalam) + ' ' + b.satuan + ') tidak mencukupi untuk menarik kembali ' + j + ' ' + b.satuan + ' stok masuk.');
     }
     b.stok_dalam = Math.max(0, r_(num_(b.stok_dalam) - j));
     update_('Barang', b);
@@ -1031,6 +1085,13 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) 
   var tok = token || (typeof clientTxId === 'string' && clientTxId.indexOf('.') > 0 ? clientTxId : null);
   var idemKey = clientTxId && clientTxId !== tok ? clientTxId : null;
   auth_(pin, tok);
+  var p = PropertiesService.getScriptProperties();
+  var skipAuth = p && p.getProperty('SKIP_AUTH_SESSION') === '1';
+  var sessEmail = 'admin';
+  if (!skipAuth) {
+    var sess = requireSession_(tok, 'admin');
+    if (sess && sess.email) sessEmail = sess.email;
+  }
   return withIdempotency_(idemKey, function () {
     jumlah = r_(num_(jumlah));
     if (!(jumlah > 0)) throw new Error('Jumlah harus lebih dari 0');
@@ -1041,7 +1102,7 @@ function stokMasuk(pin, barangId, jumlah, supplier, catatan, clientTxId, token) 
       update_('Barang', b);
       var ts = Date.now();
       append_('Transaksi', { id: uid_(), ts: ts, waktu: fmt_(ts), jenis: 'MASUK', barang_id: String(b.id), barang: b.nama, jumlah: jumlah,
-        alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: 'admin', catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
+        alur: 'DALAM', supplier: supplier || '', status: 'AKTIF', dicatat_oleh: sessEmail, catatan: catatan || '', kategori: String(b.kategori || ''), satuan: String(b.satuan || '') });
       var supClean = String(supplier || '').trim();
       if (supClean) {
         var dSup = daftarSupplier_();
