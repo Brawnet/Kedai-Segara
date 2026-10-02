@@ -67,7 +67,7 @@ html.dark,
   @supports (-moz-appearance: none) {
     * {
       scrollbar-width: thin;
-      scrollbar-color: var(--color-line-strong) transparent;
+      scrollbar-color: var(--color-line-strong) var(--color-bg);
     }
   }
 
@@ -85,13 +85,13 @@ html.dark,
   }
   ::-webkit-scrollbar-track,
   *::-webkit-scrollbar-track {
-    background: transparent;
+    background-color: var(--color-bg);
   }
   ::-webkit-scrollbar-thumb,
   *::-webkit-scrollbar-thumb {
     background-color: var(--color-line-strong);
     border-radius: 9999px;
-    border: 2px solid transparent;
+    border: 2px solid var(--color-bg);
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover,
@@ -100,16 +100,18 @@ html.dark,
   }
   ::-webkit-scrollbar-corner,
   *::-webkit-scrollbar-corner {
-    background: transparent;
+    background-color: var(--color-bg);
   }
   html {
+    background-color: var(--color-bg);
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
     max-width: 100%;
     overflow-x: hidden;
   }
   body {
-    @apply bg-bg font-sans text-fg antialiased;
+    background-color: var(--color-bg);
+    @apply font-sans text-fg antialiased;
     font-size: 16px;
     line-height: 1.5;
     max-width: 100%;
