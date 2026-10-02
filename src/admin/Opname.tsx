@@ -1061,9 +1061,19 @@ export function OpnamePage() {
                   value={qRiwayat}
                   onInput={(e) => setQRiwayat(e.currentTarget.value)}
                   placeholder="Cari nama barang di riwayat…"
-                  class="pl-9 h-9 text-xs"
+                  class="pl-9 pr-8 h-9 text-xs"
                   aria-label="Cari nama barang di riwayat opname"
                 />
+                {qRiwayat && (
+                  <button
+                    type="button"
+                    onClick={() => setQRiwayat('')}
+                    aria-label="Hapus pencarian riwayat"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center rounded-full text-muted-fg hover:text-fg hover:bg-muted cursor-pointer"
+                  >
+                    <X size={13} aria-hidden />
+                  </button>
+                )}
               </div>
             </div>
 

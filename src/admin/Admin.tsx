@@ -16,6 +16,7 @@ import {
   Moon,
   Package,
   Scales,
+  SidebarSimple,
   SignOut,
   SquaresFour,
   Sun,
@@ -92,6 +93,23 @@ export function Admin({
     return 'dash';
   });
   const [more, setMore] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('sg_admin_sidebar_collapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = (val?: boolean) => {
+    setSidebarCollapsed((prev) => {
+      const next = typeof val === 'boolean' ? val : !prev;
+      try {
+        localStorage.setItem('sg_admin_sidebar_collapsed', next ? '1' : '0');
+      } catch {}
+      return next;
+    });
+  };
 
   // Bersihkan sisa token PIN lama dari sessionStorage jika pernah tersimpan
   useEffect(() => {
@@ -214,34 +232,78 @@ export function Admin({
 
   return (
     <Ctx.Provider value={ctx}>
-      <div class="min-h-dvh lg:pl-64">
+      <div class={`min-h-dvh transition-[padding] duration-200 ease-in-out ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
         {/* Sidebar desktop */}
-        <aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-card lg:flex">
-          <div class="flex h-16 items-center border-b border-line px-5">
-            <Logo sub="Admin" />
+        <aside
+          class={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-line bg-card lg:flex transition-[width] duration-200 ease-in-out ${
+            sidebarCollapsed ? 'w-20' : 'w-64'
+          }`}
+        >
+          <div class={`flex h-16 items-center border-b border-line ${sidebarCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+            {sidebarCollapsed ? (
+              <button
+                type="button"
+                onClick={() => toggleSidebar(false)}
+                title="Buka menu sidebar"
+                aria-label="Buka menu sidebar"
+                class="group relative flex size-10 items-center justify-center rounded-ctl border border-line bg-white dark:bg-card p-0.5 shadow-xs hover:border-primary transition-all cursor-pointer"
+              >
+                <Logo compact />
+                <SidebarSimple
+                  size={18}
+                  weight="bold"
+                  class="absolute opacity-0 group-hover:opacity-100 text-primary transition-opacity bg-card/90 size-full p-2.5 rounded-ctl"
+                  aria-hidden
+                />
+              </button>
+            ) : (
+              <>
+                <Logo sub="Admin" />
+                <button
+                  type="button"
+                  onClick={() => toggleSidebar(true)}
+                  title="Tutup menu sidebar"
+                  aria-label="Tutup menu sidebar"
+                  class="flex size-8 items-center justify-center rounded-lg text-muted-fg hover:bg-muted hover:text-fg transition-colors cursor-pointer"
+                >
+                  <SidebarSimple size={19} weight="bold" aria-hidden />
+                </button>
+              </>
+            )}
           </div>
-          <nav class="flex-1 overflow-y-auto p-3" aria-label="Menu admin">
+          <nav class={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'px-2 py-3' : 'p-3'}`} aria-label="Menu admin">
             <ul class="flex flex-col gap-1">
               {TABS.map((t) => (
                 <li key={t.k}>
-                  <NavItem t={t} active={t.k === tab} onClick={() => pilih(t.k)} />
+                  <NavItem t={t} active={t.k === tab} onClick={() => pilih(t.k)} collapsed={sidebarCollapsed} />
                 </li>
               ))}
             </ul>
           </nav>
           {session?.email && (
-            <div class="px-4 py-2 text-xs border-t border-line flex flex-col gap-0.5 bg-muted/40">
-              <span class="text-muted-fg font-medium">Terotentikasi:</span>
-              <span class="font-bold text-fg truncate" title={session.email}>{session.email}</span>
-            </div>
+            sidebarCollapsed ? (
+              <div class="flex justify-center py-2.5 border-t border-line bg-muted/40" title={`Terotentikasi: ${session.email}`}>
+                <div class="flex size-8 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
+                  {session.email.charAt(0).toUpperCase()}
+                </div>
+              </div>
+            ) : (
+              <div class="px-4 py-2 text-xs border-t border-line flex flex-col gap-0.5 bg-muted/40">
+                <span class="text-muted-fg font-medium">Terotentikasi:</span>
+                <span class="font-bold text-fg truncate" title={session.email}>{session.email}</span>
+              </div>
+            )
           )}
-          <div class="flex flex-col gap-1 border-t border-line p-3">
-            <Button variant="ghost" onClick={toggleTheme} class="justify-start">
-              {theme === 'dark' ? <Sun size={20} aria-hidden /> : <Moon size={20} aria-hidden />}
-              {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
-            </Button>
-            <Button variant="ghost" onClick={onTablet} class="justify-start">
-              <DeviceTablet size={20} aria-hidden /> Mode tablet
+          <div class={`flex flex-col gap-1 border-t border-line ${sidebarCollapsed ? 'p-2 items-center' : 'p-3'}`}>
+            <Button
+              variant="ghost"
+              onClick={onTablet}
+              title="Mode tablet"
+              aria-label="Mode tablet"
+              class={sidebarCollapsed ? 'size-11 justify-center p-0' : 'justify-start'}
+            >
+              <DeviceTablet size={20} aria-hidden />
+              {!sidebarCollapsed && <span>Mode tablet</span>}
             </Button>
             <Button
               variant="ghost"
@@ -249,9 +311,12 @@ export function Admin({
                 logout();
                 onLogout?.();
               }}
-              class="justify-start text-danger hover:text-danger hover:bg-danger-soft"
+              title="Keluar Akun"
+              aria-label="Keluar Akun"
+              class={`text-danger hover:text-danger hover:bg-danger-soft ${sidebarCollapsed ? 'size-11 justify-center p-0' : 'justify-start'}`}
             >
-              <SignOut size={20} aria-hidden /> Keluar Akun
+              <SignOut size={20} aria-hidden />
+              {!sidebarCollapsed && <span>Keluar Akun</span>}
             </Button>
           </div>
         </aside>
@@ -412,18 +477,32 @@ export function Admin({
   );
 }
 
-function NavItem({ t, active, onClick }: { t: (typeof TABS)[number]; active: boolean; onClick: () => void }) {
+function NavItem({
+  t,
+  active,
+  onClick,
+  collapsed,
+}: {
+  t: (typeof TABS)[number];
+  active: boolean;
+  onClick: () => void;
+  collapsed?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
+      title={collapsed ? t.label : undefined}
+      aria-label={t.label}
       aria-current={active ? 'page' : undefined}
-      class={`flex min-h-11 w-full items-center gap-3 rounded-ctl px-3 text-[15px] font-semibold transition-colors duration-150 ${
+      class={`flex min-h-11 w-full items-center rounded-ctl text-[15px] font-semibold transition-all duration-150 ${
+        collapsed ? 'justify-center px-0' : 'gap-3 px-3'
+      } ${
         active ? 'bg-primary-soft text-primary' : 'text-fg hover:bg-muted'
       }`}
     >
-      <t.icon size={20} weight={active ? 'fill' : 'regular'} aria-hidden />
-      {t.label}
+      <t.icon size={collapsed ? 22 : 20} weight={active ? 'fill' : 'regular'} aria-hidden />
+      {!collapsed && <span class="truncate">{t.label}</span>}
     </button>
   );
 }

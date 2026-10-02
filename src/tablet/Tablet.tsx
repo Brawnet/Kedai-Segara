@@ -8,6 +8,7 @@ import {
   CheckCircle,
   ClipboardText,
   Clock,
+  CookingPot,
   DownloadSimple,
   House,
   MagnifyingGlass,
@@ -18,9 +19,10 @@ import {
   Sun,
   UploadSimple,
   X,
-  LockKey,
-  Plus,
-} from '@phosphor-icons/react';
+   LockKey,
+   Plus,
+  ChatCenteredText,
+ } from '@phosphor-icons/react';
 import type { ComponentChildren } from 'preact';
 import { call, pesan } from '../lib/api';
 import { useApp } from '../lib/app';
@@ -485,7 +487,7 @@ function Home({
                 {`${salam}, siapa yang pakai tablet?`}
               </h1>
               <p class="mt-2 text-sm text-muted-fg">
-                Sentuh nama Anda untuk mulai mencatat pengambilan bahan dari gudang, pengembalian bahan ke gudang, atau rekap harian dapur.
+                Sentuh nama Anda untuk mulai mencatat pengambilan bahan dari gudang, hasil produksi dapur, atau rekap harian closing.
               </p>
             </div>
 
@@ -623,7 +625,7 @@ function Menu({ k, d, onBack, onAksi, onRekap }: { k: Karyawan; d: TabletData; o
   const st = d.status;
   const items = [
     { key: 'ambil', icon: UploadSimple, title: 'Ambil dari gudang', sub: 'Catat barang yang dibawa ke dapur', tone: 'bg-primary text-white', onClick: () => onAksi('ambil') },
-    { key: 'masuk', icon: DownloadSimple, title: 'Masukkan ke gudang', sub: 'Kembalikan bahan dari dapur ke gudang', tone: 'bg-success text-white', onClick: () => onAksi('masuk') },
+    { key: 'masuk', icon: CookingPot, title: 'Masuk hasil produksi', sub: 'Catat bahan olahan yang selesai dimasak/diproduksi', tone: 'bg-success text-white', onClick: () => onAksi('masuk') },
     {
       key: 'rekap',
       icon: ClipboardText,
@@ -676,7 +678,7 @@ function PilihBarang({
   const masuk = st.aksi === 'masuk';
   const availableBarang = useMemo(() => {
     if (!masuk) return d.barang;
-    return d.barang.filter((b) => b.alur === 'LUAR' && (b.stok_luar ?? 0) > 0);
+    return d.barang.filter((b) => b.bisa_produksi);
   }, [d.barang, masuk]);
 
   const kats = useMemo(() => urutKat(availableBarang, d.urutan), [availableBarang, d.urutan]);
@@ -688,14 +690,14 @@ function PilihBarang({
     <section class="flex flex-col gap-5">
       <BackBar onBack={onBack} label={st.kat ? 'Semua kategori' : 'Menu'} />
       <PageTitle
-        kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang (Dapur → Gudang)' : 'Ambil dari gudang'}`}
-        title={st.kat ?? (masuk ? 'Bahan apa yang dikembalikan ke gudang?' : 'Ambil barang apa?')}
+        kicker={`${st.k.nama} · ${masuk ? 'Masuk hasil produksi (Dapur → Gudang)' : 'Ambil dari gudang'}`}
+        title={st.kat ?? (masuk ? 'Bahan olahan apa yang diproduksi?' : 'Ambil barang apa?')}
         sub={
           availableBarang.length === 0
             ? undefined
             : showKat
             ? masuk
-              ? 'Pilih kategori atau langsung cari bahan yang masih ada di dapur.'
+              ? 'Pilih kategori atau langsung cari barang hasil produksi dapur.'
               : 'Pilih kategori, atau langsung cari nama/kode barang.'
             : undefined
         }
@@ -772,7 +774,7 @@ function PilihBarang({
       {availableBarang.length === 0 ? (
         <Empty>
           {masuk
-            ? 'Tidak ada stok bahan di luar dapur yang dapat dikembalikan ke gudang saat ini.'
+            ? 'Belum ada barang yang diatur untuk produksi karyawan. Atur di menu Admin > Barang > Edit Barang > Bisa Diproduksi Karyawan.'
             : 'Belum ada barang. Tambahkan lewat menu Admin.'}
         </Empty>
       ) : showKat ? (
@@ -846,9 +848,8 @@ function ModalTambahBarang({
 
   const availableBarang = useMemo(() => {
     if (!masuk) return d.barang;
-    return d.barang.filter((b) => b.alur === 'LUAR' && (b.stok_luar ?? 0) > 0);
+    return d.barang.filter((b) => b.bisa_produksi);
   }, [d.barang, masuk]);
-
   const kats = useMemo(() => urutKat(availableBarang, d.urutan), [availableBarang, d.urutan]);
   const query = q.trim();
   const filtered = useMemo(
@@ -860,7 +861,7 @@ function ModalTambahBarang({
     <Dialog
       open
       onClose={onClose}
-      title={masuk ? 'Tambah Bahan yang Dikembalikan' : 'Tambah Barang Lain'}
+      title={masuk ? 'Tambah Hasil Produksi Lain' : 'Tambah Barang Lain'}
       wide
     >
       <div class="flex flex-col gap-4">
@@ -979,6 +980,10 @@ function ModalVerifikasi({
   aksi,
   k,
   busy,
+  batchNote,
+  setBatchNote,
+  showBatchNote,
+  setShowBatchNote,
   onClose,
   onRemoveItem,
   onKonfirmasi,
@@ -987,35 +992,55 @@ function ModalVerifikasi({
   aksi: Aksi;
   k: Karyawan;
   busy: boolean;
+  batchNote: string;
+  setBatchNote: (n: string) => void;
+  showBatchNote: boolean;
+  setShowBatchNote: (s: boolean) => void;
   onClose: () => void;
   onRemoveItem: (index: number) => void;
-  onKonfirmasi: () => void;
+  onKonfirmasi: (batchNote: string) => void;
 }) {
   const masuk = aksi === 'masuk';
   const totalItem = items.length;
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      if (e.key === 'Enter' && !busy && items.length > 0) {
+        e.preventDefault();
+        onKonfirmasi(batchNote);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [busy, items.length, batchNote, onKonfirmasi]);
 
   return (
     <Dialog
       open
       onClose={onClose}
-      title={masuk ? 'Verifikasi Pengembalian ke Gudang' : 'Verifikasi Pengambilan Barang'}
+      title={masuk ? 'Verifikasi Hasil Produksi' : 'Verifikasi Pengambilan Barang'}
       wide
     >
-      <div class="flex flex-col gap-5">
+      <div class="flex flex-col gap-4">
         <div class="rounded-card border border-primary/20 bg-primary-soft/30 p-3.5 text-sm">
           <p class="font-bold text-fg">
-            {k.nama} akan {masuk ? 'mengembalikan' : 'mengambil'} {totalItem} macam bahan:
+            {masuk
+              ? `${k.nama} akan mencatat hasil produksi ${totalItem} macam barang:`
+              : `${k.nama} akan mengambil ${totalItem} macam bahan:`}
           </p>
           <p class="mt-0.5 text-xs text-muted-fg">
-            Pastikan nama barang dan jumlahnya sudah sesuai dengan fisik sebelum konfirmasi.
+            {masuk
+              ? `Dicatat oleh: ${k.nama}. Stok gudang akan otomatis bertambah setelah konfirmasi.`
+              : 'Pastikan nama barang dan jumlahnya sudah sesuai dengan fisik sebelum konfirmasi.'}
           </p>
         </div>
 
-        <div class="max-h-[45vh] overflow-y-auto divide-y divide-line rounded-card border border-line bg-card">
+        <div class="max-h-[40vh] overflow-y-auto divide-y divide-line rounded-card border border-line bg-card">
           {items.map((it, idx) => {
             const j = parseNum(it.val || '0');
             return (
-              <div key={it.b.id} class="flex items-center justify-between p-3.5 gap-3">
+              <div key={it.b.id} class="p-3.5 flex items-center justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <span class="block font-bold text-fg leading-tight">{it.b.nama}</span>
                   <span class="text-xs text-muted-fg">{katOf(it.b)}</span>
@@ -1025,19 +1050,55 @@ function ModalVerifikasi({
                     {nf(j)} {it.b.satuan}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onRemoveItem(idx)}
-                  class="grid size-9 shrink-0 place-items-center rounded-ctl text-muted-fg hover:text-danger hover:bg-danger-soft transition-colors cursor-pointer"
-                  aria-label={`Hapus ${it.b.nama}`}
-                  title="Hapus dari daftar"
-                >
-                  <X size={18} weight="bold" />
-                </button>
+                <div class="flex items-center shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(idx)}
+                    class="grid size-9 shrink-0 place-items-center rounded-ctl text-muted-fg hover:text-danger hover:bg-danger-soft transition-colors cursor-pointer"
+                    aria-label={`Hapus ${it.b.nama}`}
+                    title="Hapus dari daftar"
+                  >
+                    <X size={18} weight="bold" />
+                  </button>
+                </div>
               </div>
             );
           })}
         </div>
+
+        {/* Seksi Catatan Batch */}
+        {showBatchNote || batchNote ? (
+          <div class="rounded-card border border-primary/20 bg-primary-soft/10 p-3 flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-fg flex items-center gap-1.5">
+                <ChatCenteredText size={16} weight="bold" class="text-primary" />
+                <span>Catatan Batch (Semua Barang)</span>
+              </label>
+              <span class="text-[11px] text-muted-fg font-mono">
+                {batchNote.length}/150
+              </span>
+            </div>
+            <input
+              type="text"
+              maxLength={150}
+              value={batchNote}
+              onInput={(e) => setBatchNote((e.target as HTMLInputElement).value)}
+              placeholder="mis. Persiapan event bazar, catering, dll. (opsional)"
+              class="w-full text-sm rounded-ctl border border-line bg-card px-3 py-2 text-fg placeholder:text-muted-fg focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        ) : (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowBatchNote(true)}
+              class="inline-flex items-center gap-2 rounded-ctl border border-dashed border-line hover:border-primary/50 bg-muted/20 hover:bg-primary-soft/20 px-3.5 py-2.5 text-xs font-semibold text-muted-fg hover:text-primary transition-all cursor-pointer w-full justify-center"
+            >
+              <Plus size={15} weight="bold" />
+              <span>+ Tambah Catatan Batch</span>
+            </button>
+          </div>
+        )}
 
         <div class="grid grid-cols-2 gap-3 pt-2 border-t border-line">
           <Button variant="ghost" size="lg" onClick={onClose} disabled={busy}>
@@ -1048,10 +1109,10 @@ function ModalVerifikasi({
             size="lg"
             guard
             disabled={busy || items.length === 0}
-            onClick={onKonfirmasi}
+            onClick={() => onKonfirmasi(batchNote)}
             class="font-bold"
           >
-            {busy ? 'Menyimpan…' : `Konfirmasi ${masuk ? 'Kembalikan' : 'Ambil'}`}
+            {busy ? 'Menyimpan…' : masuk ? 'Simpan Hasil Produksi' : 'Konfirmasi Ambil'}
           </Button>
         </div>
       </div>
@@ -1079,7 +1140,8 @@ function Jumlah({
   const [activeIdx, setActiveIdx] = useState(st.activeIdx || 0);
   const [showModalTambah, setShowModalTambah] = useState(false);
   const [showModalVerifikasi, setShowModalVerifikasi] = useState(false);
-
+  const [batchNote, setBatchNote] = useState('');
+  const [showBatchNote, setShowBatchNote] = useState(false);
   const masuk = st.aksi === 'masuk';
 
   // Current active item
@@ -1157,7 +1219,7 @@ function Jumlah({
 
   const reqIdBase = useRef(Date.now() + '-' + Math.random().toString(36).slice(2, 8));
 
-  const handleKonfirmasiBatch = async () => {
+  const handleKonfirmasiBatch = async (bNote = batchNote) => {
     if (busy || items.length === 0) return;
     const invalidIdx = items.findIndex((it) => !(parseNum(it.val || '0') > 0));
     if (invalidIdx !== -1) {
@@ -1168,16 +1230,19 @@ function Jumlah({
 
     const baseId = reqIdBase.current;
     const results: { b: BarangTablet; j: number }[] = [];
+    const finalCatatan = (bNote || '').trim().slice(0, 150);
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const n = r3(parseNum(item.val));
       const reqId = `${baseId}-${i}`;
+
       if (masuk) {
-        const okRes = await act('masukKaryawan', [st.k.id, item.b.id, n, '', reqId]);
+        const catatanProd = finalCatatan || 'Hasil produksi';
+        const okRes = await act('produksiKaryawan', [st.k.id, item.b.id, n, catatanProd, reqId]);
         if (!okRes) return;
       } else {
-        const res = await act('ambil', [st.k.id, item.b.id, n, reqId]);
+        const res = await act('ambil', [st.k.id, item.b.id, n, finalCatatan, reqId]);
         if (!res) return;
       }
       results.push({ b: item.b, j: n });
@@ -1195,8 +1260,7 @@ function Jumlah({
       else if (e.key === ',' || e.key === '.') press(',');
       else if (e.key === 'Backspace') press('del');
       else if (e.key === 'Enter' && !busy) {
-        if (showModalVerifikasi) handleKonfirmasiBatch();
-        else handlePreVerify();
+        if (!showModalVerifikasi) handlePreVerify();
       } else return;
       e.preventDefault();
     };
@@ -1207,9 +1271,8 @@ function Jumlah({
   if (!b) return null;
 
   const ket = masuk
-    ? `Dikembalikan ke stok gudang (${items.length} barang)`
+    ? `Dicatat oleh ${st.k.nama} · Masuk ke stok gudang (${items.length} barang)`
     : `Dibawa ke dapur, direkap saat closing (${items.length} barang)`;
-
   const selectedIds: Record<string, true> = {};
   items.forEach((it) => {
     selectedIds[it.b.id] = true;
@@ -1222,8 +1285,8 @@ function Jumlah({
       {/* Header and Chips */}
       <div class="flex flex-col gap-3">
         <PageTitle
-          kicker={`${st.k.nama} · ${masuk ? 'Masukkan ke gudang (Dapur → Gudang)' : 'Ambil dari gudang'}`}
-          title={masuk ? 'Kembalikan Bahan ke Gudang' : 'Ambil Bahan dari Gudang'}
+          kicker={`${st.k.nama} · ${masuk ? 'Masuk hasil produksi' : 'Ambil dari gudang'}`}
+          title={masuk ? 'Catat Hasil Produksi ke Gudang' : 'Ambil Bahan dari Gudang'}
           sub="Pilih chip barang di bawah untuk mengatur jumlahnya, atau tekan tombol tambah barang lain."
         />
 
@@ -1317,9 +1380,9 @@ function Jumlah({
                 {nf(b.stok_luar ?? 0)} {b.satuan}
               </span>
             </div>
-            {masuk && j > (b.stok_luar ?? 0) && (
-              <p class="mt-2 text-xs font-medium text-warning">
-                Perhatian: Jumlah yang dimasukkan ({nf(j)} {b.satuan}) melebihi sisa fisik dapur ({nf(b.stok_luar ?? 0)} {b.satuan}).
+            {masuk && b.catatan && (
+              <p class="mt-2 text-xs font-medium text-muted-fg">
+                Catatan: {b.catatan}
               </p>
             )}
 
@@ -1328,7 +1391,9 @@ function Jumlah({
               aria-live="polite"
               aria-label={`Jumlah ${val || '0'} ${b.satuan}`}
             >
-              <p class="text-sm font-semibold text-muted-fg">Jumlah yang {masuk ? 'dikembalikan' : 'diambil'}</p>
+              <p class="text-sm font-semibold text-muted-fg">
+                {masuk ? `Jumlah hasil produksi (oleh ${st.k.nama})` : 'Jumlah yang diambil'}
+              </p>
               <p class="num flex items-baseline gap-2 break-all">
                 <span class={`text-5xl font-extrabold tracking-tight md:text-6xl ${ok ? 'text-fg' : 'text-muted-fg'}`}>
                   {val || '0'}
@@ -1385,7 +1450,7 @@ function Jumlah({
             class="min-h-16 flex-col gap-0.5 text-lg"
           >
             <span>
-              Periksa & {masuk ? 'Kembalikan' : 'Ambil'} ({items.length} barang)
+              Periksa & {masuk ? 'Simpan Produksi' : 'Ambil'} ({items.length} barang)
             </span>
             <span class="text-[12px] font-medium opacity-90">{ket}</span>
           </Button>
@@ -1408,6 +1473,10 @@ function Jumlah({
           aksi={st.aksi}
           k={st.k}
           busy={busy}
+          batchNote={batchNote}
+          setBatchNote={setBatchNote}
+          showBatchNote={showBatchNote}
+          setShowBatchNote={setShowBatchNote}
           onClose={() => setShowModalVerifikasi(false)}
           onRemoveItem={(idx) => {
             handleRemoveItem(idx);
@@ -1445,7 +1514,7 @@ function Sukses({
       <div>
         <p class="text-[13px] font-bold uppercase tracking-wide text-success">Tercatat</p>
         <h1 class="mt-1 text-2xl font-extrabold leading-tight text-balance md:text-3xl">
-          {st.k.nama} berhasil {m ? 'mengembalikan' : 'mengambil'} {totalItem} macam barang {m ? 'ke gudang' : ''}
+          {st.k.nama} berhasil {m ? 'mencatat' : 'mengambil'} {totalItem} macam {m ? 'hasil produksi ke gudang' : 'barang'}
         </h1>
       </div>
       <div class="w-full rounded-card border border-line bg-card divide-y divide-line text-left shadow-sm">
@@ -1460,7 +1529,7 @@ function Sukses({
       </div>
       <div class="grid w-full gap-3 sm:grid-cols-3">
         <Button variant="primary" size="lg" onClick={onLagi}>
-          <ArrowRight size={20} aria-hidden /> {m ? 'Kembalikan lagi' : 'Ambil lagi'}
+          <ArrowRight size={20} aria-hidden /> {m ? 'Produksi lagi' : 'Ambil lagi'}
         </Button>
         <Button size="lg" onClick={onMenu}>
           Menu

@@ -11,16 +11,18 @@ import {
   GoogleLogo,
   Key,
   Link,
-  LockKey,
-  Moon,
-  ShieldCheck,
-  Sun,
-  Trash,
+   LockKey,
+   Moon,
+  PencilSimple,
+   ShieldCheck,
+   Sun,
+   Trash,
   UserPlus,
   Warning,
   WarningCircle,
 } from '@phosphor-icons/react';
 import { call, pesan } from '../lib/api';
+import { formatNamaAdmin } from '../lib/format';
 import { useApp } from '../lib/app';
 import type { AuthAccount, LoginLog, PublicAuthConfig } from '../lib/types';
 import { Button, Card, Confirm, Dialog, Field, Input, PageTitle, Select, Tag } from '../components/ui';
@@ -50,8 +52,13 @@ export function PengaturanPage() {
   const [modalTambah, setModalTambah] = useState(false);
   const [emailBaru, setEmailBaru] = useState('');
   const [roleBaru, setRoleBaru] = useState<'admin' | 'tablet'>('tablet');
-  const [errTambah, setErrTambah] = useState('');
-  const [hapusTarget, setHapusTarget] = useState<string | null>(null);
+   const [errTambah, setErrTambah] = useState('');
+   const [hapusTarget, setHapusTarget] = useState<string | null>(null);
+  const [namaBaru, setNamaBaru] = useState('');
+  const [editTarget, setEditTarget] = useState<AuthAccount | null>(null);
+  const [namaEdit, setNamaEdit] = useState('');
+  const [roleEdit, setRoleEdit] = useState<'admin' | 'tablet'>('tablet');
+  const [errEdit, setErrEdit] = useState('');
 
   // Google OAuth Client ID
   const [authConfig, setAuthConfig] = useState<PublicAuthConfig>({ hasGoogleAuth: false, googleClientId: '' });
@@ -133,11 +140,28 @@ export function PengaturanPage() {
       setErrTambah('Format email tidak valid.');
       return;
     }
-    const ok = await A('simpanAuthAccount', [em, roleBaru, true], 'Akun berhasil ditambahkan ke whitelist');
+    const ok = await A('simpanAuthAccount', [em, roleBaru, true, namaBaru.trim()], 'Akun berhasil ditambahkan ke whitelist');
+     if (ok) {
+       setModalTambah(false);
+       setEmailBaru('');
+      setNamaBaru('');
+       setRoleBaru('tablet');
+       muatAkun();
+     }
+  };
+
+  const handleSimpanEdit = async (e: Event) => {
+    e.preventDefault();
+    if (!editTarget) return;
+    setErrEdit('');
+    const ok = await A(
+      'simpanAuthAccount',
+      [editTarget.email, roleEdit, editTarget.aktif, namaEdit.trim()],
+      'Perubahan akun berhasil disimpan',
+    );
     if (ok) {
-      setModalTambah(false);
-      setEmailBaru('');
-      setRoleBaru('tablet');
+      setEditTarget(null);
+      setNamaEdit('');
       muatAkun();
     }
   };
@@ -145,7 +169,7 @@ export function PengaturanPage() {
   const toggleAktifAkun = async (acc: AuthAccount) => {
     const ok = await A(
       'simpanAuthAccount',
-      [acc.email, acc.role, !acc.aktif],
+      [acc.email, acc.role, !acc.aktif, acc.nama || ''],
       acc.aktif ? 'Akses akun dinonaktifkan' : 'Akses akun diaktifkan',
     );
     if (ok) muatAkun();
@@ -426,13 +450,20 @@ export function PengaturanPage() {
                   accounts.map((acc) => (
                     <tr key={acc.email} class="transition-colors hover:bg-bg">
                       <td class="px-4 py-3 font-medium">
-                        <div class="flex items-center gap-2">
-                          {acc.email.endsWith('@gmail.com') ? (
-                            <GoogleLogo size={18} weight="bold" class="text-primary shrink-0" aria-hidden />
-                          ) : (
-                            <EnvelopeSimple size={18} class="text-muted-fg shrink-0" aria-hidden />
+                        <div class="flex flex-col">
+                          <div class="flex items-center gap-2">
+                            {acc.email.endsWith('@gmail.com') ? (
+                              <GoogleLogo size={18} weight="bold" class="text-primary shrink-0" aria-hidden />
+                            ) : (
+                              <EnvelopeSimple size={18} class="text-muted-fg shrink-0" aria-hidden />
+                            )}
+                            <span class="font-semibold text-fg break-all">{acc.email}</span>
+                          </div>
+                          {acc.role === 'admin' && (
+                            <span class="text-xs text-muted-fg mt-0.5 pl-6.5">
+                              Nama Admin: <strong class="text-fg font-semibold">{acc.nama || `${formatNamaAdmin('', acc.email)} (default)`}</strong>
+                            </span>
                           )}
-                          <span class="font-semibold text-fg break-all">{acc.email}</span>
                         </div>
                       </td>
                       <td class="px-4 py-3">
@@ -488,15 +519,31 @@ export function PengaturanPage() {
                         </button>
                       </td>
                       <td class="px-4 py-3 text-right">
-                        <Button
-                          variant="danger-ghost"
-                          size="sm"
-                          onClick={() => setHapusTarget(acc.email)}
-                          aria-label={`Hapus ${acc.email}`}
-                          title="Hapus dari whitelist"
-                        >
-                          <Trash size={16} aria-hidden />
-                        </Button>
+                        <div class="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditTarget(acc);
+                              setNamaEdit(acc.nama || '');
+                              setRoleEdit(acc.role);
+                              setErrEdit('');
+                            }}
+                            aria-label={`Edit ${acc.email}`}
+                            title="Edit nama dan role akun"
+                          >
+                            <PencilSimple size={16} aria-hidden />
+                          </Button>
+                          <Button
+                            variant="danger-ghost"
+                            size="sm"
+                            onClick={() => setHapusTarget(acc.email)}
+                            aria-label={`Hapus ${acc.email}`}
+                            title="Hapus dari whitelist"
+                          >
+                            <Trash size={16} aria-hidden />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -656,12 +703,97 @@ export function PengaturanPage() {
             )}
           </Field>
           {roleBaru === 'admin' && (
+            <Field
+              label="Nama Panggilan / Nama Admin"
+              hint={`Nama yang dicatat di transaksi saat admin ini input stok/produksi (opsional). Default: ${formatNamaAdmin('', emailBaru) || 'Nama email'}`}
+            >
+              {(id, dId) => (
+                <Input
+                  id={id}
+                  type="text"
+                  maxLength={50}
+                  value={namaBaru}
+                  onInput={(e) => setNamaBaru(e.currentTarget.value)}
+                  placeholder={`mis. Budi (default: ${formatNamaAdmin('', emailBaru) || 'Nama email'})`}
+                  aria-describedby={dId}
+                />
+              )}
+            </Field>
+          )}
+          {roleBaru === 'admin' && (
             <div class="rounded-ctl bg-primary-soft p-2.5 text-xs text-primary font-medium flex items-center gap-2">
               <LockKey size={16} weight="bold" class="shrink-0" aria-hidden />
               <span>Admin baru akan dipandu untuk membuat PIN pribadinya saat pertama kali masuk.</span>
             </div>
           )}
         </form>
+      </Dialog>
+
+      {/* Dialog Edit Akun Whitelist */}
+      <Dialog
+        open={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        title="Edit Akun Whitelist"
+        footer={
+          <div class="flex w-full justify-end gap-2">
+            <Button onClick={() => setEditTarget(null)}>Batal</Button>
+            <Button variant="primary" type="submit" form="form-edit-akun">
+              Simpan Perubahan
+            </Button>
+          </div>
+        }
+      >
+        {editTarget && (
+          <form id="form-edit-akun" onSubmit={handleSimpanEdit} class="flex flex-col gap-4">
+            {errEdit && (
+              <div class="rounded-ctl border border-danger/30 bg-danger-soft p-3 text-sm text-danger font-medium">
+                {errEdit}
+              </div>
+            )}
+            <Field label="Alamat Email">
+              {(id) => (
+                <Input
+                  id={id}
+                  type="email"
+                  disabled
+                  value={editTarget.email}
+                  class="opacity-70 cursor-not-allowed bg-muted"
+                />
+              )}
+            </Field>
+            <Field label="Hak Akses (Role)" hint="Pilih hak akses untuk akun ini.">
+              {(id) => (
+                <Select
+                  id={id}
+                  value={roleEdit}
+                  onChange={(e) => setRoleEdit(e.currentTarget.value as 'admin' | 'tablet')}
+                >
+                  <option value="tablet">Tablet Saja (Perangkat Dapur/Resto - Sesi 30 Hari)</option>
+                  <option value="admin">Admin Penuh (Dashboard, Master, Rekap, Pengaturan - 2FA PIN)</option>
+                </Select>
+              )}
+            </Field>
+            {roleEdit === 'admin' && (
+              <Field
+                label="Nama Panggilan / Nama Admin"
+                hint={`Nama yang dicatat di transaksi saat admin ini input stok/produksi. Default: ${formatNamaAdmin('', editTarget.email)}`}
+              >
+                {(id, dId) => (
+                  <Input
+                    id={id}
+                    type="text"
+                    maxLength={50}
+                    value={namaEdit}
+                    onInput={(e) => setNamaEdit(e.currentTarget.value)}
+                    placeholder={`mis. Budi (default: ${formatNamaAdmin('', editTarget.email)})`}
+                    aria-describedby={dId}
+                    autoFocus
+                  />
+                )}
+              </Field>
+            )}
+          </form>
+        )}
       </Dialog>
 
       {/* Konfirmasi Hapus Akun */}

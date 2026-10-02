@@ -33,14 +33,14 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
   const properties: Record<string, string> = {
     SS_ID: 'test-ss-id',
     ADMIN_PIN: '12345',
-    SKEMA: '5',
+    SKEMA: '6',
     SKIP_AUTH_SESSION: '1',
   };
   const sheetsData: Record<string, Cell[][]> = {
     Barang: [
-      ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan'],
-      ['b1', 'Minyak goreng', 'liter', 'Bahan', 20, 0, 5, 'LUAR', true, 'MG', ''],
-      ['b2', 'Plastik Sampah S', 'Lbr', 'Cleaning', 10, 0, 2, 'LANGSUNG_HABIS', true, 'PS', ''],
+      ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'bisa_produksi'],
+      ['b1', 'Minyak goreng', 'liter', 'Bahan', 20, 0, 5, 'LUAR', true, 'MG', '', true],
+      ['b2', 'Plastik Sampah S', 'Lbr', 'Cleaning', 10, 0, 2, 'LANGSUNG_HABIS', true, 'PS', '', false],
     ],
     Karyawan: [
       ['id', 'nama', 'aktif', 'pin'],
@@ -308,31 +308,40 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     assert.equal(num_(null), 0);
   });
 
-  it('masukKaryawan validates active employee and writes Transaksi with alur DALAM', () => {
+  it('produksiKaryawan validates active employee, enforces bisa_produksi, and writes Transaksi with jenis PRODUKSI', () => {
     const { context, sheetsData } = createAppsScriptEnvironment();
-    const masukKaryawan = runInContext('masukKaryawan', context);
+    const produksiKaryawan = runInContext('produksiKaryawan', context);
 
     // Inactive employee k2 must be rejected
     assert.throws(
-      () => masukKaryawan('k2', 'b1', 10, 'Supplier X'),
+      () => produksiKaryawan('k2', 'b1', 10, 'Catatan'),
       /Karyawan tidak aktif atau tidak ditemukan/,
     );
 
-    // Active employee k1 succeeds
-    const res = masukKaryawan('k1', 'b1', 5, 'Supplier Makmur');
+    // Non-producible item b2 must be rejected
+    assert.throws(
+      () => produksiKaryawan('k1', 'b2', 5, 'Catatan'),
+      /Barang ini tidak diatur untuk produksi karyawan/,
+    );
+
+    // Active employee k1 with producible item b1 succeeds
+    const res = produksiKaryawan('k1', 'b1', 5, 'Batch pagi');
     assert.equal(res, true);
 
     // Verify stock_dalam updated
-    const barangRow = sheetsData.Barang.find((r) => r[0] === 'b1');
+    const barangRow = sheetsData.Barang.find((r) => r[0] === 'b1')!;
     assert.equal(barangRow[4], 25);
 
     // Verify Transaksi entry
-    const txRow = sheetsData.Transaksi[sheetsData.Transaksi.length - 1];
-    assert.equal(txRow[3], 'MASUK');
+    const txRow = sheetsData.Transaksi[sheetsData.Transaksi.length - 1]!;
+    assert.equal(txRow[3], 'PRODUKSI');
     assert.equal(txRow[4], 'b1');
     assert.equal(txRow[6], 5);
     assert.equal(txRow[7], 'k1');
+    assert.equal(txRow[8], 'Budi');
     assert.equal(txRow[9], 'DALAM');
+    assert.equal(txRow[12], 'karyawan');
+    assert.equal(txRow[13], 'Batch pagi');
   });
 
   it('ambil validates active employee and updates stock balances', () => {
@@ -828,6 +837,30 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
       () => simpanAuthAccount(pin, 'owner@segara.com', 'tablet', true),
       /Tidak dapat menonaktifkan atau mengubah role admin aktif terakhir/,
     );
+  });
+
+  it('simpanAuthAccount persists custom nama and stokMasuk writes admin name in Transaksi', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const simpanAuthAccount = runInContext('simpanAuthAccount', context);
+    const getAuthAccounts = runInContext('getAuthAccounts', context);
+    const stokMasuk = runInContext('stokMasuk', context);
+
+    // 1. Simpan akun dengan nama
+    simpanAuthAccount(pin, 'budi@segara.com', 'admin', true, 'Budi Santoso');
+    const accs = getAuthAccounts(pin);
+    const budi = accs.find((a: { email: string; nama?: string }) => a.email === 'budi@segara.com');
+    assert.ok(budi);
+    assert.equal(budi.nama, 'Budi Santoso');
+
+    // 2. Transaksi stokMasuk dengan token milik budi
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+    const sess = buatSessionToken_('budi@segara.com', 'admin');
+    stokMasuk(pin, 'b1', 10, 'Supplier Utama', 'Catatan masuk', 'client-tx-budi', sess.token);
+
+    const lastTx = sheetsData.Transaksi[sheetsData.Transaksi.length - 1];
+    assert.equal(lastTx[3], 'MASUK');
+    assert.equal(lastTx[8], 'Budi Santoso'); // Column 8 is karyawan in sheet Transaksi
+    assert.equal(lastTx[12], 'budi@segara.com'); // Column 12 is dicatat_oleh
   });
 
   it('hapusAuthAccount prevents deleting the last active admin', () => {

@@ -38,6 +38,7 @@ const kosong: Form = {
   ambang_min: '',
   aktif: true,
   stok_awal: '0',
+  bisa_produksi: false,
 };
 
 export function BarangPage() {
@@ -139,6 +140,7 @@ export function BarangPage() {
             ...b,
             ambang_min: String(b.ambang_min),
             stok_awal: '',
+            bisa_produksi: Boolean(b.bisa_produksi),
           }
         : { ...kosong },
     );
@@ -182,6 +184,7 @@ export function BarangPage() {
                 </span>
               )}
               {b.alur === 'LANGSUNG_HABIS' && <Tag tone="neutral">Langsung Habis</Tag>}
+              {b.bisa_produksi && <Tag tone="primary">Produksi</Tag>}
               {!b.aktif && <Tag tone="danger">Arsip</Tag>}
               {menipis && (
                 <Tag tone="warning">
@@ -998,6 +1001,22 @@ export function BarangPage() {
                     )}
                   </Field>
                 )}
+                <Field
+                  label="Bisa Diproduksi Karyawan"
+                  hint="Izinkan staf mencatat hasil olahan/batching item ini di tablet dapur"
+                >
+                  {(id) => (
+                    <Select
+                      id={id}
+                      value={f.bisa_produksi ? '1' : '0'}
+                      onChange={(e) => up({ bisa_produksi: e.currentTarget.value === '1' })}
+                      class="min-h-11 text-base"
+                    >
+                      <option value="0">Tidak</option>
+                      <option value="1">Ya (Dapat diproduksi staf)</option>
+                    </Select>
+                  )}
+                </Field>
                 <Field label="Catatan" hint="Keterangan tambahan kemasan/penyimpanan">
                   {(id) => (
                     <Input
