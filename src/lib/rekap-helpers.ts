@@ -57,3 +57,58 @@ export function hitungBelumRekap(
 
   return { txBelumRekap, ringkasanBarang };
 }
+
+export const SNOOZE_REKAP_KEY = 'sg_snooze_rekap_until';
+export const SNOOZE_DURATION_MS = 12 * 60 * 60 * 1000; // 12 jam
+
+export function getRekapSnoozeUntil(storage?: Storage): number {
+  try {
+    const s = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+    const val = s?.getItem?.(SNOOZE_REKAP_KEY);
+    return val ? Number(val) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function isRekapSnoozed(storage?: Storage, now = Date.now()): boolean {
+  return getRekapSnoozeUntil(storage) > now;
+}
+
+export function setRekapSnooze(
+  durationMs = SNOOZE_DURATION_MS,
+  storage?: Storage,
+  now = Date.now(),
+): number {
+  const until = now + durationMs;
+  try {
+    const s = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+    s?.setItem?.(SNOOZE_REKAP_KEY, String(until));
+  } catch {}
+  return until;
+}
+
+export function clearRekapSnooze(storage?: Storage): void {
+  try {
+    const s = storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+    s?.removeItem?.(SNOOZE_REKAP_KEY);
+  } catch {}
+}
+
+export function formatSnoozeUntil(until: number): string {
+  if (!until || until <= Date.now()) return '';
+  const d = new Date(until);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const today = new Date();
+  if (
+    d.getDate() === today.getDate() &&
+    d.getMonth() === today.getMonth() &&
+    d.getFullYear() === today.getFullYear()
+  ) {
+    return `pukul ${hh}:${mm} hari ini`;
+  }
+  const dd = String(d.getDate()).padStart(2, '0');
+  const bb = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${bb} pukul ${hh}:${mm}`;
+}

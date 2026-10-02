@@ -14,6 +14,7 @@ import type { Barang } from '../lib/types';
 import { Banner, Button, Card, Input, PageTitle, Select, StockGauge, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
 import { DetailBelumRekapDialog } from './DetailBelumRekapDialog';
+import { getRekapSnoozeUntil } from '../lib/rekap-helpers';
 
 export { total, menipis };
 
@@ -103,6 +104,8 @@ export function Dashboard() {
   const [onlyLow, setOnlyLow] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const [modalDetailRekap, setModalDetailRekap] = useState(false);
+  const [snoozeUntil, setSnoozeUntil] = useState(() => getRekapSnoozeUntil());
+  const isSnoozed = snoozeUntil > Date.now();
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -247,43 +250,45 @@ export function Dashboard() {
 
   return (
     <div class="flex flex-col gap-6">
-      {st.lewatHari ? (
-        <Banner
-          key={`rekap-danger-${st.belumRekap}`}
-          tone="danger"
-          action={
-            <Button
-              size="sm"
-              variant="danger"
-              class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
-              onClick={() => setModalDetailRekap(true)}
-            >
-              <Eye size={16} weight="bold" aria-hidden />
-              <span>Lihat detail</span>
-            </Button>
-          }
-        >
-          Rekap tertunda: {st.belumRekap} pengambilan belum direkap, ada yang dari hari sebelumnya.
-        </Banner>
-      ) : st.belumRekap ? (
-        <Banner
-          key={`rekap-warning-${st.belumRekap}`}
-          tone="warning"
-          action={
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
-              onClick={() => setModalDetailRekap(true)}
-            >
-              <Eye size={16} weight="bold" aria-hidden />
-              <span>Lihat detail</span>
-            </Button>
-          }
-        >
-          {st.belumRekap} pengambilan belum direkap.
-        </Banner>
-      ) : null}
+      {!isSnoozed && (
+        st.lewatHari ? (
+          <Banner
+            key={`rekap-danger-${st.belumRekap}`}
+            tone="danger"
+            action={
+              <Button
+                size="sm"
+                variant="danger"
+                class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
+                onClick={() => setModalDetailRekap(true)}
+              >
+                <Eye size={16} weight="bold" aria-hidden />
+                <span>Lihat detail</span>
+              </Button>
+            }
+          >
+            Rekap tertunda: {st.belumRekap} pengambilan belum direkap, ada yang dari hari sebelumnya.
+          </Banner>
+        ) : st.belumRekap ? (
+          <Banner
+            key={`rekap-warning-${st.belumRekap}`}
+            tone="warning"
+            action={
+              <Button
+                size="sm"
+                variant="secondary"
+                class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
+                onClick={() => setModalDetailRekap(true)}
+              >
+                <Eye size={16} weight="bold" aria-hidden />
+                <span>Lihat detail</span>
+              </Button>
+            }
+          >
+            {st.belumRekap} pengambilan belum direkap.
+          </Banner>
+        ) : null
+      )}
 
       <PageTitle kicker="Ringkasan" title="Stok saat ini" />
 
@@ -316,10 +321,22 @@ export function Dashboard() {
           icon={ClipboardText}
           label="Belum direkap"
           value={st.belumRekap}
-          sublabel={st.belumRekap > 0 ? 'Klik untuk lihat detail' : 'Semua tersinkron'}
-          tone={st.belumRekap > 0 ? 'bg-danger-soft text-danger' : 'bg-muted text-muted-fg'}
-          badge={st.lewatHari ? 'Lewat hari' : undefined}
-          badgeTone="danger"
+          sublabel={
+            st.belumRekap > 0
+              ? isSnoozed
+                ? 'Disenyapkan 12j · Klik untuk buka'
+                : 'Klik untuk lihat detail'
+              : 'Semua tersinkron'
+          }
+          tone={
+            st.belumRekap > 0
+              ? isSnoozed
+                ? 'bg-muted text-muted-fg'
+                : 'bg-danger-soft text-danger'
+              : 'bg-muted text-muted-fg'
+          }
+          badge={isSnoozed ? 'Ditunda 12j' : st.lewatHari ? 'Lewat hari' : undefined}
+          badgeTone={isSnoozed ? 'primary' : 'danger'}
           onClick={st.belumRekap > 0 ? () => setModalDetailRekap(true) : undefined}
         />
         <StatCard
@@ -571,6 +588,7 @@ export function Dashboard() {
       <DetailBelumRekapDialog
         open={modalDetailRekap}
         onClose={() => setModalDetailRekap(false)}
+        onSnoozeChange={(snoozed) => setSnoozeUntil(snoozed ? getRekapSnoozeUntil() : 0)}
       />
     </div>
   );

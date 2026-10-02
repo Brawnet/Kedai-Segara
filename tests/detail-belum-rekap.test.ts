@@ -1,7 +1,16 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createMock } from '../src/lib/mock.ts';
-import { hitungBelumRekap } from '../src/lib/rekap-helpers.ts';
+import {
+  clearRekapSnooze,
+  formatSnoozeUntil,
+  getRekapSnoozeUntil,
+  hitungBelumRekap,
+  isRekapSnoozed,
+  setRekapSnooze,
+  SNOOZE_DURATION_MS,
+  SNOOZE_REKAP_KEY,
+} from '../src/lib/rekap-helpers.ts';
 import type { Transaksi } from '../src/lib/types.ts';
 
 describe('Detail Belum Rekap logic & invariants', () => {
@@ -257,5 +266,51 @@ describe('Detail Belum Rekap logic & invariants', () => {
     // Stok kembali pulih
     const matchaFinal = adminAfterBatal.barang.find((b) => b.id === matcha.id)!;
     assert.equal(matchaFinal.stok_dalam, 1000);
+  });
+
+  it('snooze helpers correctly persist 12-hour snooze, check expiry, and format time', () => {
+    const storageStore: Record<string, string> = {};
+    const mockStorage = {
+      getItem: (k: string) => storageStore[k] || null,
+      setItem: (k: string, v: string) => {
+        storageStore[k] = v;
+      },
+      removeItem: (k: string) => {
+        delete storageStore[k];
+      },
+      clear: () => {
+        for (const k of Object.keys(storageStore)) delete storageStore[k];
+      },
+      length: 0,
+      key: () => null,
+    } as unknown as Storage;
+
+    const now = new Date(2026, 9, 2, 12, 0, 0).getTime();
+
+    // Awalnya tidak snoozed
+    assert.equal(isRekapSnoozed(mockStorage, now), false);
+    assert.equal(getRekapSnoozeUntil(mockStorage), 0);
+
+    // Set snooze 12 jam
+    const until = setRekapSnooze(SNOOZE_DURATION_MS, mockStorage, now);
+    assert.equal(until, now + 12 * 3600 * 1000);
+    assert.equal(mockStorage.getItem(SNOOZE_REKAP_KEY), String(until));
+
+    // Cek status snoozed pada jam 15:00 (3 jam setelahnya) -> masih snoozed
+    const jam15 = now + 3 * 3600 * 1000;
+    assert.equal(isRekapSnoozed(mockStorage, jam15), true);
+
+    // Cek status snoozed pada jam 01:00 besok (13 jam setelahnya) -> sudah expired
+    const jam13Nanti = now + 13 * 3600 * 1000;
+    assert.equal(isRekapSnoozed(mockStorage, jam13Nanti), false);
+
+    // Format waktu
+    const formatted = formatSnoozeUntil(until);
+    assert.ok(formatted.includes('pukul 00:00'));
+
+    // Clear snooze (aktifkan kembali)
+    clearRekapSnooze(mockStorage);
+    assert.equal(isRekapSnoozed(mockStorage, now), false);
+    assert.equal(getRekapSnoozeUntil(mockStorage), 0);
   });
 });
