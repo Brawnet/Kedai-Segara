@@ -1,20 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   ArrowSquareOut,
+  BellSlash,
   ClipboardText,
   Eye,
   MagnifyingGlass,
   Package,
   Warning,
   X,
+  type Icon,
 } from '@phosphor-icons/react';
-import type { Icon } from '@phosphor-icons/react';
 import { alurLabel, cocok, grupKat, katOf, menipis, nf, total, urutKat } from '../lib/format';
 import type { Barang } from '../lib/types';
 import { Banner, Button, Card, Input, PageTitle, Select, StockGauge, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
 import { DetailBelumRekapDialog } from './DetailBelumRekapDialog';
-import { getRekapSnoozeUntil } from '../lib/rekap-helpers';
+import { clearRekapSnooze, getRekapSnoozeUntil } from '../lib/rekap-helpers';
 
 export { total, menipis };
 
@@ -250,45 +251,72 @@ export function Dashboard() {
 
   return (
     <div class="flex flex-col gap-6">
-      {!isSnoozed && (
-        st.lewatHari ? (
-          <Banner
-            key={`rekap-danger-${st.belumRekap}`}
-            tone="danger"
-            action={
-              <Button
-                size="sm"
-                variant="danger"
-                class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
-                onClick={() => setModalDetailRekap(true)}
-              >
-                <Eye size={16} weight="bold" aria-hidden />
-                <span>Lihat detail</span>
-              </Button>
-            }
-          >
-            Rekap tertunda: {st.belumRekap} pengambilan belum direkap, ada yang dari hari sebelumnya.
-          </Banner>
-        ) : st.belumRekap ? (
-          <Banner
-            key={`rekap-warning-${st.belumRekap}`}
-            tone="warning"
-            action={
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
-                onClick={() => setModalDetailRekap(true)}
-              >
-                <Eye size={16} weight="bold" aria-hidden />
-                <span>Lihat detail</span>
-              </Button>
-            }
-          >
-            {st.belumRekap} pengambilan belum direkap.
-          </Banner>
-        ) : null
-      )}
+      {isSnoozed && (st.lewatHari || st.belumRekap > 0) ? (
+        <div class="flex items-center justify-between gap-3 rounded-card border border-line bg-muted/40 px-3.5 py-2.5 text-xs text-muted-fg">
+          <div class="flex items-center gap-2 min-w-0">
+            <BellSlash size={16} weight="bold" class="text-primary shrink-0" aria-hidden />
+            <span class="truncate">
+              Pengingat rekap sedang disenyapkan ({st.belumRekap} pengambilan belum direkap).
+            </span>
+          </div>
+          <div class="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setModalDetailRekap(true)}
+              class="font-semibold text-fg hover:underline cursor-pointer"
+            >
+              Lihat detail
+            </button>
+            <span class="text-line-strong">·</span>
+            <button
+              type="button"
+              onClick={() => {
+                clearRekapSnooze();
+                setSnoozeUntil(0);
+              }}
+              class="font-bold text-primary hover:underline cursor-pointer"
+            >
+              Aktifkan kembali
+            </button>
+          </div>
+        </div>
+      ) : st.lewatHari ? (
+        <Banner
+          key={`rekap-danger-${st.belumRekap}`}
+          tone="danger"
+          action={
+            <Button
+              size="sm"
+              variant="danger"
+              class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
+              onClick={() => setModalDetailRekap(true)}
+            >
+              <Eye size={16} weight="bold" aria-hidden />
+              <span>Lihat detail</span>
+            </Button>
+          }
+        >
+          Rekap tertunda: {st.belumRekap} pengambilan belum direkap, ada yang dari hari sebelumnya.
+        </Banner>
+      ) : st.belumRekap ? (
+        <Banner
+          key={`rekap-warning-${st.belumRekap}`}
+          tone="warning"
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              class="h-9 min-h-9 px-3 text-xs font-semibold sm:text-sm whitespace-nowrap shadow-xs cursor-pointer"
+              onClick={() => setModalDetailRekap(true)}
+            >
+              <Eye size={16} weight="bold" aria-hidden />
+              <span>Lihat detail</span>
+            </Button>
+          }
+        >
+          {st.belumRekap} pengambilan belum direkap.
+        </Banner>
+      ) : null}
 
       <PageTitle kicker="Ringkasan" title="Stok saat ini" />
 
