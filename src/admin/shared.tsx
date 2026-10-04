@@ -37,6 +37,7 @@ export function useMedia(q: string) {
 
 export interface Col<T> {
   label: string;
+  header?: ComponentChildren;
   cell: (r: T) => ComponentChildren;
   align?: 'left' | 'center' | 'right';
   /** Lebar kolom di tabel, mis. "w-48". */
@@ -242,7 +243,7 @@ export function DataTable<T>({
              <tr>
                {cols.map((c) => (
                 <th key={c.label} scope="col" class={`whitespace-nowrap px-4 py-3 font-semibold ${c.align === 'center' ? 'text-center' : c.align === 'right' ? 'text-right' : 'text-left'} ${c.w ?? ''}`}>
-                   {c.bare && !c.label.trim() ? <span class="sr-only">Aksi</span> : c.label}
+                   {c.header ?? (c.bare && !c.label.trim() ? <span class="sr-only">Aksi</span> : c.label)}
                  </th>
                ))}
              </tr>

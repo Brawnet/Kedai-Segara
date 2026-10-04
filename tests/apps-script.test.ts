@@ -29,11 +29,11 @@ function display(v: Cell): string {
 }
 const cloneCell = (v: Cell): Cell => (v instanceof Date ? new Date(v.getTime()) : v);
 
-export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
+export function createAppsScriptEnvironment(opts: { uuid?: () => string; activeUserEmail?: string } = {}) {
   const properties: Record<string, string> = {
     SS_ID: 'test-ss-id',
     ADMIN_PIN: '12345',
-    SKEMA: '6',
+    SKEMA: '7',
     SKIP_AUTH_SESSION: '1',
   };
   const sheetsData: Record<string, Cell[][]> = {
@@ -51,10 +51,10 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
       ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
     ],
     Rekap: [
-      ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
+      ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin', 'status', 'approved_ts'],
     ],
     RekapBaris: [
-      ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan'],
+      ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan', 'terjual', 'selisih'],
     ],
     Opname: [
       ['id', 'ts', 'waktu', 'barang_id', 'barang', 'sistem', 'fisik', 'selisih'],
@@ -184,6 +184,9 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
       getScriptTimeZone: () => 'Asia/Jakarta',
       getEffectiveUser: () => ({
         getEmail: () => 'owner@segara.com',
+      }),
+      getActiveUser: () => ({
+        getEmail: () => (opts.activeUserEmail !== undefined ? opts.activeUserEmail : 'owner@segara.com'),
       }),
     },
     Utilities: {
@@ -377,7 +380,7 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     const ambilRes = ambil('k1', 'b1', 4);
     const txId = ambilRes.tx.id;
 
-    const ok = batalAmbil(txId, '');
+    const ok = batalAmbil(txId, '12345');
     assert.equal(ok, true);
 
     const b1 = sheetsData.Barang.find((r) => r[0] === 'b1');
@@ -411,7 +414,7 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     assert.equal(txRow[9], 'LANGSUNG_HABIS');
 
     // Batal ambil
-    const ok = batalAmbil(res.tx.id, '');
+    const ok = batalAmbil(res.tx.id, '12345');
     assert.equal(ok, true);
 
     const b2AfterBatal = sheetsData.Barang.find((r: unknown[]) => r[0] === 'b2');
@@ -651,7 +654,7 @@ describe('Kode.gs regressions (real Google Sheets coercion & integrity)', () => 
     const ambil = runInContext('ambil', context);
     const batalAmbil = runInContext('batalAmbil', context);
     const r = ambil('k1', 'b1', 2);
-    assert.ok(batalAmbil(r.tx.id, ''));
+    assert.ok(batalAmbil(r.tx.id, '12345'));
   });
 
   it('text that looks like a date or number is kept verbatim', () => {
@@ -916,31 +919,45 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     );
   });
 
-  it('supports dummy login directly for @segara.com accounts with 123456 code in Kode.gs', () => {
-    const { context, properties } = createAppsScriptEnvironment();
+  it('generates real 6-digit OTP, sends via email, and verifies strictly against cache', () => {
+    const { context, properties, mockCache } = createAppsScriptEnvironment();
     properties.AUTH_WHITELIST = JSON.stringify([
       { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
       { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
     ]);
 
+    const requestOtp = runInContext('requestOtp', context);
     const verifyOtp = runInContext('verifyOtp', context);
-    const getPublicAuthConfig = runInContext('getPublicAuthConfig', context);
 
-    // Direct verify dummy admin
-    const adminSess = verifyOtp('admin@segara.com', '123456', 'Mozilla/5.0');
+    // Unrequested OTP fails immediately
+    assert.throws(
+      () => verifyOtp('admin@segara.com', '123456', 'Mozilla/5.0'),
+      /Kode verifikasi salah atau sudah kadaluarsa/,
+    );
+
+    // Request OTP generates random code in cache and sends email
+    const req = requestOtp('admin@segara.com');
+    assert.equal(req.success, true);
+    const code = mockCache.get('otp_admin@segara.com');
+    assert.match(code, /^\d{6}$/);
+
+    // Wrong code fails
+    assert.throws(
+      () => verifyOtp('admin@segara.com', '999999', 'Mozilla/5.0'),
+      /Kode verifikasi salah/,
+    );
+
+    // Valid code succeeds and returns session token
+    const adminSess = verifyOtp('admin@segara.com', code, 'Mozilla/5.0');
     assert.equal(adminSess.email, 'admin@segara.com');
     assert.equal(adminSess.role, 'admin');
     assert.ok(adminSess.token);
 
-    // Direct verify dummy tablet
-    const tabletSess = verifyOtp('tablet@segara.com', '123456', 'Mozilla/5.0');
-    assert.equal(tabletSess.email, 'tablet@segara.com');
-    assert.equal(tabletSess.role, 'tablet');
-    assert.ok(tabletSess.token);
-
-    // Public auth config reflects allowDummyAuth
-    const conf = getPublicAuthConfig();
-    assert.equal(conf.allowDummyAuth, true);
+    // Replay with used code fails (one-time use)
+    assert.throws(
+      () => verifyOtp('admin@segara.com', code, 'Mozilla/5.0'),
+      /Kode verifikasi salah atau sudah kadaluarsa/,
+    );
   });
 
   it('rejects getTablet and ambil when server session is missing or invalid in production', () => {
@@ -1040,6 +1057,7 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     const buatSessionToken_ = runInContext('buatSessionToken_', context);
 
     // All operations without session token must be rejected
+    const tambahSatuan = runInContext('tambahSatuan', context);
     assert.throws(() => adminData('12345'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => simpanBarang('12345', { nama: 'Test', satuan: 'kg', ambang_min: 0, alur: 'LUAR', kode: '', catatan: '' }), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => hapusBarang('12345', 'b1'), /Akses ditolak: sesi login wajib disertakan/);
@@ -1048,15 +1066,21 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     assert.throws(() => tambahKategori('12345', 'KategoriBaru'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => hapusKategori('12345', 'Bahan'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => tambahSupplier('12345', 'SupplierBaru'), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => tambahSatuan('12345', 'SatuanBaru'), /Akses ditolak: sesi login wajib disertakan/);
     // With valid admin token, succeeds
     const sess = buatSessionToken_('admin@segara.com', 'admin');
     const res = adminData('12345', sess.token);
     assert.ok(res.barang.length > 0);
+    assert.ok(Array.isArray(res.daftarSatuan));
+    assert.ok(res.daftarSatuan.includes('Porsi'));
+    assert.ok(res.daftarSatuan.includes('Pack'));
     const supRes = tambahSupplier('12345', 'Supplier Uji', sess.token);
     assert.equal(supRes.status, 'created');
     assert.ok(adminData('12345', sess.token).daftarSupplier.includes('Supplier Uji'));
+    const satRes = tambahSatuan('12345', 'Krat', sess.token);
+    assert.equal(satRes.status, 'created');
+    assert.ok(adminData('12345', sess.token).daftarSatuan.includes('Krat'));
   });
-
   it('buatDummyRekap requires valid admin credentials and rejects unauthenticated calls', () => {
     const { context, properties } = createAppsScriptEnvironment();
     properties.SKIP_AUTH_SESSION = '0';
@@ -1102,5 +1126,120 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     // Passing the base64 hash as inputPin should not authenticate or overwrite the hash
     assert.equal(cekAdminPin_(originalHashed), false);
     assert.equal(properties.ADMIN_PIN, originalHashed);
+  });
+  it('doGet does not execute state mutations when ?aksi= URLs are accessed and only serves HtmlOutput', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const doGet = runInContext('doGet', context);
+
+    // Initial state: b1 has stok_luar = 0
+    sheetsData.Barang[1][5] = 10; // pretend stok_luar is 10
+    const initialRekapCount = sheetsData.Rekap.length;
+
+    // Simulate GET ?aksi=tutup_september
+    const resTutup = doGet({ parameter: { aksi: 'tutup_september', mode: 'tablet' } });
+    // In mock, HtmlOutput returns string '<html>tablet</html>'
+    assert.equal(resTutup, '<html>tablet</html>');
+    // Ensure no rekap was added and stok_luar was NOT zeroed
+    assert.equal(sheetsData.Rekap.length, initialRekapCount);
+    assert.equal(sheetsData.Barang[1][5], 10);
+
+    // Simulate GET ?aksi=reset_stok_luar
+    const resReset = doGet({ parameter: { aksi: 'reset_stok_luar', mode: 'admin' } });
+    assert.equal(resReset, '<html>admin</html>');
+    assert.equal(sheetsData.Barang[1][5], 10);
+
+    // Simulate GET ?aksi=cek_rekap_draf
+    const resDraf = doGet({ parameter: { aksi: 'cek_rekap_draf' } });
+    assert.equal(resDraf, '<html>tablet</html>');
+  });
+
+  it('internal maintenance functions have trailing underscores and are not exposed to google.script.run', () => {
+    const { context } = createAppsScriptEnvironment();
+
+    // Verify functions without trailing _ are NOT present in global scope
+    assert.equal(runInContext('typeof resetStokLuar', context), 'undefined');
+    assert.equal(runInContext('typeof tutupPeriodeSeptember', context), 'undefined');
+
+    // Verify private implementations WITH trailing _ exist internally
+    assert.equal(runInContext('typeof resetStokLuar_', context), 'function');
+    assert.equal(runInContext('typeof tutupPeriodeSeptember_', context), 'function');
+    // Verify that all functions in Kode.gs without a trailing underscore are strictly whitelisted
+    const code = readFileSync('apps-script/Kode.gs', 'utf8');
+    const typesCode = readFileSync('src/lib/types.ts', 'utf8');
+
+    const apiMatch = typesCode.match(/export interface Api \{([\s\S]*?)\n\}/);
+    const apiKeys = new Set<string>();
+    if (apiMatch) {
+      const lines = apiMatch[1].split('\n');
+      for (const line of lines) {
+        const m = line.match(/^\s*([a-zA-Z0-9_]+)\s*\(/);
+        if (m) apiKeys.add(m[1]);
+      }
+    }
+
+    const EDITOR_ENTRY_POINTS: Record<string, true> = {
+      doGet: true,
+      setup: true,
+      imporDataSegara: true,
+    };
+    const funcRegex = /^function\s+([a-zA-Z0-9_]+)\s*\(/gm;
+    let match: RegExpExecArray | null;
+    const exposedWithoutUnderscore: string[] = [];
+
+    while ((match = funcRegex.exec(code)) !== null) {
+      const fnName = match[1];
+      if (!fnName.endsWith('_')) {
+        exposedWithoutUnderscore.push(fnName);
+      }
+    }
+
+    for (const fn of exposedWithoutUnderscore) {
+      const isAllowed = apiKeys.has(fn) || Boolean(EDITOR_ENTRY_POINTS[fn]);
+      assert.ok(
+        isAllowed,
+        `Function "${fn}" in Kode.gs does not have a trailing underscore and is not in Api or editorEntryPoints. It would be exposed to google.script.run!`,
+      );
+    }
+  });
+  it('setup and imporDataSegara can be run directly from Apps Script editor by the owner', () => {
+    // Simulated editor session where Session.getActiveUser().getEmail() is owner email
+    const { context } = createAppsScriptEnvironment({ activeUserEmail: 'owner@segara.com' });
+    const setup = runInContext('setup', context);
+    const imporDataSegara = runInContext('imporDataSegara', context);
+
+    assert.doesNotThrow(() => setup());
+    assert.doesNotThrow(() => imporDataSegara());
+  });
+
+  it('setup and imporDataSegara reject unauthorized client calls via google.script.run', () => {
+    // Simulated web app call from tablet where Session.getActiveUser().getEmail() is empty
+    const { context, properties } = createAppsScriptEnvironment({ activeUserEmail: '' });
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const setup = runInContext('setup', context);
+    const imporDataSegara = runInContext('imporDataSegara', context);
+
+    // Calling without admin credentials throws unauthorized error
+    assert.throws(() => setup(), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => imporDataSegara(), /Akses ditolak: sesi login wajib disertakan/);
+  });
+
+  it('setup and imporDataSegara allow client calls when authenticated admin credentials are provided', () => {
+    const { context, properties } = createAppsScriptEnvironment({ activeUserEmail: '' });
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const setup = runInContext('setup', context);
+    const imporDataSegara = runInContext('imporDataSegara', context);
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+
+    const sess = buatSessionToken_('admin@segara.com', 'admin');
+    assert.doesNotThrow(() => setup('12345', sess.token));
+    assert.doesNotThrow(() => imporDataSegara('12345', sess.token));
   });
 });

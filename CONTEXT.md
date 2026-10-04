@@ -30,3 +30,19 @@ _Avoid_: User profile, member, credentials
 **Nama Admin**:
 Nama penanggung jawab operasional yang dikonfigurasi per Akun Auth di Pengaturan Akses Akun, dicatat ke kolom karyawan pada transaksi yang diinput admin.
 _Avoid_: Nama toko, user display name, author
+
+**Terjual**:
+Jumlah barang atau porsi yang terjual menurut data penjualan kasir yang diinput oleh Admin saat verifikasi rekap.
+_Avoid_: Sales order, penjualan kasir, qty terjual
+
+**Selisih Rekap**:
+Deviasi numerik antara stok fisik terpakai dengan jumlah yang terjual (`Terpakai - Terjual`). Ditampilkan ringkas dan rapi secara numerik tanpa teks deskriptif panjang.
+_Avoid_: Variance, deviasi stok, selisih pemakaian lebih
+
+**Rekap Approved**:
+Status sesi rekap yang telah diverifikasi dan disetujui oleh admin, menandai data resmi masuk ke Riwayat Rekap.
+_Avoid_: Verified rekap, rekap final, closed rekap
+
+**Rekap Pending**:
+Sesi rekap yang diinput oleh karyawan di tablet namun belum disetujui admin, bertahan dalam antrean verifikasi rekap admin.
+_Avoid_: Unapproved rekap, draft rekap, rekap gantung

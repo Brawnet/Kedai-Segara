@@ -1,0 +1,3 @@
+# Alur Approval Rekap dan Antrean FIFO
+
+Ketika tablet mengirim rekap harian, rekap masuk sebagai antrean berstatus `PENDING` dan belum langsung ditampilkan di tabel Riwayat Rekap. Admin memeriksa dan menginput nilai `Terjual` per barang serta mengoreksi `Sisa` bila diperlukan. Tombol "Setujui Rekap" secara atomik menyimpan koreksi, menghitung `Selisih` (`Terpakai - Terjual`), dan memindahkan rekap ke status `APPROVED` agar resmi muncul di Riwayat Rekap. Jika terdapat beberapa hari rekap yang belum disetujui, antrean diproses berurutan (FIFO: hari terlama disetujui lebih dahulu) untuk menjaga kesinambungan saldo fisik barang.

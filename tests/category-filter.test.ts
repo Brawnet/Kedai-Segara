@@ -35,6 +35,31 @@ describe('Category Filtering & Stock Aggregation Logic', () => {
     assert.equal(result[0].nama, 'Bumbu Merah');
   });
 
+  it('supports multi-category filtering (array of categories)', () => {
+    // Empty selection returns all
+    const noFilter: string[] = [];
+    const allResult = mockBarang.filter((b) => noFilter.length === 0 || noFilter.includes(katOf(b)));
+    assert.equal(allResult.length, 5);
+
+    // Single category in array
+    const singleFilter = ['Freezer Protein'];
+    const singleResult = mockBarang.filter((b) => singleFilter.length === 0 || singleFilter.includes(katOf(b)));
+    assert.equal(singleResult.length, 3);
+    assert.ok(singleResult.every((b) => b.kategori === 'Freezer Protein'));
+
+    // Multiple categories selected simultaneously
+    const multiFilter = ['Freezer Protein', 'Freezer Bumbu'];
+    const multiResult = mockBarang.filter((b) => multiFilter.length === 0 || multiFilter.includes(katOf(b)));
+    assert.equal(multiResult.length, 5);
+
+    // Combined with low-stock filter
+    const multiWithLow = mockBarang.filter(
+      (b) => (!multiFilter.length || multiFilter.includes(katOf(b))) && menipis(b),
+    );
+    assert.equal(multiWithLow.length, 2); // Cumi (6 < 8) and Bumbu Merah (3 < 5)
+    assert.deepEqual(multiWithLow.map((b) => b.nama), ['Cumi', 'Bumbu Merah']);
+  });
+
   it('calculates low stock count per category group accurately for groupBadge', () => {
     const groups = grupKat(mockBarang);
     const badgeCounts: Record<string, number> = {};

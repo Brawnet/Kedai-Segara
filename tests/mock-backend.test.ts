@@ -76,7 +76,11 @@ describe('Mock Backend Business Logic & Invariants', () => {
     const prevLuar = item.stok_luar;
 
     const res = api.ambil(employee.id, item.id, 2);
-    const ok = api.batalAmbil(res.tx.id, '');
+
+    // Wrong PIN fails
+    assert.throws(() => api.batalAmbil(res.tx.id, 'wrong'), /PIN salah/);
+
+    const ok = api.batalAmbil(res.tx.id, '12345');
     assert.equal(ok, true);
 
     const reverted = api.adminData('12345').barang.find((b) => b.id === item.id);
@@ -87,7 +91,7 @@ describe('Mock Backend Business Logic & Invariants', () => {
     assert.equal(tx?.status, 'BATAL');
 
     // Double cancel should fail
-    assert.throws(() => api.batalAmbil(res.tx.id, ''), /Transaksi tidak bisa dibatalkan/);
+    assert.throws(() => api.batalAmbil(res.tx.id, '12345'), /Transaksi tidak bisa dibatalkan/);
   });
 
   it('simpanBarang validates non-negative ambang_min and stok_awal', () => {

@@ -139,8 +139,10 @@ describe('Per-Account Admin PIN Invariants & Public APIs', () => {
     const buatSessionToken_ = runInContext('buatSessionToken_', context);
     const adminData = runInContext('adminData', context);
 
-    // Request OTP (segara.com uses dummy 123456)
+    // Request OTP generates random code stored in cache
     requestOtp('admin@segara.com');
+    const code = mockCache.get('otp_admin@segara.com');
+    assert.ok(code);
 
     // Wrong OTP fails
     assert.throws(
@@ -149,14 +151,13 @@ describe('Per-Account Admin PIN Invariants & Public APIs', () => {
     );
 
     // Correct OTP resets PIN
-    assert.ok(resetAdminPinWithOtp('admin@segara.com', '123456', '9876'));
-
+    assert.ok(resetAdminPinWithOtp('admin@segara.com', code, '9876'));
     // Authenticate with new PIN
     const token = buatSessionToken_('admin@segara.com', 'admin').token;
     assert.ok(adminData('9876', token));
   });
 
-  it('batalAmbil on tablet accepts PIN from any active admin and records authorizer email', () => {
+  it('batalAmbil requires admin session, rejects tablet tokens, and records authorizer email', () => {
     const { context, properties, sheetsData } = createAppsScriptEnvironment();
     properties.SKIP_AUTH_SESSION = '0';
 
@@ -168,11 +169,11 @@ describe('Per-Account Admin PIN Invariants & Public APIs', () => {
 
     const buatSessionToken_ = runInContext('buatSessionToken_', context);
     const tabletToken = buatSessionToken_('tablet@segara.com', 'tablet').token;
+    const adminToken = buatSessionToken_('spv@segara.com', 'admin').token;
 
     const append_ = runInContext('append_', context);
     const batalAmbil = runInContext('batalAmbil', context);
 
-    // Insert an old AMBIL transaction (> 65 seconds ago)
     const oldTs = Date.now() - 70000;
     append_('Transaksi', {
       id: 'tx_old',
@@ -193,17 +194,20 @@ describe('Per-Account Admin PIN Invariants & Public APIs', () => {
       satuan: 'liter',
     });
 
-    // Without valid admin PIN, fails due to > 60s limit
+    // Tablet token is rejected with access denied
     assert.throws(
-      () => batalAmbil('tx_old', '', tabletToken),
-      /Batas 60 detik lewat\. Minta admin untuk membatalkan\./,
+      () => batalAmbil('tx_old', '8888', tabletToken),
+      /Akses ditolak: peran "tablet" tidak memiliki izin/,
     );
+
+    // Admin token with wrong PIN fails
     assert.throws(
-      () => batalAmbil('tx_old', '1234', tabletToken),
-      /PIN admin salah/,
+      () => batalAmbil('tx_old', '1234', adminToken),
+      /PIN salah/,
     );
-    // With spv's PIN (8888), succeeds and updates transaction
-    assert.ok(batalAmbil('tx_old', '8888', tabletToken));
+
+    // With spv's admin token and valid PIN (8888), succeeds and updates transaction
+    assert.ok(batalAmbil('tx_old', '8888', adminToken));
 
     // Verify transaction status changed to BATAL and dicatat_oleh records spv email
     const row = sheetsData.Transaksi.find((r) => r[0] === 'tx_old');

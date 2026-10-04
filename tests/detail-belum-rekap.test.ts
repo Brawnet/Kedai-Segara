@@ -305,7 +305,7 @@ describe('Detail Belum Rekap logic & invariants', () => {
     assert.equal(isRekapSnoozed(mockStorage, jam13Nanti), false);
 
     // Format waktu
-    const formatted = formatSnoozeUntil(until);
+    const formatted = formatSnoozeUntil(until, now);
     assert.ok(formatted.includes('pukul 00:00'));
 
     // Clear snooze (aktifkan kembali)

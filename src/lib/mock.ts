@@ -86,6 +86,7 @@ export function createMock(): Impl {
   };
   const urutan = DATA.map((d) => d[0]);
   const daftarSupplier: string[] = ['CV. Dapur Rumah Rasa'];
+  const daftarSatuan: string[] = ['Porsi', 'Pack', 'Pcs', 'Botol', 'Kaleng', 'Lbr', 'Kg', 'Gram', 'Liter', 'Cup', 'Bungkus', 'Dus', 'Piring', 'Mangkok'];
   const barang: Barang[] = [];
   DATA.forEach(([kat, items], gi) =>
     items.forEach(([kode, nama, satuan, catatan], i) =>
@@ -463,32 +464,23 @@ export function createMock(): Impl {
         tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier: '', catatan: supplier || 'Hasil produksi', dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
         return true;
       }),
-    batalAmbil: (txId, pin, _token) => {
+    batalAmbil: (txId, pin, token) => {
+      let email = 'admin';
+      if (token) {
+        const parts = token.split('_');
+        if (parts[3]) email = parts[3];
+      }
+      auth(pin, token);
       const t = transaksi.find((x) => x.id === txId);
       if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-      let adminEmail: string | null = null;
-      if (pin) {
-        const input = String(pin).trim();
-        const matched = authWhitelist.find(
-          (a) => a.role === 'admin' && a.aktif && a.pinHash && (mockHash(input, a.salt || 'admin_salt') === a.pinHash || input === a.pinHash)
-        );
-        if (matched) adminEmail = matched.email;
-        else if (input === PIN) adminEmail = 'admin@segara.com';
-      }
-      const isOverTime = Date.now() - t.ts > 65000;
-      if (isOverTime) {
-        if (!adminEmail) {
-          if (!pin) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
-          throw new Error('PIN admin salah');
-        }
-      }
       if (t.ts <= lastRekapTs()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
       const b = find(t.barang_id);
       if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + t.jumlah);
       if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
-      if (adminEmail) t.dicatat_oleh = adminEmail;
+      t.catatan = (t.catatan ? t.catatan + ' · ' : '') + 'Dibatalkan admin';
+      t.dicatat_oleh = email;
       return true;
     },
     batalMasuk: (txId, pin, token) => {
@@ -552,12 +544,13 @@ export function createMock(): Impl {
           if (s < 0 || s > r.maks + 1e-9) throw new Error(`Sisa ${r.nama} harus 0 sampai ${r.maks}`);
         });
         const id = uid();
-        rekap.push({ id, ts: cutoff, waktu: fmt(cutoff), karyawan_id: k.id, karyawan: k.nama, diedit_admin: false });
+        rekap.push({ id, ts: cutoff, waktu: fmt(cutoff), karyawan_id: k.id, karyawan: k.nama, diedit_admin: false, status: 'PENDING' });
         draf.forEach((r) => {
           const i = by[r.barang_id]!, s = r_(num(i.sisa));
           const b = find(r.barang_id);
           if (b) b.stok_luar = r_(s + r.setelah);
-          rekapBaris.push({ rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil, sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
+          const terpakai = r_(r.maks - s);
+          rekapBaris.push({ rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil, sisa: s, terpakai, terjual: 0, selisih: terpakai, catatan: i.catatan || '' });
         });
         return { id };
       }),
@@ -569,7 +562,24 @@ export function createMock(): Impl {
           barang,
           karyawan: karyawan.map(({ id, nama, aktif, punyaPin, pin, pinLen }) => ({ id, nama, aktif, punyaPin: punyaPin ?? !!(pin && pin.trim()), pinLen: pinLen || (pin ? 4 : 0) })),
           transaksi: [...transaksi].sort(setelahDesc).slice(0, 400),
-          rekap: [...rekap].sort(setelahDesc).slice(0, 30).map((r) => ({ ...r, baris: rekapBaris.filter((x) => x.rekap_id === r.id) })),
+          rekap: (() => {
+            const pending = rekap.filter((r) => (r.status || 'APPROVED') === 'PENDING').sort(setelahDesc);
+            const approved = rekap.filter((r) => (r.status || 'APPROVED') === 'APPROVED').sort(setelahDesc).slice(0, 30);
+            return [...pending, ...approved].map((r) => ({
+              ...r,
+              status: r.status || 'APPROVED',
+              baris: rekapBaris.filter((x) => x.rekap_id === r.id).map((b) => {
+                const adaSelisih = b.selisih !== undefined && b.selisih !== null && String(b.selisih).trim() !== '';
+                const adaTerjual = b.terjual !== undefined && b.terjual !== null && String(b.terjual).trim() !== '';
+                if (adaSelisih || adaTerjual) {
+                  const terjual = num(b.terjual) || 0;
+                  const selisih = adaSelisih ? num(b.selisih) : r_(b.terpakai - terjual);
+                  return { ...b, terjual, selisih };
+                }
+                return { ...b, terjual: num(b.terpakai), selisih: 0 };
+              }),
+            }));
+          })(),
           opname: [...opname].sort(setelahDesc).slice(0, 100),
           status: status(),
           lastRekap: lastRekapTs(),
@@ -580,6 +590,14 @@ export function createMock(): Impl {
             const set = new Set<string>(daftarSupplier);
             transaksi.forEach((t) => {
               const s = (t.supplier || '').trim();
+              if (s) set.add(s);
+            });
+            return Array.from(set);
+          })(),
+          daftarSatuan: (() => {
+            const set = new Set<string>(daftarSatuan);
+            barang.forEach((b) => {
+              const s = (b.satuan || '').trim();
               if (s) set.add(s);
             });
             return Array.from(set);
@@ -662,6 +680,17 @@ export function createMock(): Impl {
       }
       daftarSupplier.push(sup);
       return { status: 'created', nama: sup, message: `Supplier "${sup}" berhasil ditambahkan` };
+    },
+    tambahSatuan: (pin, namaSatuan, token) => {
+      auth(pin, token);
+      const sat = String(namaSatuan || '').trim();
+      if (!sat) throw new Error('Nama satuan tidak boleh kosong');
+      const lower = sat.toLowerCase();
+      if (daftarSatuan.some((s) => s.toLowerCase() === lower)) {
+        throw new Error(`Satuan "${sat}" sudah ada`);
+      }
+      daftarSatuan.push(sat);
+      return { status: 'created', nama: sat, message: `Satuan "${sat}" berhasil ditambahkan` };
     },
     hapusKategori: (pin, namaKategori, token) => {
       auth(pin, token);
@@ -871,6 +900,70 @@ export function createMock(): Impl {
       });
       if (plan.length) rk.diedit_admin = true;
       return plan.length;
+    },
+    approveRekap: (pin, rekapId, input, token) => {
+      auth(pin, token);
+      const rk = rekap.find((r) => r.id === rekapId);
+      if (!rk) throw new Error('Rekap tidak ditemukan');
+      if ((rk.status || 'APPROVED') === 'APPROVED') {
+        throw new Error('Rekap sudah disetujui');
+      }
+
+      // FIFO check: pastikan tidak ada rekap berstatus PENDING yang lebih lampau
+      const hasOlderPending = rekap.some((r) => {
+        const isPending = (r.status || 'APPROVED') === 'PENDING';
+        return isPending && r.id !== rekapId && r.ts < rk.ts;
+      });
+      if (hasOlderPending) {
+        throw new Error('Harap setujui rekap yang lebih lama terlebih dahulu');
+      }
+
+      const plan: { x: RekapBaris; b: Barang; s: number; maks: number; nl: number; terjual: number }[] = [];
+      const by = Object.fromEntries((input || []).map((i) => [i.barang_id, i]));
+      const bs = rekapBaris.filter((b) => b.rekap_id === rk.id);
+
+      bs.forEach((x) => {
+        const itemInput = by[x.barang_id];
+        let s = x.sisa;
+        let terjual = x.terjual ?? 0;
+        const maks = r_(x.saldo_awal + x.diambil);
+
+        if (itemInput) {
+          if (itemInput.sisa !== '' && itemInput.sisa !== null && itemInput.sisa !== undefined) {
+            s = r_(numWajib(itemInput.sisa, 'Sisa ' + x.barang));
+            if (s < 0 || s > maks + 1e-9) throw new Error(`Sisa ${x.barang} harus 0 sampai ${maks}`);
+          }
+          if (itemInput.terjual !== '' && itemInput.terjual !== null && itemInput.terjual !== undefined) {
+            terjual = r_(numWajib(itemInput.terjual, 'Terjual ' + x.barang));
+            if (terjual < 0) throw new Error(`Terjual ${x.barang} tidak boleh negatif`);
+          }
+        }
+
+        const delta = r_(s - x.sisa);
+        const b = find(x.barang_id);
+        if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
+        const nl = r_(b.stok_luar + delta);
+        if (nl < 0) throw new Error('Saldo luar ' + x.barang + ' akan negatif');
+        plan.push({ x, b, s, maks, nl, terjual });
+      });
+
+      let changed = false;
+      plan.forEach((p) => {
+        if (p.b.stok_luar !== p.nl) {
+          p.b.stok_luar = p.nl;
+          changed = true;
+        }
+        if (p.x.sisa !== p.s) changed = true;
+        p.x.sisa = p.s;
+        p.x.terpakai = r_(p.maks - p.s);
+        p.x.terjual = p.terjual;
+        p.x.selisih = r_(p.x.terpakai - p.terjual);
+      });
+
+      if (changed) rk.diedit_admin = true;
+      rk.status = 'APPROVED';
+      rk.approved_ts = Date.now();
+      return { id: rk.id, status: 'APPROVED' };
     },
     buatDummyRekap: (pin, token) => {
       auth(pin, token);

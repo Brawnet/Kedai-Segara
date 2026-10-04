@@ -7,8 +7,8 @@ var SHEETS = {
   Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'bisa_produksi'],
   Karyawan: ['id', 'nama', 'aktif', 'pin'],
   Transaksi: ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
-  Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
-  RekapBaris: ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan'],
+  Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin', 'status', 'approved_ts'],
+  RekapBaris: ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan', 'terjual', 'selisih'],
   Opname: ['id', 'ts', 'waktu', 'barang_id', 'barang', 'sistem', 'fisik', 'selisih'],
   Pengaturan: ['kunci', 'nilai'],
   Log_Login: ['id', 'ts', 'waktu', 'email', 'metode', 'role', 'status', 'user_agent']
@@ -18,12 +18,12 @@ var SS_ = null;
 // Opsional: Isi ID spreadsheet jika script dibuat terpisah dari script.google.com.
 // Jika dibuka dari spreadsheet langsung (Ekstensi → Apps Script), biarkan kosong ('').
 var DEFAULT_SS_ID = '';
-var SKEMA_V = '6'; // naikkan jika kolom di SHEETS berubah
+var SKEMA_V = '7'; // naikkan jika kolom di SHEETS berubah
 
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
 // karena kode JS hasil build bisa mengandung "<?" — mode disisipkan lewat placeholder.
-function resetStokLuar() {
+function resetStokLuar_() {
   return lock_(function () {
     var last = lastRekapTs_();
     var open = openTx_(last);
@@ -58,7 +58,7 @@ function appendBatch_(n, rows) {
   s.getRange(lr + 1, 1, raw.length, cols.length).setValues(raw);
 }
 
-function tutupPeriodeSeptember() {
+function tutupPeriodeSeptember_() {
   return lock_(function () {
     var allTx = rows_('Transaksi');
     var maxTs = 0;
@@ -125,36 +125,6 @@ function tutupPeriodeSeptember() {
 
 function doGet(e) {
   var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
-  if (e && e.parameter && e.parameter.aksi === 'reset_stok_luar') {
-    try {
-      var res = resetStokLuar();
-      return ContentService.createTextOutput(JSON.stringify(res))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  if (e && e.parameter && e.parameter.aksi === 'tutup_september') {
-    try {
-      var res = tutupPeriodeSeptember();
-      return ContentService.createTextOutput(JSON.stringify(res))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  if (e && e.parameter && e.parameter.aksi === 'cek_rekap_draf') {
-    try {
-      var draf = hitungRekap_(Date.now());
-      return ContentService.createTextOutput(JSON.stringify({ total: draf.length, baris: draf }))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
   var html = HtmlService.createHtmlOutputFromFile('index').getContent().replace('__SEGARA_MODE__', mode);
   return HtmlService.createHtmlOutput(html)
     .setTitle('Stok Segara')
@@ -163,7 +133,23 @@ function doGet(e) {
 }
 
 /* ---------- Setup (jalankan sekali dari editor) ---------- */
-function setup() {
+function requireEditorOrAdmin_(pin, token) {
+  var isEditor = false;
+  try {
+    if (typeof Session !== 'undefined' && Session.getActiveUser) {
+      var u = Session.getActiveUser().getEmail();
+      if (u && u.trim()) isEditor = true;
+    }
+  } catch (e) {}
+  if (isEditor) return true;
+
+  // Jika dipanggil dari web app / client tablet via google.script.run, wajib otentikasi admin
+  auth_(pin, token);
+  return true;
+}
+
+function setup(pin, token) {
+  requireEditorOrAdmin_(pin, token);
   // Script yang dibuat dari Sheet (Ekstensi → Apps Script) memakai sheet itu;
   // script standalone memakai DEFAULT_SS_ID.
   var ss = SpreadsheetApp.getActiveSpreadsheet() || (DEFAULT_SS_ID ? SpreadsheetApp.openById(DEFAULT_SS_ID) : null);
@@ -648,23 +634,17 @@ function ambil(karyawanId, barangId, jumlah, arg4, arg5, arg6) {
 }
 
 function batalAmbil(txId, pin, token) {
-  requireSession_(token, 'tablet');
+  var p = PropertiesService.getScriptProperties();
+  var skipAuth = p && p.getProperty('SKIP_AUTH_SESSION') === '1';
+  var sessEmail = 'admin';
+  if (!skipAuth) {
+    var sess = requireSession_(token, 'admin');
+    if (sess && sess.email) sessEmail = sess.email;
+  }
+  auth_(pin, token);
   return lock_(function () {
-    var adminEmail = null;
-    if (pin) {
-      var input = String(pin).trim();
-      adminEmail = cekAnyAdminPin_(input);
-      if (!adminEmail && cekAdminPin_(input)) adminEmail = 'admin@segara.com';
-    }
     var t = find_('Transaksi', txId);
     if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-    var isOverTime = Date.now() - num_(t.ts) > 65000;
-    if (isOverTime) {
-      if (!adminEmail) {
-        if (!pin || !String(pin).trim()) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
-        throw new Error('PIN admin salah');
-      }
-    }
     if (num_(t.ts) <= lastRekapTs_()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
     var b = find_('Barang', t.barang_id);
     if (!b) throw new Error('Barang tidak ditemukan');
@@ -672,7 +652,8 @@ function batalAmbil(txId, pin, token) {
     if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
     update_('Barang', b);
     t.status = 'BATAL';
-    if (adminEmail) t.dicatat_oleh = adminEmail;
+    t.catatan = (t.catatan ? String(t.catatan).trim() + ' · ' : '') + 'Dibatalkan admin';
+    t.dicatat_oleh = sessEmail;
     update_('Transaksi', t);
     return true;
   });
@@ -770,7 +751,7 @@ function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
         if (s < 0 || s > r.maks + 1e-9) throw new Error('Sisa ' + r.nama + ' harus 0 sampai ' + r.maks);
       });
       var id = uid_();
-      append_('Rekap', { id: id, ts: cutoff, waktu: fmt_(cutoff), karyawan_id: String(k.id), karyawan: k.nama, diedit_admin: false });
+      append_('Rekap', { id: id, ts: cutoff, waktu: fmt_(cutoff), karyawan_id: String(k.id), karyawan: k.nama, diedit_admin: false, status: 'PENDING', approved_ts: '' });
       draf.forEach(function (r) {
         var i = by[r.barang_id], s = r_(num_(i.sisa));
         var b = barang.filter(function (x) { return String(x.id) === r.barang_id; })[0];
@@ -778,8 +759,9 @@ function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
           b.stok_luar = r_(s + r.setelah);
           update_('Barang', b);
         }
+        var terpakai = r_(r.maks - s);
         append_('RekapBaris', { rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil,
-          sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
+          sisa: s, terpakai: terpakai, catatan: i.catatan || '', terjual: 0, selisih: terpakai });
       });
       return { id: id };
     });
@@ -790,11 +772,28 @@ function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
 function adminData(pin, token) {
   auth_(pin, token);
   var desc = function (a, b) { return num_(b.ts) - num_(a.ts); };
-  var rekap = rows_('Rekap').sort(desc).slice(0, 30).map(clean_);
+  var allRekapList = rows_('Rekap');
+  var pendingRekap = allRekapList.filter(function (r) { return String(r.status || '').toUpperCase() === 'PENDING'; }).sort(desc);
+  var approvedRekap = allRekapList.filter(function (r) { return String(r.status || '').toUpperCase() !== 'PENDING'; }).sort(desc).slice(0, 30);
+  var rekap = pendingRekap.concat(approvedRekap).map(clean_);
   var baris = rows_('RekapBaris');
   rekap.forEach(function (r) {
     r.diedit_admin = truthy_(r.diedit_admin);
-    r.baris = baris.filter(function (x) { return String(x.rekap_id) === String(r.id); }).map(clean_);
+    r.status = r.status ? String(r.status).toUpperCase() : 'APPROVED';
+    r.baris = baris.filter(function (x) { return String(x.rekap_id) === String(r.id); }).map(function (b) {
+      var cb = clean_(b);
+      var adaSelisih = cb.selisih !== undefined && cb.selisih !== null && String(cb.selisih).trim() !== '';
+      var adaTerjual = cb.terjual !== undefined && cb.terjual !== null && String(cb.terjual).trim() !== '';
+      if (adaSelisih || adaTerjual) {
+        cb.terjual = num_(cb.terjual) || 0;
+        cb.selisih = adaSelisih ? num_(cb.selisih) : r_(num_(cb.terpakai) - cb.terjual);
+      } else {
+        // Data lama (sebelum ada fitur terjual & selisih): tidak ada selisih
+        cb.terjual = num_(cb.terpakai);
+        cb.selisih = 0;
+      }
+      return cb;
+    });
   });
   return {
     barang: rows_('Barang').map(pub_),
@@ -809,7 +808,8 @@ function adminData(pin, token) {
     urutan: urutanKategori_(),
     jamTutup: jamTutup_(),
     url: ss_().getUrl(),
-    daftarSupplier: daftarSupplier_()
+    daftarSupplier: daftarSupplier_(),
+    daftarSatuan: daftarSatuan_()
   };
 }
 
@@ -962,6 +962,50 @@ function tambahSupplier(pin, namaSupplier, token) {
     list.push(sup);
     setSetting_('daftar_supplier', JSON.stringify(list));
     return { status: 'created', nama: sup, message: 'Supplier "' + sup + '" berhasil ditambahkan' };
+  });
+}
+
+function daftarSatuan_() {
+  var s = getSetting_('daftar_satuan');
+  var list = [];
+  if (s) {
+    try { list = JSON.parse(s); } catch (e) {}
+  }
+  var set = {};
+  var res = [];
+  var tambah = function (nm) {
+    var clean = String(nm || '').trim();
+    if (!clean) return;
+    var lower = clean.toLowerCase();
+    if (!set[lower]) {
+      set[lower] = true;
+      res.push(clean);
+    }
+  };
+  ['Porsi', 'Pack', 'Pcs', 'Botol', 'Kaleng', 'Lbr', 'Kg', 'Gram', 'Liter', 'Cup', 'Bungkus', 'Dus', 'Piring', 'Mangkok'].forEach(tambah);
+  if (Array.isArray(list)) list.forEach(tambah);
+  rows_('Barang').forEach(function (b) {
+    tambah(b.satuan);
+  });
+  return res;
+}
+
+function tambahSatuan(pin, namaSatuan, token) {
+  auth_(pin, token);
+  var sat = String(namaSatuan || '').trim();
+  if (!sat) throw new Error('Nama satuan tidak boleh kosong');
+  return lock_(function () {
+    var list = daftarSatuan_();
+    var exists = list.some(function (s) { return s.toLowerCase() === sat.toLowerCase(); });
+    if (exists) throw new Error('Satuan "' + sat + '" sudah ada');
+    var s = getSetting_('daftar_satuan');
+    var savedList = [];
+    if (s) {
+      try { savedList = JSON.parse(s); } catch (e) {}
+    }
+    savedList.push(sat);
+    setSetting_('daftar_satuan', JSON.stringify(savedList));
+    return { status: 'created', nama: sat, message: 'Satuan "' + sat + '" berhasil ditambahkan' };
   });
 }
 
@@ -1215,6 +1259,78 @@ function editRekapTerakhir(pin, input, token) {
     return plan.length;
   });
 }
+function approveRekap(pin, rekapId, input, token) {
+  auth_(pin, token);
+  return lock_(function () {
+    var rk = find_('Rekap', rekapId);
+    if (!rk) throw new Error('Rekap tidak ditemukan');
+    if ((rk.status ? String(rk.status).toUpperCase() : 'APPROVED') === 'APPROVED') {
+      throw new Error('Rekap sudah disetujui');
+    }
+
+    // FIFO check: pastikan tidak ada rekap berstatus PENDING yang lebih lampau
+    var allRekap = rows_('Rekap');
+    var hasOlderPending = allRekap.some(function (r) {
+      var isPending = (r.status ? String(r.status).toUpperCase() : 'APPROVED') === 'PENDING';
+      return isPending && String(r.id) !== String(rekapId) && num_(r.ts) < num_(rk.ts);
+    });
+    if (hasOlderPending) {
+      throw new Error('Harap setujui rekap yang lebih lama terlebih dahulu');
+    }
+
+    var bs = rows_('RekapBaris').filter(function (x) { return String(x.rekap_id) === String(rekapId); });
+    var barang = rows_('Barang'), plan = [];
+    var by = {};
+    (input || []).forEach(function (i) { by[String(i.barang_id)] = i; });
+
+    bs.forEach(function (x) {
+      var itemInput = by[String(x.barang_id)];
+      var s = num_(x.sisa);
+      var terjual = num_(x.terjual) || 0;
+      var maks = num_(x.saldo_awal) + num_(x.diambil);
+
+      if (itemInput) {
+        if (itemInput.sisa !== '' && itemInput.sisa !== null && itemInput.sisa !== undefined) {
+          s = r_(numWajib_(itemInput.sisa, 'Sisa ' + x.barang));
+          if (s < 0 || s > maks + 1e-9) throw new Error('Sisa ' + x.barang + ' harus 0 sampai ' + maks);
+        }
+        if (itemInput.terjual !== '' && itemInput.terjual !== null && itemInput.terjual !== undefined) {
+          terjual = r_(numWajib_(itemInput.terjual, 'Terjual ' + x.barang));
+          if (terjual < 0) throw new Error('Terjual ' + x.barang + ' tidak boleh negatif');
+        }
+      }
+
+      var delta = r_(s - num_(x.sisa));
+      var b = barang.filter(function (y) { return String(y.id) === String(x.barang_id); })[0];
+      if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
+      var nl = r_(num_(b.stok_luar) + delta);
+      if (nl < 0) throw new Error('Saldo luar ' + x.barang + ' akan negatif');
+      plan.push({ x: x, b: b, s: s, maks: maks, nl: nl, terjual: terjual });
+    });
+
+    var changed = false;
+    plan.forEach(function (p) {
+      if (p.b.stok_luar !== p.nl) {
+        p.b.stok_luar = p.nl;
+        update_('Barang', p.b);
+        changed = true;
+      }
+      if (p.x.sisa !== p.s) changed = true;
+      p.x.sisa = p.s;
+      p.x.terpakai = r_(p.maks - p.s);
+      p.x.terjual = p.terjual;
+      p.x.selisih = r_(p.x.terpakai - p.terjual);
+      update_('RekapBaris', p.x);
+    });
+
+    if (changed) rk.diedit_admin = true;
+    rk.status = 'APPROVED';
+    rk.approved_ts = Date.now();
+    update_('Rekap', rk);
+
+    return { id: rk.id, status: 'APPROVED' };
+  });
+}
 
 function simpanPengaturan(pin, jamTutup, pinBaru, token) {
   auth_(pin, token);
@@ -1409,14 +1525,8 @@ function getPublicAuthConfig() {
   var clientId = (p && p.getProperty('GOOGLE_CLIENT_ID')) || '';
   return {
     hasGoogleAuth: Boolean(clientId && clientId.trim()),
-    googleClientId: clientId ? clientId.trim() : '',
-    allowDummyAuth: isDummyAllowed_()
+    googleClientId: clientId ? clientId.trim() : ''
   };
-}
-
-function isDummyAllowed_() {
-  var p = PropertiesService.getScriptProperties();
-  return p && (p.getProperty('ALLOW_DUMMY_AUTH') === '1' || p.getProperty('SKIP_AUTH_SESSION') === '1');
 }
 
 function requestOtp(email) {
@@ -1432,13 +1542,12 @@ function requestOtp(email) {
 
   rateLimitGuard_('otp_req_' + em, 120);
 
-  var isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
   var c = cache_();
-  if (c && c.get('otp_cd_' + em) && !isDummy) {
+  if (c && c.get('otp_cd_' + em)) {
     throw new Error('Kode verifikasi baru saja dikirim. Tunggu 60 detik sebelum meminta kode baru.');
   }
 
-  var code = isDummy ? '123456' : (function () {
+  var code = (function () {
     var raw = Utilities.getUuid().replace(/\D/g, '');
     if (raw.length < 6) raw += String(Math.floor(100000 + Math.random() * 900000));
     return raw.slice(0, 6);
@@ -1446,13 +1555,6 @@ function requestOtp(email) {
   if (c) {
     c.put('otp_' + em, code, 300);
     c.put('otp_cd_' + em, '1', 60);
-  }
-  if (isDummy) {
-    return {
-      success: true,
-      message: 'Kode verifikasi dummy: 123456 (Gunakan kode ini untuk masuk)',
-      expSeconds: 300
-    };
   }
 
   try {
@@ -1478,16 +1580,14 @@ function verifyOtp(email, code, userAgent) {
   rateLimitGuard_('otp_ver_' + em, 60);
 
   var c = cache_();
-  var isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
   var stored = c ? c.get('otp_' + em) : null;
-  if (!stored && !isDummy) {
+  if (!stored) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP', '-', 'GAGAL - OTP KADALUARSA', userAgent);
     throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
   }
 
-  var validDummy = isDummy && cd === '123456';
-  if (stored !== cd && !validDummy) {
+  if (!safeEqual_(stored, cd)) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP', '-', 'GAGAL - OTP SALAH', userAgent);
     throw new Error('Kode verifikasi salah.');
@@ -1650,16 +1750,14 @@ function resetAdminPinWithOtp(email, code, newPin, token) {
   rateLimitGuard_('otp_ver_' + em, 60);
 
   var c = cache_();
-  var isDummy = (typeof isDummyAllowed_ === 'function' ? isDummyAllowed_() : true) && (em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com'));
   var stored = c ? c.get('otp_' + em) : null;
-  if (!stored && !isDummy) {
+  if (!stored) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP_RESET_PIN', '-', 'GAGAL - OTP KADALUARSA', '');
     throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
   }
 
-  var validOtp = (stored && safeEqual_(stored, cd)) || (isDummy && cd === '123456');
-  if (!validOtp) {
+  if (!safeEqual_(stored, cd)) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP_RESET_PIN', '-', 'GAGAL - OTP SALAH', '');
     throw new Error('Kode verifikasi salah');
@@ -1946,8 +2044,8 @@ var DATA_SEGARA = [
  * Stok diisi setelah hitung fisik lewat Admin → Opname.
  * Aman dijalankan ulang: barang yang kodenya sudah ada tidak diubah.
  */
-function imporDataSegara() {
-  migrasi_(ss_());
+function imporDataSegara(pin, token) {
+  requireEditorOrAdmin_(pin, token);
   return lock_(function () {
     var ada = {};
     rows_('Barang').forEach(function (b) { if (String(b.kode || '')) ada[String(b.kode)] = true; });

@@ -17,7 +17,7 @@ import { cocok, grupKat, katOf, nf, parseNum, r3, urutKat } from '../lib/format'
 import { useApp } from '../lib/app';
 import { loadOpnameDraft, saveOpnameDraft, clearOpnameDraft } from '../lib/opname-draft';
 import type { Barang, Opname } from '../lib/types';
-import { Button, Confirm, Input, PageTitle, Select, Tag, vibrate } from '../components/ui';
+import { Button, Confirm, Input, MultiSelect, PageTitle, Select, Tag, vibrate } from '../components/ui';
 import { DataTable, Section, useAdmin, useMedia, type Col } from './shared';
 
 const selisihCls = (s: number) => (s > 0 ? 'text-success' : s < 0 ? 'text-danger' : 'text-muted-fg');
@@ -283,7 +283,7 @@ export function OpnamePage() {
   const [q, setQ] = useState('');
   const [tanya, setTanya] = useState(false);
   const [sort, setSort] = useState<SortOpt>('kategori');
-  const [katFilter, setKatFilter] = useState('semua');
+  const [katFilter, setKatFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('semua');
   const searchRef = useRef<HTMLInputElement>(null);
   const [filterTgl, setFilterTgl] = useState<string>('');
@@ -377,7 +377,7 @@ export function OpnamePage() {
   const filtered = useMemo(() => {
     return aktif.filter((b) => {
       if (!cocok(b, q)) return false;
-      if (katFilter !== 'semua' && katOf(b) !== katFilter) return false;
+      if (katFilter.length > 0 && !katFilter.includes(katOf(b))) return false;
 
       const v = vals[b.id];
       const hasValue = v !== undefined && v.trim() !== '';
@@ -436,7 +436,7 @@ export function OpnamePage() {
           <span class="font-semibold text-fg">{b.nama}</span>
           <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-fg">
             {b.kode && <Tag>{b.kode}</Tag>}
-            {(sort !== 'kategori' || katFilter !== 'semua') && <span>{b.kategori}</span>}
+            {(sort !== 'kategori' || katFilter.length > 0) && <span>{b.kategori}</span>}
           </div>
         </div>
       ),
@@ -824,37 +824,43 @@ export function OpnamePage() {
             )}
           </label>
 
-          {/* Dropdown Besar Kecilnya (Sort) & Kategori */}
+          {/* Dropdown Besar Kecilnya (Sort) & Kategori MultiSelect */}
           <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-nowrap sm:items-center">
-            <div class="flex items-center gap-1.5 min-w-0 sm:min-w-[220px] flex-1 sm:flex-initial">
+            {/* Sort Dropdown: fixed width sm:w-56 */}
+            <div class="w-full sm:w-56 shrink-0 flex items-center gap-1.5">
               <ArrowsDownUp size={18} class="text-muted-fg shrink-0" aria-hidden />
-              <Select
-                value={sort}
-                onChange={(e) => setSort(e.currentTarget.value as SortOpt)}
-                class="w-full text-xs sm:text-sm font-semibold"
-                aria-label="Urutkan besar kecilnya stok"
-              >
-                <option value="kategori">Kategori</option>
-                <option value="stok-desc">Stok Dalam: Besar → Kecil</option>
-                <option value="stok-asc">Stok Dalam: Kecil → Besar</option>
-                <option value="nama-asc">Nama: A → Z</option>
-                <option value="selisih-desc">Selisih Terbesar (±)</option>
-              </Select>
+              <div class="flex-1 min-w-0">
+                <Select
+                  value={sort}
+                  onChange={(e) => setSort(e.currentTarget.value as SortOpt)}
+                  class="w-full min-h-11 text-xs sm:text-sm font-semibold"
+                  aria-label="Urutkan besar kecilnya stok"
+                >
+                  <option value="kategori">Kategori</option>
+                  <option value="stok-desc">Stok Dalam: Besar → Kecil</option>
+                  <option value="stok-asc">Stok Dalam: Kecil → Besar</option>
+                  <option value="nama-asc">Nama: A → Z</option>
+                  <option value="selisih-desc">Selisih Terbesar (±)</option>
+                </Select>
+              </div>
             </div>
 
-            <Select
-              value={katFilter}
-              onChange={(e) => setKatFilter(e.currentTarget.value)}
-              class="w-full min-w-0 sm:min-w-[170px] text-xs sm:text-sm font-semibold flex-1 sm:flex-initial"
-              aria-label="Filter kategori"
-            >
-              <option value="semua">Semua Kategori ({aktif.length})</option>
-              {kats.map((c) => (
-                <option key={c} value={c}>
-                  {c} ({aktif.filter((b) => b.kategori === c).length})
-                </option>
-              ))}
-            </Select>
+            {/* Category MultiSelect: fixed width sm:w-64 */}
+            <div class="w-full sm:w-64 shrink-0">
+              <MultiSelect
+                value={katFilter}
+                onChange={setKatFilter}
+                options={kats.map((c) => ({
+                  value: c,
+                  label: c,
+                  count: aktif.filter((b) => b.kategori === c).length,
+                }))}
+                allLabel={`Semua Kategori (${aktif.length})`}
+                placeholder="Pilih Kategori"
+                class="w-full min-h-11 font-medium text-xs sm:text-sm"
+                aria-label="Filter kategori"
+              />
+            </div>
           </div>
         </div>
 
@@ -892,8 +898,38 @@ export function OpnamePage() {
             <Copy size={16} aria-hidden /> <span class="hidden sm:inline">Salin semua stok dalam</span><span class="sm:hidden">Salin Semua</span>
           </Button>
         </div>
+
+        {/* Chips Kategori Aktif jika ada kategori yang dipilih */}
+        {katFilter.length > 0 && (
+          <div class="flex flex-wrap items-center gap-1.5 pt-1 text-xs text-muted-fg">
+            <span class="font-semibold text-fg">Kategori aktif:</span>
+            {katFilter.map((c) => (
+              <span
+                key={c}
+                class="inline-flex items-center gap-1 rounded-md bg-card pl-2 pr-1.5 py-0.5 font-medium text-fg border border-line"
+              >
+                <span>{c}</span>
+                <button
+                  type="button"
+                  onClick={() => setKatFilter((prev) => prev.filter((x) => x !== c))}
+                  class="text-muted-fg hover:text-danger cursor-pointer ml-0.5"
+                  aria-label={`Hapus filter kategori ${c}`}
+                >
+                  <X size={12} weight="bold" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={() => setKatFilter([])}
+              class="font-semibold text-primary hover:underline cursor-pointer ml-1"
+            >
+              Hapus semua ({katFilter.length})
+            </button>
+          </div>
+        )}
       </div>
-      {sort === 'kategori' && katFilter === 'semua' ? (
+      {sort === 'kategori' && katFilter.length !== 1 ? (
         <DataTable
           compact
           cols={cols}
