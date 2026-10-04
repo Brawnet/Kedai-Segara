@@ -1,6 +1,7 @@
 # Planning & scratch
 .planning/
 .kiro/
+.agents/
 
 # Node / build
 node_modules/

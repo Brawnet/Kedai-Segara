@@ -7,8 +7,8 @@ var SHEETS = {
   Barang: ['id', 'nama', 'satuan', 'kategori', 'stok_dalam', 'stok_luar', 'ambang_min', 'alur', 'aktif', 'kode', 'catatan', 'bisa_produksi'],
   Karyawan: ['id', 'nama', 'aktif', 'pin'],
   Transaksi: ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
-  Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
-  RekapBaris: ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan'],
+  Rekap: ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin', 'status', 'approved_ts'],
+  RekapBaris: ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan', 'terjual', 'selisih'],
   Opname: ['id', 'ts', 'waktu', 'barang_id', 'barang', 'sistem', 'fisik', 'selisih'],
   Pengaturan: ['kunci', 'nilai'],
   Log_Login: ['id', 'ts', 'waktu', 'email', 'metode', 'role', 'status', 'user_agent']
@@ -18,7 +18,7 @@ var SS_ = null;
 // Opsional: Isi ID spreadsheet jika script dibuat terpisah dari script.google.com.
 // Jika dibuka dari spreadsheet langsung (Ekstensi → Apps Script), biarkan kosong ('').
 var DEFAULT_SS_ID = '';
-var SKEMA_V = '6'; // naikkan jika kolom di SHEETS berubah
+var SKEMA_V = '7'; // naikkan jika kolom di SHEETS berubah
 
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
@@ -770,7 +770,7 @@ function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
         if (s < 0 || s > r.maks + 1e-9) throw new Error('Sisa ' + r.nama + ' harus 0 sampai ' + r.maks);
       });
       var id = uid_();
-      append_('Rekap', { id: id, ts: cutoff, waktu: fmt_(cutoff), karyawan_id: String(k.id), karyawan: k.nama, diedit_admin: false });
+      append_('Rekap', { id: id, ts: cutoff, waktu: fmt_(cutoff), karyawan_id: String(k.id), karyawan: k.nama, diedit_admin: false, status: 'PENDING', approved_ts: '' });
       draf.forEach(function (r) {
         var i = by[r.barang_id], s = r_(num_(i.sisa));
         var b = barang.filter(function (x) { return String(x.id) === r.barang_id; })[0];
@@ -778,8 +778,9 @@ function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
           b.stok_luar = r_(s + r.setelah);
           update_('Barang', b);
         }
+        var terpakai = r_(r.maks - s);
         append_('RekapBaris', { rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil,
-          sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
+          sisa: s, terpakai: terpakai, catatan: i.catatan || '', terjual: 0, selisih: terpakai });
       });
       return { id: id };
     });
@@ -790,11 +791,20 @@ function simpanRekap(cutoff, karyawanId, input, clientTxId, token) {
 function adminData(pin, token) {
   auth_(pin, token);
   var desc = function (a, b) { return num_(b.ts) - num_(a.ts); };
-  var rekap = rows_('Rekap').sort(desc).slice(0, 30).map(clean_);
+  var allRekapList = rows_('Rekap');
+  var pendingRekap = allRekapList.filter(function (r) { return String(r.status || '').toUpperCase() === 'PENDING'; }).sort(desc);
+  var approvedRekap = allRekapList.filter(function (r) { return String(r.status || '').toUpperCase() !== 'PENDING'; }).sort(desc).slice(0, 30);
+  var rekap = pendingRekap.concat(approvedRekap).map(clean_);
   var baris = rows_('RekapBaris');
   rekap.forEach(function (r) {
     r.diedit_admin = truthy_(r.diedit_admin);
-    r.baris = baris.filter(function (x) { return String(x.rekap_id) === String(r.id); }).map(clean_);
+    r.status = r.status ? String(r.status).toUpperCase() : 'APPROVED';
+    r.baris = baris.filter(function (x) { return String(x.rekap_id) === String(r.id); }).map(function (b) {
+      var cb = clean_(b);
+      cb.terjual = num_(cb.terjual) || 0;
+      cb.selisih = cb.selisih !== undefined && cb.selisih !== '' ? num_(cb.selisih) : r_(num_(cb.terpakai) - cb.terjual);
+      return cb;
+    });
   });
   return {
     barang: rows_('Barang').map(pub_),
@@ -1213,6 +1223,78 @@ function editRekapTerakhir(pin, input, token) {
     });
     if (plan.length) { rk.diedit_admin = true; update_('Rekap', rk); }
     return plan.length;
+  });
+}
+function approveRekap(pin, rekapId, input, token) {
+  auth_(pin, token);
+  return lock_(function () {
+    var rk = find_('Rekap', rekapId);
+    if (!rk) throw new Error('Rekap tidak ditemukan');
+    if ((rk.status ? String(rk.status).toUpperCase() : 'APPROVED') === 'APPROVED') {
+      throw new Error('Rekap sudah disetujui');
+    }
+
+    // FIFO check: pastikan tidak ada rekap berstatus PENDING yang lebih lampau
+    var allRekap = rows_('Rekap');
+    var hasOlderPending = allRekap.some(function (r) {
+      var isPending = (r.status ? String(r.status).toUpperCase() : 'APPROVED') === 'PENDING';
+      return isPending && String(r.id) !== String(rekapId) && num_(r.ts) < num_(rk.ts);
+    });
+    if (hasOlderPending) {
+      throw new Error('Harap setujui rekap yang lebih lama terlebih dahulu');
+    }
+
+    var bs = rows_('RekapBaris').filter(function (x) { return String(x.rekap_id) === String(rekapId); });
+    var barang = rows_('Barang'), plan = [];
+    var by = {};
+    (input || []).forEach(function (i) { by[String(i.barang_id)] = i; });
+
+    bs.forEach(function (x) {
+      var itemInput = by[String(x.barang_id)];
+      var s = num_(x.sisa);
+      var terjual = num_(x.terjual) || 0;
+      var maks = num_(x.saldo_awal) + num_(x.diambil);
+
+      if (itemInput) {
+        if (itemInput.sisa !== '' && itemInput.sisa !== null && itemInput.sisa !== undefined) {
+          s = r_(numWajib_(itemInput.sisa, 'Sisa ' + x.barang));
+          if (s < 0 || s > maks + 1e-9) throw new Error('Sisa ' + x.barang + ' harus 0 sampai ' + maks);
+        }
+        if (itemInput.terjual !== '' && itemInput.terjual !== null && itemInput.terjual !== undefined) {
+          terjual = r_(numWajib_(itemInput.terjual, 'Terjual ' + x.barang));
+          if (terjual < 0) throw new Error('Terjual ' + x.barang + ' tidak boleh negatif');
+        }
+      }
+
+      var delta = r_(s - num_(x.sisa));
+      var b = barang.filter(function (y) { return String(y.id) === String(x.barang_id); })[0];
+      if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
+      var nl = r_(num_(b.stok_luar) + delta);
+      if (nl < 0) throw new Error('Saldo luar ' + x.barang + ' akan negatif');
+      plan.push({ x: x, b: b, s: s, maks: maks, nl: nl, terjual: terjual });
+    });
+
+    var changed = false;
+    plan.forEach(function (p) {
+      if (p.b.stok_luar !== p.nl) {
+        p.b.stok_luar = p.nl;
+        update_('Barang', p.b);
+        changed = true;
+      }
+      if (p.x.sisa !== p.s) changed = true;
+      p.x.sisa = p.s;
+      p.x.terpakai = r_(p.maks - p.s);
+      p.x.terjual = p.terjual;
+      p.x.selisih = r_(p.x.terpakai - p.terjual);
+      update_('RekapBaris', p.x);
+    });
+
+    if (changed) rk.diedit_admin = true;
+    rk.status = 'APPROVED';
+    rk.approved_ts = Date.now();
+    update_('Rekap', rk);
+
+    return { id: rk.id, status: 'APPROVED' };
   });
 }
 

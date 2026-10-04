@@ -552,12 +552,13 @@ export function createMock(): Impl {
           if (s < 0 || s > r.maks + 1e-9) throw new Error(`Sisa ${r.nama} harus 0 sampai ${r.maks}`);
         });
         const id = uid();
-        rekap.push({ id, ts: cutoff, waktu: fmt(cutoff), karyawan_id: k.id, karyawan: k.nama, diedit_admin: false });
+        rekap.push({ id, ts: cutoff, waktu: fmt(cutoff), karyawan_id: k.id, karyawan: k.nama, diedit_admin: false, status: 'PENDING' });
         draf.forEach((r) => {
           const i = by[r.barang_id]!, s = r_(num(i.sisa));
           const b = find(r.barang_id);
           if (b) b.stok_luar = r_(s + r.setelah);
-          rekapBaris.push({ rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil, sisa: s, terpakai: r_(r.maks - s), catatan: i.catatan || '' });
+          const terpakai = r_(r.maks - s);
+          rekapBaris.push({ rekap_id: id, barang_id: r.barang_id, barang: r.nama, saldo_awal: r.saldo_awal, diambil: r.diambil, sisa: s, terpakai, terjual: 0, selisih: terpakai, catatan: i.catatan || '' });
         });
         return { id };
       }),
@@ -569,7 +570,19 @@ export function createMock(): Impl {
           barang,
           karyawan: karyawan.map(({ id, nama, aktif, punyaPin, pin, pinLen }) => ({ id, nama, aktif, punyaPin: punyaPin ?? !!(pin && pin.trim()), pinLen: pinLen || (pin ? 4 : 0) })),
           transaksi: [...transaksi].sort(setelahDesc).slice(0, 400),
-          rekap: [...rekap].sort(setelahDesc).slice(0, 30).map((r) => ({ ...r, baris: rekapBaris.filter((x) => x.rekap_id === r.id) })),
+          rekap: (() => {
+            const pending = rekap.filter((r) => (r.status || 'APPROVED') === 'PENDING').sort(setelahDesc);
+            const approved = rekap.filter((r) => (r.status || 'APPROVED') === 'APPROVED').sort(setelahDesc).slice(0, 30);
+            return [...pending, ...approved].map((r) => ({
+              ...r,
+              status: r.status || 'APPROVED',
+              baris: rekapBaris.filter((x) => x.rekap_id === r.id).map((b) => ({
+                ...b,
+                terjual: b.terjual ?? 0,
+                selisih: b.selisih !== undefined ? b.selisih : r_(b.terpakai - (b.terjual ?? 0)),
+              })),
+            }));
+          })(),
           opname: [...opname].sort(setelahDesc).slice(0, 100),
           status: status(),
           lastRekap: lastRekapTs(),
@@ -871,6 +884,70 @@ export function createMock(): Impl {
       });
       if (plan.length) rk.diedit_admin = true;
       return plan.length;
+    },
+    approveRekap: (pin, rekapId, input, token) => {
+      auth(pin, token);
+      const rk = rekap.find((r) => r.id === rekapId);
+      if (!rk) throw new Error('Rekap tidak ditemukan');
+      if ((rk.status || 'APPROVED') === 'APPROVED') {
+        throw new Error('Rekap sudah disetujui');
+      }
+
+      // FIFO check: pastikan tidak ada rekap berstatus PENDING yang lebih lampau
+      const hasOlderPending = rekap.some((r) => {
+        const isPending = (r.status || 'APPROVED') === 'PENDING';
+        return isPending && r.id !== rekapId && r.ts < rk.ts;
+      });
+      if (hasOlderPending) {
+        throw new Error('Harap setujui rekap yang lebih lama terlebih dahulu');
+      }
+
+      const plan: { x: RekapBaris; b: Barang; s: number; maks: number; nl: number; terjual: number }[] = [];
+      const by = Object.fromEntries((input || []).map((i) => [i.barang_id, i]));
+      const bs = rekapBaris.filter((b) => b.rekap_id === rk.id);
+
+      bs.forEach((x) => {
+        const itemInput = by[x.barang_id];
+        let s = x.sisa;
+        let terjual = x.terjual ?? 0;
+        const maks = r_(x.saldo_awal + x.diambil);
+
+        if (itemInput) {
+          if (itemInput.sisa !== '' && itemInput.sisa !== null && itemInput.sisa !== undefined) {
+            s = r_(numWajib(itemInput.sisa, 'Sisa ' + x.barang));
+            if (s < 0 || s > maks + 1e-9) throw new Error(`Sisa ${x.barang} harus 0 sampai ${maks}`);
+          }
+          if (itemInput.terjual !== '' && itemInput.terjual !== null && itemInput.terjual !== undefined) {
+            terjual = r_(numWajib(itemInput.terjual, 'Terjual ' + x.barang));
+            if (terjual < 0) throw new Error(`Terjual ${x.barang} tidak boleh negatif`);
+          }
+        }
+
+        const delta = r_(s - x.sisa);
+        const b = find(x.barang_id);
+        if (!b) throw new Error('Barang ' + x.barang + ' tidak ditemukan');
+        const nl = r_(b.stok_luar + delta);
+        if (nl < 0) throw new Error('Saldo luar ' + x.barang + ' akan negatif');
+        plan.push({ x, b, s, maks, nl, terjual });
+      });
+
+      let changed = false;
+      plan.forEach((p) => {
+        if (p.b.stok_luar !== p.nl) {
+          p.b.stok_luar = p.nl;
+          changed = true;
+        }
+        if (p.x.sisa !== p.s) changed = true;
+        p.x.sisa = p.s;
+        p.x.terpakai = r_(p.maks - p.s);
+        p.x.terjual = p.terjual;
+        p.x.selisih = r_(p.x.terpakai - p.terjual);
+      });
+
+      if (changed) rk.diedit_admin = true;
+      rk.status = 'APPROVED';
+      rk.approved_ts = Date.now();
+      return { id: rk.id, status: 'APPROVED' };
     },
     buatDummyRekap: (pin, token) => {
       auth(pin, token);

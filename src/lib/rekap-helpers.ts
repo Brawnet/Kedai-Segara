@@ -1,4 +1,5 @@
 import type { Transaksi } from './types';
+import { nf } from './format.ts';
 
 export interface ItemSummary {
   barang_id: string;
@@ -95,12 +96,12 @@ export function clearRekapSnooze(storage?: Storage): void {
   } catch {}
 }
 
-export function formatSnoozeUntil(until: number): string {
-  if (!until || until <= Date.now()) return '';
+export function formatSnoozeUntil(until: number, now: number = Date.now()): string {
+  if (!until || until <= now) return '';
   const d = new Date(until);
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
-  const today = new Date();
+  const today = new Date(now);
   if (
     d.getDate() === today.getDate() &&
     d.getMonth() === today.getMonth() &&
@@ -111,4 +112,9 @@ export function formatSnoozeUntil(until: number): string {
   const dd = String(d.getDate()).padStart(2, '0');
   const bb = String(d.getMonth() + 1).padStart(2, '0');
   return `${dd}/${bb} pukul ${hh}:${mm}`;
+}
+
+export function formatSelisih(n: number): string {
+  if (Math.abs(n) < 1e-9) return '0';
+  return (n > 0 ? '+' : '') + nf(n);
 }

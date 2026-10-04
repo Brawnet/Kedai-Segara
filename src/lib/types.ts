@@ -94,6 +94,8 @@ export interface Transaksi {
   satuan: string;
 }
 
+export type RekapStatus = 'PENDING' | 'APPROVED';
+
 export interface RekapBaris {
   rekap_id: string;
   barang_id: string;
@@ -102,6 +104,8 @@ export interface RekapBaris {
   diambil: number;
   sisa: number;
   terpakai: number;
+  terjual?: number;
+  selisih?: number;
   catatan: string;
 }
 export interface Rekap {
@@ -111,7 +115,15 @@ export interface Rekap {
   karyawan_id: string;
   karyawan: string;
   diedit_admin: boolean;
+  status?: RekapStatus;
+  approved_ts?: number;
   baris: RekapBaris[];
+}
+
+export interface RekapApprovalItem {
+  barang_id: string;
+  sisa: number | string;
+  terjual?: number | string;
 }
 
 export interface Opname {
@@ -238,6 +250,7 @@ export interface Api {
   ambilAdmin(pin: string, karyawanId: string, barangId: string, jumlah: number | string, ts: number, token?: string): AmbilResult;
   simpanOpname(pin: string, items: { barang_id: string; fisik: string }[], token?: string): number;
   editRekapTerakhir(pin: string, input: { barang_id: string; sisa: string }[], token?: string): number;
+  approveRekap(pin: string, rekapId: string, input: RekapApprovalItem[], token?: string): { id: string; status: RekapStatus };
   buatDummyRekap(pin: string, token?: string): number;
   simpanPengaturan(pin: string, jamTutup: string, pinBaru: string, token?: string): boolean;
   laporan(pin: string, dari: string, sampai: string, token?: string): LaporanRow[];

@@ -33,7 +33,7 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
   const properties: Record<string, string> = {
     SS_ID: 'test-ss-id',
     ADMIN_PIN: '12345',
-    SKEMA: '6',
+    SKEMA: '7',
     SKIP_AUTH_SESSION: '1',
   };
   const sheetsData: Record<string, Cell[][]> = {
@@ -51,10 +51,10 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
       ['id', 'ts', 'waktu', 'jenis', 'barang_id', 'barang', 'jumlah', 'karyawan_id', 'karyawan', 'alur', 'supplier', 'status', 'dicatat_oleh', 'catatan', 'kategori', 'satuan'],
     ],
     Rekap: [
-      ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin'],
+      ['id', 'ts', 'waktu', 'karyawan_id', 'karyawan', 'diedit_admin', 'status', 'approved_ts'],
     ],
     RekapBaris: [
-      ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan'],
+      ['rekap_id', 'barang_id', 'barang', 'saldo_awal', 'diambil', 'sisa', 'terpakai', 'catatan', 'terjual', 'selisih'],
     ],
     Opname: [
       ['id', 'ts', 'waktu', 'barang_id', 'barang', 'sistem', 'fisik', 'selisih'],
