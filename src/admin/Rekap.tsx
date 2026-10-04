@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { CaretDown, CheckCircle, Clock, FunnelSimple, ListDashes, Rows } from '@phosphor-icons/react';
+import { CaretDown, CheckCircle, Clock, FunnelSimple, Info, ListDashes, Rows } from '@phosphor-icons/react';
 import { nf, parseNum, ymd } from '../lib/format';
 import type { Rekap } from '../lib/types';
-import { Button, Card, Field, Input, PageTitle, Tag, cx } from '../components/ui';
+import { Button, Card, Dialog, Field, Input, PageTitle, Tag, cx } from '../components/ui';
 import { DataTable, Section, useAdmin, type Col } from './shared';
 import { formatSelisih, hitungAutoFillTerjual } from '../lib/rekap-helpers';
+import { clearRekapDraft, loadRekapDraft, saveRekapDraft } from '../lib/rekap-draft';
 
 const hari = (a: number, b: number) => {
   const x = new Date(a), y = new Date(b);
@@ -14,10 +15,10 @@ const hari = (a: number, b: number) => {
 };
 
 
-function SelisihBadge({ value }: { value: number }) {
+function SelisihBadge({ value, onClick }: { value: number; onClick?: () => void }) {
   const isZero = Math.abs(value) < 1e-9;
   const isPos = value > 0;
-  return (
+  const badge = (
     <span
       class={cx(
         'num font-bold px-2 py-0.5 rounded text-xs min-w-6 text-center inline-block transition-colors',
@@ -26,25 +27,53 @@ function SelisihBadge({ value }: { value: number }) {
           : isPos
           ? 'bg-amber-100/80 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/60'
           : 'bg-blue-100/80 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300/60 dark:border-blue-800/60',
+        onClick && 'cursor-pointer hover:opacity-85 active:scale-95 transition-transform',
       )}
-      title={`Selisih: ${formatSelisih(value)}`}
+      title={
+        isZero
+          ? 'Selisih 0: Fisik terpakai pas dengan penjualan kasir'
+          : isPos
+          ? `Selisih +${formatSelisih(value)}: Terpakai lebih banyak dari kasir (potensi loss/porsi lebih)`
+          : `Selisih ${formatSelisih(value)}: Terpakai lebih sedikit dari kasir (penjualan kasir lebih tinggi)`
+      }
     >
       {formatSelisih(value)}
     </span>
   );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} class="cursor-pointer" aria-label="Info nilai selisih">
+        {badge}
+      </button>
+    );
+  }
+  return badge;
 }
 
 export function RekapPage() {
   const { d, A } = useAdmin();
-  const [sisaVals, setSisaVals] = useState<Record<string, Record<string, string>>>({});
-  const [terjualVals, setTerjualVals] = useState<Record<string, Record<string, string>>>({});
-  const [manualTerjual, setManualTerjual] = useState<Record<string, Record<string, boolean>>>({});
+  const [initialDraft] = useState(() => loadRekapDraft());
+  const [sisaVals, setSisaVals] = useState<Record<string, Record<string, string>>>(() => initialDraft?.sisaVals || {});
+  const [terjualVals, setTerjualVals] = useState<Record<string, Record<string, string>>>(() => initialDraft?.terjualVals || {});
+  const [manualTerjual, setManualTerjual] = useState<Record<string, Record<string, boolean>>>(() => initialDraft?.manualTerjual || {});
+  const isInitialDraftMount = useRef(true);
+
+  // Simpan draf otomatis ke localStorage setiap kali ada input sisa fisik, terjual, atau auto-fill
+  useEffect(() => {
+    if (isInitialDraftMount.current) {
+      isInitialDraftMount.current = false;
+      return;
+    }
+    saveRekapDraft(sisaVals, terjualVals, manualTerjual);
+  }, [sisaVals, terjualVals, manualTerjual]);
+
   const [openPendingId, setOpenPendingId] = useState<string | null>(null);
   const initializedPendingRef = useRef(false);
   const [dari, setDari] = useState('');
   const [sampai, setSampai] = useState('');
   const [modeTampilan, setModeTampilan] = useState<'rinci' | 'ringkas'>('rinci');
-
+  const [bukaInfoSelisih, setBukaInfoSelisih] = useState(false);
   const pendingRekaps = useMemo(() => {
     return d.rekap
       .filter((x) => (x.status ? String(x.status).toUpperCase() === 'PENDING' : false))
@@ -56,6 +85,31 @@ export function RekapPage() {
       .filter((x) => (x.status ? String(x.status).toUpperCase() === 'APPROVED' : true))
       .sort((a, b) => b.ts - a.ts); // Riwayat: terbaru di atas
   }, [d.rekap]);
+  // Bersihkan draf untuk rekap yang sudah tidak berstatus pending (mis. disetujui di tab lain)
+  useEffect(() => {
+    const pendingIds = new Set(pendingRekaps.map((r) => r.id));
+    const draftIds = new Set([...Object.keys(sisaVals), ...Object.keys(terjualVals)]);
+    for (const id of draftIds) {
+      if (!pendingIds.has(id)) {
+        clearRekapDraft(id);
+      }
+    }
+  }, [pendingRekaps, sisaVals, terjualVals]);
+
+  // Peringatan sebelum reload/close tab jika ada angka draf yang belum disetujui
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const hasUnsaved =
+        Object.values(sisaVals).some((sub) => Object.values(sub).some((v) => typeof v === 'string' && v.trim() !== '')) ||
+        Object.values(terjualVals).some((sub) => Object.values(sub).some((v) => typeof v === 'string' && v.trim() !== ''));
+      if (hasUnsaved) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [sisaVals, terjualVals]);
 
   // Set default accordion ke rekap pending paling awal (FIFO)
   useEffect(() => {
@@ -173,8 +227,18 @@ export function RekapPage() {
                         <span class="font-semibold text-fg text-xs">{nf(terjualVal)}</span>
                       </div>
                       <div class="flex flex-col items-center border-l border-line/60 px-0.5">
-                        <span class="text-[9px] uppercase font-bold text-muted-fg tracking-wider">Selisih</span>
-                        <SelisihBadge value={selisihVal} />
+                        <span class="inline-flex items-center gap-1 text-[9px] uppercase font-bold text-muted-fg tracking-wider">
+                          <span>Selisih</span>
+                          <button
+                            type="button"
+                            onClick={() => setBukaInfoSelisih(true)}
+                            class="text-muted-fg hover:text-primary cursor-pointer"
+                            title="Arti nilai selisih"
+                          >
+                            <Info size={10} weight="bold" />
+                          </button>
+                        </span>
+                        <SelisihBadge value={selisihVal} onClick={() => setBukaInfoSelisih(true)} />
                       </div>
                     </div>
                     {b.catatan ? (
@@ -202,7 +266,7 @@ export function RekapPage() {
                       {nf(b.terpakai)}
                     </span>
                     <span class="text-muted-fg text-[11px]">Jual: <strong class="text-fg num">{nf(terjualVal)}</strong></span>
-                    <SelisihBadge value={selisihVal} />
+                    <SelisihBadge value={selisihVal} onClick={() => setBukaInfoSelisih(true)} />
                   </span>
                 );
               })
@@ -398,9 +462,26 @@ export function RekapPage() {
                 },
                 {
                   label: 'Selisih',
+                  header: (
+                    <span class="inline-flex items-center justify-center gap-1">
+                      <span>Selisih</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBukaInfoSelisih(true);
+                        }}
+                        class="grid size-5 place-items-center rounded-full text-muted-fg hover:text-primary hover:bg-muted/80 transition-colors cursor-pointer"
+                        title="Panduan & Arti Nilai Selisih (Klik untuk info)"
+                        aria-label="Penjelasan arti nilai selisih"
+                      >
+                        <Info size={14} weight="bold" />
+                      </button>
+                    </span>
+                  ),
                   align: 'center',
                   w: 'w-[11%]',
-                  cell: (b) => <SelisihBadge value={b.liveSelisih} />,
+                  cell: (b) => <SelisihBadge value={b.liveSelisih} onClick={() => setBukaInfoSelisih(true)} />,
                 },
               ];
 
@@ -424,8 +505,18 @@ export function RekapPage() {
                         </span>
                       </div>
                       <div class="flex flex-col items-end">
-                        <span class="text-[9px] font-bold uppercase tracking-wider text-muted-fg">Selisih</span>
-                        <SelisihBadge value={b.liveSelisih} />
+                        <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-fg">
+                          <span>Selisih</span>
+                          <button
+                            type="button"
+                            onClick={() => setBukaInfoSelisih(true)}
+                            class="text-muted-fg hover:text-primary cursor-pointer p-0.5"
+                            aria-label="Info nilai selisih"
+                          >
+                            <Info size={11} weight="bold" />
+                          </button>
+                        </span>
+                        <SelisihBadge value={b.liveSelisih} onClick={() => setBukaInfoSelisih(true)} />
                       </div>
                     </div>
                   </div>
@@ -494,14 +585,56 @@ export function RekapPage() {
                 </div>
               );
 
-              const setujui = () => {
+              const setujui = async () => {
                 if (!isFirstQueue || adaSalah || !itemRows.length) return;
                 const items = itemRows.map((b) => ({
                   barang_id: b.barang_id,
                   sisa: String(parseNum(b.sisaStr)),
                   terjual: String(parseNum(b.terjualStr)),
                 }));
-                A('approveRekap', [rk.id, items], 'Rekap berhasil disetujui');
+                const res = await A('approveRekap', [rk.id, items], 'Rekap berhasil disetujui');
+                if (res) {
+                  clearRekapDraft(rk.id);
+                  setSisaVals((prev) => {
+                    const next = { ...prev };
+                    delete next[rk.id];
+                    return next;
+                  });
+                  setTerjualVals((prev) => {
+                    const next = { ...prev };
+                    delete next[rk.id];
+                    return next;
+                  });
+                  setManualTerjual((prev) => {
+                    const next = { ...prev };
+                    delete next[rk.id];
+                    return next;
+                  });
+                }
+              };
+
+              const hasDraft = Boolean(
+                (sisaVals[rk.id] && Object.values(sisaVals[rk.id]).some((v) => typeof v === 'string' && v.trim() !== '')) ||
+                (terjualVals[rk.id] && Object.values(terjualVals[rk.id]).some((v) => typeof v === 'string' && v.trim() !== ''))
+              );
+
+              const resetDraf = () => {
+                clearRekapDraft(rk.id);
+                setSisaVals((prev) => {
+                  const next = { ...prev };
+                  delete next[rk.id];
+                  return next;
+                });
+                setTerjualVals((prev) => {
+                  const next = { ...prev };
+                  delete next[rk.id];
+                  return next;
+                });
+                setManualTerjual((prev) => {
+                  const next = { ...prev };
+                  delete next[rk.id];
+                  return next;
+                });
               };
 
               const isiOtomatisTerjual = () => {
@@ -547,6 +680,7 @@ export function RekapPage() {
                       ) : (
                         <Tag tone="neutral">Antrean #{idx + 1}</Tag>
                       )}
+                      {hasDraft && <Tag tone="neutral">Draf Tersimpan</Tag>}
                       {rk.diedit_admin && <Tag>diedit admin</Tag>}
                     </div>
                     <div
@@ -595,9 +729,20 @@ export function RekapPage() {
                         >
                           Isi Terjual Otomatis
                         </Button>
+                        {hasDraft && (
+                          <Button
+                            variant="ghost"
+                            type="button"
+                            onClick={resetDraf}
+                            disabled={!isFirstQueue}
+                            title="Kembalikan sisa fisik dan terjual ke nilai asli dari tablet"
+                          >
+                            Reset Draf
+                          </Button>
+                        )}
                         <p class="text-xs text-muted-fg">
                           {isFirstQueue
-                            ? 'Menyimpan sisa fisik, terjual, dan selisih ke Riwayat Rekap. Tombol otomatis mengisi terjual = terpakai tanpa menimpa angka yang sudah Anda isi manual.'
+                            ? 'Menyimpan sisa fisik, terjual, dan selisih ke Riwayat Rekap. Draf tersimpan otomatis di perangkat ini.'
                             : `Terkunci: setujui rekap ${pendingRekaps[0].waktu} terlebih dahulu.`}
                         </p>
                       </div>
@@ -760,6 +905,15 @@ export function RekapPage() {
             <span class="num font-semibold text-fg">Awal + Ambil - Sisa</span> = <span class="num font-bold text-primary">Terpakai</span>
             <span class="text-muted-fg">·</span>
             <span class="num font-semibold text-fg">Terpakai - Terjual</span> = <span class="num font-bold text-fg">Selisih</span>
+            <button
+              type="button"
+              onClick={() => setBukaInfoSelisih(true)}
+              class="inline-flex items-center gap-1 ml-1 text-primary hover:underline font-bold cursor-pointer"
+              title="Penjelasan lengkap arti nilai selisih"
+            >
+              <Info size={13} weight="bold" />
+              <span>Arti Selisih</span>
+            </button>
           </span>
         </div>
 
@@ -774,6 +928,115 @@ export function RekapPage() {
           }
         />
       </Section>
+
+      {/* Dialog Panduan & Arti Nilai Selisih */}
+      <Dialog
+        open={bukaInfoSelisih}
+        onClose={() => setBukaInfoSelisih(false)}
+        title="Arti & Panduan Nilai Selisih"
+        footer={
+          <Button variant="secondary" onClick={() => setBukaInfoSelisih(false)}>
+            Mengerti
+          </Button>
+        }
+      >
+        <div class="flex flex-col gap-4 text-xs sm:text-sm">
+          {/* Rumus Ringkas */}
+          <div class="rounded-ctl border border-line bg-muted/50 p-3 sm:p-3.5 flex flex-col gap-1.5">
+            <div class="text-[11px] font-bold text-muted-fg uppercase tracking-wider">Rumus Dasar Selisih</div>
+            <div class="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm font-semibold text-fg">
+              <span class="num font-bold text-fg bg-card px-2 py-0.5 rounded border border-line">Selisih</span>
+              <span>=</span>
+              <span class="num text-primary font-bold bg-card px-2 py-0.5 rounded border border-line">Terpakai</span>
+              <span>−</span>
+              <span class="num text-fg bg-card px-2 py-0.5 rounded border border-line">Terjual</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-muted-fg mt-1">
+              Membandingkan stok fisik bahan yang berkurang dari dapur/bar (<strong>Terpakai</strong>) dengan pencatatan struk penjualan kasir (<strong>Terjual</strong>).
+            </p>
+          </div>
+
+          {/* Kartu 3 Kondisi: Plus, Minus, Nol */}
+          <div class="flex flex-col gap-3">
+            {/* 1. Nilai Minus */}
+            <div class="rounded-ctl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 p-3 sm:p-3.5 flex flex-col gap-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="num font-bold px-2 py-0.5 rounded text-xs text-center inline-block bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300/80 dark:border-blue-800">
+                    -2
+                  </span>
+                  <span class="font-bold text-fg text-xs sm:text-sm">Nilai Minus (−)</span>
+                </div>
+                <span class="text-[11px] font-semibold text-blue-700 dark:text-blue-300">
+                  Terpakai &lt; Terjual
+                </span>
+              </div>
+              <div class="text-xs text-muted-fg flex flex-col gap-1 mt-0.5">
+                <p class="text-fg font-medium">
+                  Artinya: Penjualan kasir lebih tinggi dari stok fisik yang terpakai.
+                </p>
+                <span class="text-[11px] font-semibold text-muted-fg uppercase tracking-wider mt-1">Penyebab Umum:</span>
+                <ul class="list-disc list-inside space-y-0.5 text-[11px] sm:text-xs pl-1">
+                  <li>Porsi atau takaran penyajian lebih hemat / efisien dibanding resep standar.</li>
+                  <li>Kasir salah mencatat kuantitas berlebih pada transaksi penjualan.</li>
+                  <li>Sisa fisik terhitung terlalu banyak saat opname rekap.</li>
+                  <li>Ada bahan sisa dari sesi sebelumnya yang ikut dipakai tanpa tercatat ambil baru.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 2. Nilai Nol */}
+            <div class="rounded-ctl border border-line bg-muted/30 p-3 sm:p-3.5 flex flex-col gap-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="num font-bold px-2 py-0.5 rounded text-xs text-center inline-block bg-muted text-muted-fg border border-line/60">
+                    0
+                  </span>
+                  <span class="font-bold text-fg text-xs sm:text-sm">Nilai Nol (0)</span>
+                </div>
+                <span class="text-[11px] font-semibold text-success">
+                  Terpakai = Terjual
+                </span>
+              </div>
+              <div class="text-xs text-muted-fg flex flex-col gap-1 mt-0.5">
+                <p class="text-fg font-medium">
+                  Artinya: Stok fisik bahan yang terpakai cocok persis dengan pencatatan penjualan kasir.
+                </p>
+                <p class="text-[11px] sm:text-xs text-muted-fg">
+                  Kondisi ideal operasional — tidak ada indikasi kebocoran bahan maupun selisih porsi.
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Nilai Plus */}
+            <div class="rounded-ctl border border-amber-200 dark:border-amber-900/60 bg-amber-50/50 dark:bg-amber-950/20 p-3 sm:p-3.5 flex flex-col gap-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="num font-bold px-2 py-0.5 rounded text-xs text-center inline-block bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800">
+                    +2
+                  </span>
+                  <span class="font-bold text-fg text-xs sm:text-sm">Nilai Plus (+)</span>
+                </div>
+                <span class="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  Terpakai &gt; Terjual
+                </span>
+              </div>
+              <div class="text-xs text-muted-fg flex flex-col gap-1 mt-0.5">
+                <p class="text-fg font-medium">
+                  Artinya: Stok fisik bahan keluar/berkurang lebih banyak daripada yang tercatat terjual di kasir.
+                </p>
+                <span class="text-[11px] font-semibold text-muted-fg uppercase tracking-wider mt-1">Penyebab Umum:</span>
+                <ul class="list-disc list-inside space-y-0.5 text-[11px] sm:text-xs pl-1">
+                  <li>Bahan terbuang (rusak, gosong, basi, tumpah, atau porsi terlalu banyak).</li>
+                  <li>Digunakan untuk tester/sampel atau konsumsi internal staf tanpa dicatat.</li>
+                  <li>Ada pesanan pelanggan yang belum sempat terinput / terlewat di kasir.</li>
+                  <li>Sisa fisik terhitung terlalu sedikit saat opname rekap.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }
