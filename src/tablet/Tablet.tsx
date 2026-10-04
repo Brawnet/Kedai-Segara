@@ -1671,8 +1671,8 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
           );
         })}
       </ul>
-      <div class="safe-bottom sticky bottom-0 z-20 -mx-4 border-t border-line bg-card/95 px-4 py-3 sm:py-3.5 backdrop-blur-md md:-mx-6 md:px-6 shadow-lg">
-        <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 sm:gap-4">
+      <div class="sticky bottom-3 sm:bottom-4 z-20 w-full rounded-2xl border border-line bg-card/95 p-3 sm:px-5 sm:py-3.5 backdrop-blur-md shadow-lg shadow-black/10 dark:shadow-black/30 transition-all">
+        <div class="flex items-center justify-between gap-3 sm:gap-4">
           <div class="flex items-center gap-3 min-w-0">
             {/* Visual Mini Progress Bar */}
             <div class="hidden sm:flex flex-col gap-1 w-28 lg:w-36 shrink-0">
