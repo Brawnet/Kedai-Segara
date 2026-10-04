@@ -1103,4 +1103,78 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     assert.equal(cekAdminPin_(originalHashed), false);
     assert.equal(properties.ADMIN_PIN, originalHashed);
   });
+  it('doGet does not execute state mutations when ?aksi= URLs are accessed and only serves HtmlOutput', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const doGet = runInContext('doGet', context);
+
+    // Initial state: b1 has stok_luar = 0
+    sheetsData.Barang[1][5] = 10; // pretend stok_luar is 10
+    const initialRekapCount = sheetsData.Rekap.length;
+
+    // Simulate GET ?aksi=tutup_september
+    const resTutup = doGet({ parameter: { aksi: 'tutup_september', mode: 'tablet' } });
+    // In mock, HtmlOutput returns string '<html>tablet</html>'
+    assert.equal(resTutup, '<html>tablet</html>');
+    // Ensure no rekap was added and stok_luar was NOT zeroed
+    assert.equal(sheetsData.Rekap.length, initialRekapCount);
+    assert.equal(sheetsData.Barang[1][5], 10);
+
+    // Simulate GET ?aksi=reset_stok_luar
+    const resReset = doGet({ parameter: { aksi: 'reset_stok_luar', mode: 'admin' } });
+    assert.equal(resReset, '<html>admin</html>');
+    assert.equal(sheetsData.Barang[1][5], 10);
+
+    // Simulate GET ?aksi=cek_rekap_draf
+    const resDraf = doGet({ parameter: { aksi: 'cek_rekap_draf' } });
+    assert.equal(resDraf, '<html>tablet</html>');
+  });
+
+  it('internal maintenance functions have trailing underscores and are not exposed to google.script.run', () => {
+    const { context } = createAppsScriptEnvironment();
+
+    // Verify functions without trailing _ are NOT present in global scope
+    assert.equal(runInContext('typeof resetStokLuar', context), 'undefined');
+    assert.equal(runInContext('typeof tutupPeriodeSeptember', context), 'undefined');
+
+    // Verify private implementations WITH trailing _ exist internally
+    assert.equal(runInContext('typeof resetStokLuar_', context), 'function');
+    assert.equal(runInContext('typeof tutupPeriodeSeptember_', context), 'function');
+    // Verify that all functions in Kode.gs without a trailing underscore are strictly whitelisted
+    const code = readFileSync('apps-script/Kode.gs', 'utf8');
+    const typesCode = readFileSync('src/lib/types.ts', 'utf8');
+
+    const apiMatch = typesCode.match(/export interface Api \{([\s\S]*?)\n\}/);
+    const apiKeys = new Set<string>();
+    if (apiMatch) {
+      const lines = apiMatch[1].split('\n');
+      for (const line of lines) {
+        const m = line.match(/^\s*([a-zA-Z0-9_]+)\s*\(/);
+        if (m) apiKeys.add(m[1]);
+      }
+    }
+
+    const EDITOR_ENTRY_POINTS: Record<string, true> = {
+      doGet: true,
+      setup: true,
+      imporDataSegara: true,
+    };
+    const funcRegex = /^function\s+([a-zA-Z0-9_]+)\s*\(/gm;
+    let match: RegExpExecArray | null;
+    const exposedWithoutUnderscore: string[] = [];
+
+    while ((match = funcRegex.exec(code)) !== null) {
+      const fnName = match[1];
+      if (!fnName.endsWith('_')) {
+        exposedWithoutUnderscore.push(fnName);
+      }
+    }
+
+    for (const fn of exposedWithoutUnderscore) {
+      const isAllowed = apiKeys.has(fn) || Boolean(EDITOR_ENTRY_POINTS[fn]);
+      assert.ok(
+        isAllowed,
+        `Function "${fn}" in Kode.gs does not have a trailing underscore and is not in Api or editorEntryPoints. It would be exposed to google.script.run!`,
+      );
+    }
+  });
 });

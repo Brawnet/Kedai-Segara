@@ -576,11 +576,16 @@ export function createMock(): Impl {
             return [...pending, ...approved].map((r) => ({
               ...r,
               status: r.status || 'APPROVED',
-              baris: rekapBaris.filter((x) => x.rekap_id === r.id).map((b) => ({
-                ...b,
-                terjual: b.terjual ?? 0,
-                selisih: b.selisih !== undefined ? b.selisih : r_(b.terpakai - (b.terjual ?? 0)),
-              })),
+              baris: rekapBaris.filter((x) => x.rekap_id === r.id).map((b) => {
+                const adaSelisih = b.selisih !== undefined && b.selisih !== null && String(b.selisih).trim() !== '';
+                const adaTerjual = b.terjual !== undefined && b.terjual !== null && String(b.terjual).trim() !== '';
+                if (adaSelisih || adaTerjual) {
+                  const terjual = num(b.terjual) || 0;
+                  const selisih = adaSelisih ? num(b.selisih) : r_(b.terpakai - terjual);
+                  return { ...b, terjual, selisih };
+                }
+                return { ...b, terjual: num(b.terpakai), selisih: 0 };
+              }),
             }));
           })(),
           opname: [...opname].sort(setelahDesc).slice(0, 100),

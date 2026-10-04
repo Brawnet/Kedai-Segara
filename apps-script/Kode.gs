@@ -23,7 +23,7 @@ var SKEMA_V = '7'; // naikkan jika kolom di SHEETS berubah
 /* ---------- Web app ---------- */
 // index.html adalah hasil build (Vite, satu file). Tidak dievaluasi sebagai template
 // karena kode JS hasil build bisa mengandung "<?" — mode disisipkan lewat placeholder.
-function resetStokLuar() {
+function resetStokLuar_() {
   return lock_(function () {
     var last = lastRekapTs_();
     var open = openTx_(last);
@@ -58,7 +58,7 @@ function appendBatch_(n, rows) {
   s.getRange(lr + 1, 1, raw.length, cols.length).setValues(raw);
 }
 
-function tutupPeriodeSeptember() {
+function tutupPeriodeSeptember_() {
   return lock_(function () {
     var allTx = rows_('Transaksi');
     var maxTs = 0;
@@ -125,36 +125,6 @@ function tutupPeriodeSeptember() {
 
 function doGet(e) {
   var mode = (e && e.parameter && e.parameter.mode) === 'admin' ? 'admin' : 'tablet';
-  if (e && e.parameter && e.parameter.aksi === 'reset_stok_luar') {
-    try {
-      var res = resetStokLuar();
-      return ContentService.createTextOutput(JSON.stringify(res))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  if (e && e.parameter && e.parameter.aksi === 'tutup_september') {
-    try {
-      var res = tutupPeriodeSeptember();
-      return ContentService.createTextOutput(JSON.stringify(res))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  if (e && e.parameter && e.parameter.aksi === 'cek_rekap_draf') {
-    try {
-      var draf = hitungRekap_(Date.now());
-      return ContentService.createTextOutput(JSON.stringify({ total: draf.length, baris: draf }))
-        .setMimeType(ContentService.MimeType.JSON);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-  }
   var html = HtmlService.createHtmlOutputFromFile('index').getContent().replace('__SEGARA_MODE__', mode);
   return HtmlService.createHtmlOutput(html)
     .setTitle('Stok Segara')
@@ -801,8 +771,16 @@ function adminData(pin, token) {
     r.status = r.status ? String(r.status).toUpperCase() : 'APPROVED';
     r.baris = baris.filter(function (x) { return String(x.rekap_id) === String(r.id); }).map(function (b) {
       var cb = clean_(b);
-      cb.terjual = num_(cb.terjual) || 0;
-      cb.selisih = cb.selisih !== undefined && cb.selisih !== '' ? num_(cb.selisih) : r_(num_(cb.terpakai) - cb.terjual);
+      var adaSelisih = cb.selisih !== undefined && cb.selisih !== null && String(cb.selisih).trim() !== '';
+      var adaTerjual = cb.terjual !== undefined && cb.terjual !== null && String(cb.terjual).trim() !== '';
+      if (adaSelisih || adaTerjual) {
+        cb.terjual = num_(cb.terjual) || 0;
+        cb.selisih = adaSelisih ? num_(cb.selisih) : r_(num_(cb.terpakai) - cb.terjual);
+      } else {
+        // Data lama (sebelum ada fitur terjual & selisih): tidak ada selisih
+        cb.terjual = num_(cb.terpakai);
+        cb.selisih = 0;
+      }
       return cb;
     });
   });

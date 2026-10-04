@@ -208,4 +208,28 @@ describe('Rekap Approval FIFO, Terjual & Selisih (Mock & Apps Script)', () => {
       api.approveRekap('12345', res.id, [{ barang_id: item.id, sisa: 2, terjual: 3 }]);
     }, /Rekap sudah disetujui/);
   });
+
+  it('Legacy rekap: rows without recorded terjual & selisih default to selisih 0 and terjual = terpakai', () => {
+    const { context, sheetsData } = createAppsScriptEnvironment();
+    const adminData = runInContext('adminData', context);
+
+    // Simulasi data lama di Google Sheets (kolom terjual dan selisih kosong)
+    const rekapSheet = sheetsData.Rekap;
+    const rekapBarisSheet = sheetsData.RekapBaris;
+    const legacyRekapId = 'legacy-rk-1';
+    rekapSheet.push([legacyRekapId, Date.now() - 50000, '01/10/2026 12:00', 'k1', 'Budi', false, '', '']);
+    // Baris rekap lama: saldo_awal: 0, diambil: 10, sisa: 3, terpakai: 7, catatan: '', terjual: '', selisih: ''
+    rekapBarisSheet.push([legacyRekapId, 'b1', 'Minyak goreng', 0, 10, 3, 7, '', '', '']);
+
+    const adm = adminData('12345');
+    const legacyRekap = adm.rekap.find((r: { id: string }) => r.id === legacyRekapId);
+    assert.ok(legacyRekap);
+    assert.equal(legacyRekap.status, 'APPROVED');
+
+    const baris = legacyRekap.baris.find((b: { barang_id: string }) => b.barang_id === 'b1');
+    assert.ok(baris);
+    assert.equal(baris.terpakai, 7);
+    assert.equal(baris.terjual, 7); // Sama dengan terpakai agar tidak ada selisih
+    assert.equal(baris.selisih, 0); // Selisih 0
+  });
 });
