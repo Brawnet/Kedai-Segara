@@ -133,7 +133,23 @@ function doGet(e) {
 }
 
 /* ---------- Setup (jalankan sekali dari editor) ---------- */
-function setup() {
+function requireEditorOrAdmin_(pin, token) {
+  var isEditor = false;
+  try {
+    if (typeof Session !== 'undefined' && Session.getActiveUser) {
+      var u = Session.getActiveUser().getEmail();
+      if (u && u.trim()) isEditor = true;
+    }
+  } catch (e) {}
+  if (isEditor) return true;
+
+  // Jika dipanggil dari web app / client tablet via google.script.run, wajib otentikasi admin
+  auth_(pin, token);
+  return true;
+}
+
+function setup(pin, token) {
+  requireEditorOrAdmin_(pin, token);
   // Script yang dibuat dari Sheet (Ekstensi → Apps Script) memakai sheet itu;
   // script standalone memakai DEFAULT_SS_ID.
   var ss = SpreadsheetApp.getActiveSpreadsheet() || (DEFAULT_SS_ID ? SpreadsheetApp.openById(DEFAULT_SS_ID) : null);
@@ -2006,8 +2022,8 @@ var DATA_SEGARA = [
  * Stok diisi setelah hitung fisik lewat Admin → Opname.
  * Aman dijalankan ulang: barang yang kodenya sudah ada tidak diubah.
  */
-function imporDataSegara() {
-  migrasi_(ss_());
+function imporDataSegara(pin, token) {
+  requireEditorOrAdmin_(pin, token);
   return lock_(function () {
     var ada = {};
     rows_('Barang').forEach(function (b) { if (String(b.kode || '')) ada[String(b.kode)] = true; });

@@ -118,3 +118,23 @@ export function formatSelisih(n: number): string {
   if (Math.abs(n) < 1e-9) return '0';
   return (n > 0 ? '+' : '') + nf(n);
 }
+
+export interface AutoFillTerjualItem {
+  barang_id: string;
+  liveTerpakai: number;
+}
+
+export function hitungAutoFillTerjual(
+  items: AutoFillTerjualItem[],
+  currentInputs: Record<string, string>,
+  manualEdited: Record<string, boolean>,
+): Record<string, string> {
+  const result: Record<string, string> = { ...currentInputs };
+  for (const item of items) {
+    if (manualEdited[item.barang_id]) {
+      continue;
+    }
+    result[item.barang_id] = String(item.liveTerpakai);
+  }
+  return result;
+}

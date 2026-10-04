@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createMock } from '../src/lib/mock.ts';
 import { createAppsScriptEnvironment } from './apps-script.test.ts';
 import { runInContext } from 'node:vm';
-import { formatSelisih } from '../src/lib/rekap-helpers.ts';
+import { formatSelisih, hitungAutoFillTerjual } from '../src/lib/rekap-helpers.ts';
 
 describe('Rekap Approval FIFO, Terjual & Selisih (Mock & Apps Script)', () => {
   it('Mock: simpanRekap creates PENDING rekap with terjual: 0 and selisih: terpakai', () => {
@@ -231,5 +231,34 @@ describe('Rekap Approval FIFO, Terjual & Selisih (Mock & Apps Script)', () => {
     assert.equal(baris.terpakai, 7);
     assert.equal(baris.terjual, 7); // Sama dengan terpakai agar tidak ada selisih
     assert.equal(baris.selisih, 0); // Selisih 0
+  });
+
+  it('hitungAutoFillTerjual: fills terjual = liveTerpakai but preserves manually edited inputs', () => {
+    const items = [
+      { barang_id: 'b1', liveTerpakai: 10 },
+      { barang_id: 'b2', liveTerpakai: 6 },
+      { barang_id: 'b3', liveTerpakai: 4 },
+    ];
+
+    // b1 sudah diedit manual oleh admin jadi 5
+    // b3 diedit manual oleh admin jadi 0
+    // b2 belum pernah diedit manual
+    const currentInputs = {
+      b1: '5',
+      b3: '0',
+    };
+    const manualEdited = {
+      b1: true,
+      b3: true,
+    };
+
+    const result = hitungAutoFillTerjual(items, currentInputs, manualEdited);
+
+    // b1 tetap 5 (tidak ditimpa menjadi 10)
+    assert.equal(result.b1, '5');
+    // b2 otomatis terisi 6 (sesuai liveTerpakai)
+    assert.equal(result.b2, '6');
+    // b3 tetap 0 (tidak ditimpa menjadi 4)
+    assert.equal(result.b3, '0');
   });
 });

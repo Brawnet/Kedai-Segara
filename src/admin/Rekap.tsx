@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
-import { CaretDown, CaretUp, CheckCircle, Clock, FunnelSimple, ListDashes, Rows } from '@phosphor-icons/react';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { CaretDown, CheckCircle, Clock, FunnelSimple, ListDashes, Rows } from '@phosphor-icons/react';
 import { nf, parseNum, ymd } from '../lib/format';
 import type { Rekap } from '../lib/types';
 import { Button, Card, Field, Input, PageTitle, Tag, cx } from '../components/ui';
 import { DataTable, Section, useAdmin, type Col } from './shared';
-import { formatSelisih } from '../lib/rekap-helpers';
+import { formatSelisih, hitungAutoFillTerjual } from '../lib/rekap-helpers';
 
 const hari = (a: number, b: number) => {
   const x = new Date(a), y = new Date(b);
@@ -38,7 +38,9 @@ export function RekapPage() {
   const { d, A } = useAdmin();
   const [sisaVals, setSisaVals] = useState<Record<string, Record<string, string>>>({});
   const [terjualVals, setTerjualVals] = useState<Record<string, Record<string, string>>>({});
-  const [openPendingId, setOpenPendingId] = useState<string>('');
+  const [manualTerjual, setManualTerjual] = useState<Record<string, Record<string, boolean>>>({});
+  const [openPendingId, setOpenPendingId] = useState<string | null>(null);
+  const initializedPendingRef = useRef(false);
   const [dari, setDari] = useState('');
   const [sampai, setSampai] = useState('');
   const [modeTampilan, setModeTampilan] = useState<'rinci' | 'ringkas'>('rinci');
@@ -57,14 +59,25 @@ export function RekapPage() {
 
   // Set default accordion ke rekap pending paling awal (FIFO)
   useEffect(() => {
-    if (pendingRekaps.length > 0) {
-      if (!openPendingId || !pendingRekaps.some((p) => p.id === openPendingId)) {
-        setOpenPendingId(pendingRekaps[0].id);
-      }
-    } else {
-      setOpenPendingId('');
+    if (pendingRekaps.length === 0) {
+      setOpenPendingId(null);
+      initializedPendingRef.current = false;
+      return;
     }
-  }, [pendingRekaps, openPendingId]);
+
+    if (!initializedPendingRef.current) {
+      setOpenPendingId(pendingRekaps[0].id);
+      initializedPendingRef.current = true;
+      return;
+    }
+
+    setOpenPendingId((currentOpenId) => {
+      if (currentOpenId && !pendingRekaps.some((p) => p.id === currentOpenId)) {
+        return pendingRekaps[0].id;
+      }
+      return currentOpenId;
+    });
+  }, [pendingRekaps]);
 
   const now = new Date();
   const today = ymd(now);
@@ -366,6 +379,10 @@ export function RekapPage() {
                             ...prev,
                             [rk.id]: { ...(prev[rk.id] || {}), [b.barang_id]: val },
                           }));
+                          setManualTerjual((prev) => ({
+                            ...prev,
+                            [rk.id]: { ...(prev[rk.id] || {}), [b.barang_id]: true },
+                          }));
                         }}
                         aria-invalid={b.badTerjual}
                         class="num text-center w-20 sm:w-24"
@@ -462,6 +479,10 @@ export function RekapPage() {
                             ...prev,
                             [rk.id]: { ...(prev[rk.id] || {}), [b.barang_id]: val },
                           }));
+                          setManualTerjual((prev) => ({
+                            ...prev,
+                            [rk.id]: { ...(prev[rk.id] || {}), [b.barang_id]: true },
+                          }));
                         }}
                         aria-invalid={b.badTerjual}
                         class="num text-center font-bold text-sm w-full"
@@ -483,12 +504,38 @@ export function RekapPage() {
                 A('approveRekap', [rk.id, items], 'Rekap berhasil disetujui');
               };
 
+              const isiOtomatisTerjual = () => {
+                if (!isFirstQueue) return;
+                const itemsToFill = itemRows.map((r) => ({
+                  barang_id: r.barang_id,
+                  liveTerpakai: r.liveTerpakai,
+                }));
+                const updated = hitungAutoFillTerjual(
+                  itemsToFill,
+                  terjualVals[rk.id] || {},
+                  manualTerjual[rk.id] || {},
+                );
+                setTerjualVals((prev) => ({
+                  ...prev,
+                  [rk.id]: updated,
+                }));
+              };
+
               return (
                 <Card key={rk.id} class="flex flex-col gap-3 p-4 md:p-5 border-line">
                   {/* Header Accordion */}
                   <div
-                    class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none"
-                    onClick={() => setOpenPendingId(isOpen ? '' : rk.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isOpen}
+                    class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
+                    onClick={() => setOpenPendingId((prev) => (prev === rk.id ? null : rk.id))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setOpenPendingId((prev) => (prev === rk.id ? null : rk.id));
+                      }
+                    }}
                   >
                     <div class="flex flex-wrap items-center gap-2">
                       <h3 class="text-base font-bold text-fg">
@@ -502,14 +549,15 @@ export function RekapPage() {
                       )}
                       {rk.diedit_admin && <Tag>diedit admin</Tag>}
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      class="p-1 size-8"
+                    <div
+                      class="flex size-8 items-center justify-center rounded-lg text-muted-fg hover:text-fg hover:bg-muted/60 transition-colors"
                       aria-label={isOpen ? 'Tutup detail rekap' : 'Buka detail rekap'}
                     >
-                      {isOpen ? <CaretUp size={18} /> : <CaretDown size={18} />}
-                    </Button>
+                      <CaretDown
+                        size={18}
+                        class={cx('transition-transform duration-200', isOpen && 'rotate-180')}
+                      />
+                    </div>
                   </div>
 
                   {/* Body Accordion */}
@@ -538,9 +586,18 @@ export function RekapPage() {
                         >
                           Setujui Rekap
                         </Button>
+                        <Button
+                          variant="secondary"
+                          type="button"
+                          onClick={isiOtomatisTerjual}
+                          disabled={!isFirstQueue || !itemRows.length}
+                          title="Isi otomatis nilai terjual = terpakai tanpa menimpa angka yang sudah Anda isi manual"
+                        >
+                          Isi Terjual Otomatis
+                        </Button>
                         <p class="text-xs text-muted-fg">
                           {isFirstQueue
-                            ? 'Menyimpan sisa fisik, terjual, menghitung selisih, dan memindahkan ke Riwayat Rekap.'
+                            ? 'Menyimpan sisa fisik, terjual, dan selisih ke Riwayat Rekap. Tombol otomatis mengisi terjual = terpakai tanpa menimpa angka yang sudah Anda isi manual.'
                             : `Terkunci: setujui rekap ${pendingRekaps[0].waktu} terlebih dahulu.`}
                         </p>
                       </div>
@@ -559,18 +616,25 @@ export function RekapPage() {
         actions={
           <div class="flex items-center gap-2 flex-wrap justify-end">
             <div
-              class="inline-flex items-center rounded-ctl border border-line bg-muted/70 p-0.5 text-xs select-none"
+              class="relative inline-grid grid-cols-2 rounded-ctl border border-line bg-muted/70 p-0.5 text-xs select-none"
               role="group"
               aria-label="Mode Tampilan Riwayat"
             >
+              {/* Sliding Pill Indicator */}
+              <div
+                class={cx(
+                  'absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] rounded-[8px] bg-card border border-line/60 shadow-2xs transition-transform duration-200 ease-out pointer-events-none',
+                  modeTampilan === 'rinci' ? 'translate-x-0' : 'translate-x-full',
+                )}
+                aria-hidden="true"
+              />
+
               <button
                 type="button"
                 onClick={() => setModeTampilan('rinci')}
                 class={cx(
-                  'inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs',
-                  modeTampilan === 'rinci'
-                    ? 'bg-card text-fg shadow-2xs border border-line/60'
-                    : 'text-muted-fg hover:text-fg',
+                  'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-[8px] px-2.5 py-1 font-semibold cursor-pointer text-xs transition-colors duration-150',
+                  modeTampilan === 'rinci' ? 'text-fg' : 'text-muted-fg hover:text-fg',
                 )}
                 title="Tampilkan detail Awal, Ambil, Sisa, Terpakai, Terjual, dan Selisih"
               >
@@ -581,10 +645,8 @@ export function RekapPage() {
                 type="button"
                 onClick={() => setModeTampilan('ringkas')}
                 class={cx(
-                  'inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 font-semibold transition-all cursor-pointer text-xs',
-                  modeTampilan === 'ringkas'
-                    ? 'bg-card text-fg shadow-2xs border border-line/60'
-                    : 'text-muted-fg hover:text-fg',
+                  'relative z-10 inline-flex items-center justify-center gap-1.5 rounded-[8px] px-2.5 py-1 font-semibold cursor-pointer text-xs transition-colors duration-150',
+                  modeTampilan === 'ringkas' ? 'text-fg' : 'text-muted-fg hover:text-fg',
                 )}
                 title="Tampilkan ringkas nama barang, terpakai, terjual, dan selisih"
               >

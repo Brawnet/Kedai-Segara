@@ -29,7 +29,7 @@ function display(v: Cell): string {
 }
 const cloneCell = (v: Cell): Cell => (v instanceof Date ? new Date(v.getTime()) : v);
 
-export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) {
+export function createAppsScriptEnvironment(opts: { uuid?: () => string; activeUserEmail?: string } = {}) {
   const properties: Record<string, string> = {
     SS_ID: 'test-ss-id',
     ADMIN_PIN: '12345',
@@ -184,6 +184,9 @@ export function createAppsScriptEnvironment(opts: { uuid?: () => string } = {}) 
       getScriptTimeZone: () => 'Asia/Jakarta',
       getEffectiveUser: () => ({
         getEmail: () => 'owner@segara.com',
+      }),
+      getActiveUser: () => ({
+        getEmail: () => (opts.activeUserEmail !== undefined ? opts.activeUserEmail : 'owner@segara.com'),
       }),
     },
     Utilities: {
@@ -1176,5 +1179,46 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
         `Function "${fn}" in Kode.gs does not have a trailing underscore and is not in Api or editorEntryPoints. It would be exposed to google.script.run!`,
       );
     }
+  });
+  it('setup and imporDataSegara can be run directly from Apps Script editor by the owner', () => {
+    // Simulated editor session where Session.getActiveUser().getEmail() is owner email
+    const { context } = createAppsScriptEnvironment({ activeUserEmail: 'owner@segara.com' });
+    const setup = runInContext('setup', context);
+    const imporDataSegara = runInContext('imporDataSegara', context);
+
+    assert.doesNotThrow(() => setup());
+    assert.doesNotThrow(() => imporDataSegara());
+  });
+
+  it('setup and imporDataSegara reject unauthorized client calls via google.script.run', () => {
+    // Simulated web app call from tablet where Session.getActiveUser().getEmail() is empty
+    const { context, properties } = createAppsScriptEnvironment({ activeUserEmail: '' });
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const setup = runInContext('setup', context);
+    const imporDataSegara = runInContext('imporDataSegara', context);
+
+    // Calling without admin credentials throws unauthorized error
+    assert.throws(() => setup(), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => imporDataSegara(), /Akses ditolak: sesi login wajib disertakan/);
+  });
+
+  it('setup and imporDataSegara allow client calls when authenticated admin credentials are provided', () => {
+    const { context, properties } = createAppsScriptEnvironment({ activeUserEmail: '' });
+    properties.SKIP_AUTH_SESSION = '0';
+    properties.AUTH_WHITELIST = JSON.stringify([
+      { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
+    ]);
+
+    const setup = runInContext('setup', context);
+    const imporDataSegara = runInContext('imporDataSegara', context);
+    const buatSessionToken_ = runInContext('buatSessionToken_', context);
+
+    const sess = buatSessionToken_('admin@segara.com', 'admin');
+    assert.doesNotThrow(() => setup('12345', sess.token));
+    assert.doesNotThrow(() => imporDataSegara('12345', sess.token));
   });
 });
