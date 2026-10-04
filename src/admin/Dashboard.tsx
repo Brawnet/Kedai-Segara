@@ -12,7 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { alurLabel, cocok, grupKat, katOf, menipis, nf, total, urutKat } from '../lib/format';
 import type { Barang } from '../lib/types';
-import { Banner, Button, Card, Input, PageTitle, Select, StockGauge, Tag, cx } from '../components/ui';
+import { Banner, Button, Card, Input, MultiSelect, PageTitle, ScrollPills, StockGauge, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
 import { DetailBelumRekapDialog } from './DetailBelumRekapDialog';
 import { clearRekapSnooze, getRekapSnoozeUntil } from '../lib/rekap-helpers';
@@ -101,7 +101,7 @@ function StatCard({
 export function Dashboard() {
   const { d } = useAdmin();
   const [q, setQ] = useState('');
-  const [kat, setKat] = useState('');
+  const [kat, setKat] = useState<string[]>([]);
   const [onlyLow, setOnlyLow] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const [modalDetailRekap, setModalDetailRekap] = useState(false);
@@ -129,14 +129,20 @@ export function Dashboard() {
   const st = d.status;
   const kategoriList = useMemo(() => urutKat(aktif, d.urutan), [aktif, d.urutan]);
   const list = useMemo(
-    () => aktif.filter((b) => cocok(b, q) && (!onlyLow || menipis(b)) && (!kat || katOf(b) === kat)),
+    () =>
+      aktif.filter(
+        (b) =>
+          cocok(b, q) &&
+          (!onlyLow || menipis(b)) &&
+          (kat.length === 0 || kat.includes(katOf(b))),
+      ),
     [aktif, q, onlyLow, kat],
   );
 
-  const hasFilter = Boolean(q.trim() || kat || onlyLow);
+  const hasFilter = Boolean(q.trim() || kat.length > 0 || onlyLow);
   const resetFilter = () => {
     setQ('');
-    setKat('');
+    setKat([]);
     setOnlyLow(false);
     searchRef.current?.focus();
   };
@@ -431,14 +437,13 @@ export function Dashboard() {
         </Card>
       )}
 
-      {/* Pill Kategori yang Thumb-Friendly di Ponsel */}
-      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* Pill Kategori dengan Drag-to-scroll, Mouse Wheel, dan Tombol Slide */}
+      <ScrollPills class="-mx-4 px-4 sm:mx-0 sm:px-0">
         <button
-          type="button"
-          onClick={() => setKat('')}
+          onClick={() => setKat([])}
           class={cx(
             'inline-flex min-h-9 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
-            !kat
+            kat.length === 0
               ? 'bg-primary text-white shadow-sm'
               : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:text-fg',
           )}
@@ -448,12 +453,16 @@ export function Dashboard() {
 
         {kategoriList.map((k) => {
           const count = aktif.filter((b) => katOf(b) === k).length;
-          const isSel = kat === k;
+          const isSel = kat.includes(k);
           return (
             <button
               key={k}
               type="button"
-              onClick={() => setKat(isSel ? '' : k)}
+              onClick={() =>
+                setKat((prev) =>
+                  prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k],
+                )
+              }
               class={cx(
                 'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 isSel
@@ -480,7 +489,7 @@ export function Dashboard() {
           <Warning size={13} weight="fill" />
           <span>Menipis ({low.length})</span>
         </button>
-      </div>
+      </ScrollPills>
 
       {/* Input Pencarian & Dropdown Kategori Desktop */}
       <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
@@ -522,26 +531,23 @@ export function Dashboard() {
         </div>
 
         {/* Dropdown filter untuk layar tablet/desktop */}
-        <div class="hidden sm:block w-56 shrink-0">
+        <div class="hidden sm:block w-64 shrink-0">
           <label class="sr-only" for="filter-kategori">
             Filter Kategori
           </label>
-          <Select
+          <MultiSelect
             id="filter-kategori"
             value={kat}
-            onChange={(e) => setKat(e.currentTarget.value)}
-            class="min-h-11 font-medium text-sm"
-          >
-            <option value="">Semua Kategori ({aktif.length})</option>
-            {kategoriList.map((k) => {
-              const count = aktif.filter((b) => katOf(b) === k).length;
-              return (
-                <option key={k} value={k}>
-                  {k} ({count})
-                </option>
-              );
-            })}
-          </Select>
+            onChange={setKat}
+            options={kategoriList.map((k) => ({
+              value: k,
+              label: k,
+              count: aktif.filter((b) => katOf(b) === k).length,
+            }))}
+            allLabel={`Semua Kategori (${aktif.length})`}
+            placeholder="Pilih Kategori"
+            class="w-full min-h-11 font-medium text-sm"
+          />
         </div>
       </div>
 
@@ -555,10 +561,25 @@ export function Dashboard() {
                 Kata kunci: "{q.trim()}"
               </span>
             )}
-            {kat && (
-              <span class="rounded-md bg-card px-2 py-0.5 font-medium text-fg border border-line">
-                Kategori: {kat}
-              </span>
+            {kat.length > 0 && (
+              <div class="flex flex-wrap items-center gap-1">
+                {kat.map((k) => (
+                  <span
+                    key={k}
+                    class="inline-flex items-center gap-1 rounded-md bg-card pl-2 pr-1.5 py-0.5 font-medium text-fg border border-line"
+                  >
+                    <span>Kategori: {k}</span>
+                    <button
+                      type="button"
+                      onClick={() => setKat((prev) => prev.filter((x) => x !== k))}
+                      class="text-muted-fg hover:text-danger cursor-pointer ml-0.5"
+                      aria-label={`Hapus filter kategori ${k}`}
+                    >
+                      <X size={12} weight="bold" />
+                    </button>
+                  </span>
+                ))}
+              </div>
             )}
             {onlyLow && (
               <span class="rounded-md bg-warning-soft px-2 py-0.5 font-medium text-warning border border-warning/30">

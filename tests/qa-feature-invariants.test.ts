@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { runInContext } from 'node:vm';
 import { createAppsScriptEnvironment } from './apps-script.test.ts';
 import { createMock } from '../src/lib/mock.ts';
-import { cocok, katOf, menipis } from '../src/lib/format.ts';
+import { cegahBukanAngka, cocok, hanyaAngka, katOf, menipis, parseNum } from '../src/lib/format.ts';
 import type { Barang, Rekap, Transaksi } from '../src/lib/types.ts';
 
 interface Row extends Record<string, unknown> {
@@ -167,12 +167,11 @@ describe('QA Subsystem & Feature Invariants', () => {
     assert.equal(res3, true);
   });
 
-  it('tablet batalAmbil allows undo within 60s without admin PIN and requires admin PIN after 60s', () => {
+  it('batalAmbil strictly requires admin PIN and cleanly restores inventory', () => {
     const { context } = createAppsScriptEnvironment();
     const ambil = runInContext('ambil', context);
     const batalAmbil = runInContext('batalAmbil', context);
     const rows_ = runInContext('rows_', context);
-    const update_ = runInContext('update_', context);
 
     const b1 = rows_('Barang').find((b: Row) => b.id === 'b1')!;
     const awalDalam = Number(b1.stok_dalam);
@@ -186,36 +185,25 @@ describe('QA Subsystem & Feature Invariants', () => {
     assert.equal(b1After.stok_dalam, awalDalam - 2);
     assert.equal(b1After.stok_luar, awalLuar + 2);
 
-    // 2. Immediate batalAmbil (within 60s) succeeds without PIN
-    const batalRes = batalAmbil(ambilRes.tx.id, '');
+    // 2. Calling batalAmbil without PIN or with wrong PIN fails
+    assert.throws(
+      () => batalAmbil(ambilRes.tx.id, ''),
+      /PIN salah/,
+    );
+    assert.throws(
+      () => batalAmbil(ambilRes.tx.id, 'wrongpin'),
+      /PIN salah/,
+    );
+
+    // 3. Canceling with valid admin PIN succeeds
+    const batalRes = batalAmbil(ambilRes.tx.id, '12345');
     assert.equal(batalRes, true);
 
     const b1Restored = rows_('Barang').find((b: Row) => b.id === 'b1')!;
     assert.equal(b1Restored.stok_dalam, awalDalam);
     assert.equal(b1Restored.stok_luar, awalLuar);
 
-    // 3. Ambil again, simulate over 60 seconds
-    const ambilRes2 = ambil('k1', 'b1', 3, 'tx-undo-test-2');
-    const txRow = rows_('Transaksi').find((t: Row) => t.id === ambilRes2.tx.id)!;
-    txRow.ts = Date.now() - 70000; // 70s ago
-    update_('Transaksi', txRow);
-
-    // Attempting cancel without PIN fails
-    assert.throws(
-      () => batalAmbil(ambilRes2.tx.id, ''),
-      /Batas 60 detik lewat\. Minta admin untuk membatalkan\./,
-    );
-
-    // Attempting cancel with wrong PIN fails
-    assert.throws(
-      () => batalAmbil(ambilRes2.tx.id, 'wrongpin'),
-      /PIN admin salah/,
-    );
-
-    // Canceling with valid admin PIN succeeds
-    assert.equal(batalAmbil(ambilRes2.tx.id, '12345'), true);
-
-    const txCancelled = rows_('Transaksi').find((t: Row) => t.id === ambilRes2.tx.id)!;
+    const txCancelled = rows_('Transaksi').find((t: Row) => t.id === ambilRes.tx.id)!;
     assert.equal(txCancelled.status, 'BATAL');
   });
 
@@ -588,5 +576,50 @@ describe('QA Subsystem & Feature Invariants', () => {
 
     // Out of range date
     assert.equal(filter('2026-09-22', '2026-09-23').length, 0);
+  });
+
+  it('Admin Barang: ambang_min and stok_awal strictly accept numeric values and strip negative signs', () => {
+
+    // Negative values and symbols are stripped
+    assert.equal(hanyaAngka('-15'), '15');
+    assert.equal(hanyaAngka('-0'), '0');
+    assert.equal(hanyaAngka('abc12.5xyz'), '12.5');
+    assert.equal(hanyaAngka('--50'), '50');
+    assert.equal(hanyaAngka('10.20.30'), '10.2030'); // extra dot stripped
+    assert.equal(hanyaAngka(''), '');
+
+    // cegahBukanAngka blocks non-numeric keystrokes
+    const simulateKey = (key: string, currVal = '') => {
+      let prevented = false;
+      const e = {
+        key,
+        preventDefault: () => {
+          prevented = true;
+        },
+      } as unknown as KeyboardEvent;
+      cegahBukanAngka(e, currVal);
+      return prevented;
+    };
+
+    assert.equal(simulateKey('-'), true); // minus blocked
+    assert.equal(simulateKey('+'), true); // plus blocked
+    assert.equal(simulateKey('a'), true); // letter blocked
+    assert.equal(simulateKey('5'), false); // digit allowed
+    assert.equal(simulateKey('.', '10'), false); // first dot allowed
+    assert.equal(simulateKey('.', '10.5'), true); // second dot blocked
+
+    // Form cleanup behavior for input value
+    const sanitizeAndParse = (rawInput: string) => {
+      const filtered = hanyaAngka(rawInput);
+      const cleaned = filtered.replace(/^[.,]+|[.,]+$/g, '');
+      const num = parseNum(cleaned || '0');
+      return { filtered, cleaned, num };
+    };
+
+    assert.deepEqual(sanitizeAndParse('-25'), { filtered: '25', cleaned: '25', num: 25 });
+    assert.deepEqual(sanitizeAndParse('.'), { filtered: '.', cleaned: '', num: 0 });
+    assert.deepEqual(sanitizeAndParse('12.'), { filtered: '12.', cleaned: '12', num: 12 });
+    assert.deepEqual(sanitizeAndParse(''), { filtered: '', cleaned: '', num: 0 });
+    assert.equal(sanitizeAndParse('-25').num >= 0, true);
   });
 });

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { CaretDown, CheckCircle, Clock, FunnelSimple, Info, ListDashes, Rows } from '@phosphor-icons/react';
+import { CaretDown, CheckCircle, Clock, FunnelSimple, Info, Lightning, ListDashes, Rows } from '@phosphor-icons/react';
 import { nf, parseNum, ymd } from '../lib/format';
 import type { Rekap } from '../lib/types';
-import { Button, Card, Dialog, Field, Input, PageTitle, Tag, cx } from '../components/ui';
+import { Button, Card, Confirm, Dialog, Field, Input, PageTitle, Tag, cx, formatDisplayDate } from '../components/ui';
 import { DataTable, Section, useAdmin, type Col } from './shared';
 import { formatSelisih, hitungAutoFillTerjual } from '../lib/rekap-helpers';
 import { clearRekapDraft, loadRekapDraft, saveRekapDraft } from '../lib/rekap-draft';
@@ -15,7 +15,17 @@ const hari = (a: number, b: number) => {
 };
 
 
-function SelisihBadge({ value, onClick }: { value: number; onClick?: () => void }) {
+function SelisihBadge({ value, onClick }: { value: number | null | undefined; onClick?: () => void }) {
+  if (value === null || value === undefined || isNaN(value)) {
+    return (
+      <span
+        class="num font-semibold px-2 py-0.5 rounded text-xs min-w-6 text-center inline-block text-muted-fg/70 bg-muted/50 border border-line/60"
+        title="Nilai selisih belum dihitung karena terjual belum diisi"
+      >
+        -
+      </span>
+    );
+  }
   const isZero = Math.abs(value) < 1e-9;
   const isPos = value > 0;
   const badge = (
@@ -69,6 +79,8 @@ export function RekapPage() {
   }, [sisaVals, terjualVals, manualTerjual]);
 
   const [openPendingId, setOpenPendingId] = useState<string | null>(null);
+  const [confirmApproveId, setConfirmApproveId] = useState<string | null>(null);
+  const [confirmResetId, setConfirmResetId] = useState<string | null>(null);
   const initializedPendingRef = useRef(false);
   const [dari, setDari] = useState('');
   const [sampai, setSampai] = useState('');
@@ -227,16 +239,8 @@ export function RekapPage() {
                         <span class="font-semibold text-fg text-xs">{nf(terjualVal)}</span>
                       </div>
                       <div class="flex flex-col items-center border-l border-line/60 px-0.5">
-                        <span class="inline-flex items-center gap-1 text-[9px] uppercase font-bold text-muted-fg tracking-wider">
-                          <span>Selisih</span>
-                          <button
-                            type="button"
-                            onClick={() => setBukaInfoSelisih(true)}
-                            class="text-muted-fg hover:text-primary cursor-pointer"
-                            title="Arti nilai selisih"
-                          >
-                            <Info size={10} weight="bold" />
-                          </button>
+                        <span class="text-[9px] uppercase font-bold text-muted-fg tracking-wider">
+                          Selisih
                         </span>
                         <SelisihBadge value={selisihVal} onClick={() => setBukaInfoSelisih(true)} />
                       </div>
@@ -336,14 +340,17 @@ export function RekapPage() {
 
               const itemRows = rk.baris.map((b, i) => {
                 const sisaStr = sisaMap[b.barang_id] ?? String(b.sisa);
-                const terjualStr = terjualMap[b.barang_id] ?? String(b.terjual ?? 0);
+                const hasEditedTerjual = b.barang_id in terjualMap || (rk.diedit_admin && b.terjual !== undefined && b.terjual !== null);
+                const terjualStr = hasEditedTerjual
+                  ? (terjualMap[b.barang_id] ?? String(b.terjual ?? ''))
+                  : '';
                 const sisaNum = parseNum(sisaStr);
                 const terjualNum = parseNum(terjualStr);
                 const maks = Number(b.saldo_awal) + Number(b.diambil);
                 const badSisa = sisaStr === '' || isNaN(sisaNum) || sisaNum < 0 || sisaNum > maks + 1e-9;
-                const badTerjual = terjualStr === '' || isNaN(terjualNum) || terjualNum < 0;
+                const badTerjual = terjualStr !== '' && (isNaN(terjualNum) || terjualNum < 0);
                 const liveTerpakai = !isNaN(sisaNum) ? Math.max(0, maks - sisaNum) : b.terpakai;
-                const liveSelisih = !isNaN(terjualNum) ? liveTerpakai - terjualNum : b.selisih ?? liveTerpakai;
+                const liveSelisih = !isNaN(terjualNum) ? liveTerpakai - terjualNum : NaN;
                 return {
                   ...b,
                   i,
@@ -358,6 +365,16 @@ export function RekapPage() {
               });
 
               const adaSalah = itemRows.some((b) => b.badSisa || b.badTerjual);
+              const belumLengkap = itemRows.some((b) => b.sisaStr.trim() === '' || b.terjualStr.trim() === '');
+              const needsAutoFill = itemRows.some((b) => {
+                if (b.terjualStr.trim() === '') return true;
+                const terjualNum = parseNum(b.terjualStr);
+                const isManuallyEdited = Boolean(manualTerjual[rk.id]?.[b.barang_id]);
+                if (!isManuallyEdited && b.liveTerpakai > 0 && (terjualNum === 0 || isNaN(terjualNum))) {
+                  return true;
+                }
+                return false;
+              });
               type PendingRow = (typeof itemRows)[number];
 
               const pendingCols: Col<PendingRow>[] = [
@@ -429,6 +446,26 @@ export function RekapPage() {
                 },
                 {
                   label: 'Terjual',
+                  header: (
+                    <span class="inline-flex items-center justify-center gap-1.5">
+                      <span>Terjual</span>
+                      {isFirstQueue && itemRows.length > 0 && needsAutoFill && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            isiOtomatisTerjual();
+                          }}
+                          class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold text-primary bg-primary-soft hover:bg-primary/20 border border-primary/30 transition-colors cursor-pointer select-none"
+                          title="Isi otomatis Terjual = Terpakai untuk semua barang tanpa menimpa yang sudah Anda isi manual"
+                          aria-label="Isi semua terjual otomatis sesuai terpakai"
+                        >
+                          <Lightning size={11} weight="fill" aria-hidden />
+                          <span>Auto</span>
+                        </button>
+                      )}
+                    </span>
+                  ),
                   align: 'center',
                   w: 'w-[15%]',
                   cell: (b) => (
@@ -437,6 +474,7 @@ export function RekapPage() {
                         aria-label={`Terjual ${b.barang}`}
                         inputmode="decimal"
                         value={b.terjualStr}
+                        placeholder="-"
                         onInput={(e) => {
                           const val = e.currentTarget.value;
                           setTerjualVals((prev) => ({
@@ -449,7 +487,7 @@ export function RekapPage() {
                           }));
                         }}
                         aria-invalid={b.badTerjual}
-                        class="num text-center w-20 sm:w-24"
+                        class="num text-center w-20 sm:w-24 placeholder:text-muted-fg/40"
                         disabled={!isFirstQueue}
                       />
                       {b.badTerjual && (
@@ -462,23 +500,6 @@ export function RekapPage() {
                 },
                 {
                   label: 'Selisih',
-                  header: (
-                    <span class="inline-flex items-center justify-center gap-1">
-                      <span>Selisih</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBukaInfoSelisih(true);
-                        }}
-                        class="grid size-5 place-items-center rounded-full text-muted-fg hover:text-primary hover:bg-muted/80 transition-colors cursor-pointer"
-                        title="Panduan & Arti Nilai Selisih (Klik untuk info)"
-                        aria-label="Penjelasan arti nilai selisih"
-                      >
-                        <Info size={14} weight="bold" />
-                      </button>
-                    </span>
-                  ),
                   align: 'center',
                   w: 'w-[11%]',
                   cell: (b) => <SelisihBadge value={b.liveSelisih} onClick={() => setBukaInfoSelisih(true)} />,
@@ -505,16 +526,8 @@ export function RekapPage() {
                         </span>
                       </div>
                       <div class="flex flex-col items-end">
-                        <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-fg">
-                          <span>Selisih</span>
-                          <button
-                            type="button"
-                            onClick={() => setBukaInfoSelisih(true)}
-                            class="text-muted-fg hover:text-primary cursor-pointer p-0.5"
-                            aria-label="Info nilai selisih"
-                          >
-                            <Info size={11} weight="bold" />
-                          </button>
+                        <span class="text-[9px] font-bold uppercase tracking-wider text-muted-fg">
+                          Selisih
                         </span>
                         <SelisihBadge value={b.liveSelisih} onClick={() => setBukaInfoSelisih(true)} />
                       </div>
@@ -558,12 +571,35 @@ export function RekapPage() {
                       {b.badSisa && <p class="mt-1 text-[10px] font-semibold text-danger">0–{nf(b.maks)}</p>}
                     </div>
                     <div>
-                      <label class="text-[11px] font-bold uppercase tracking-wider text-muted-fg block mb-1">
-                        Terjual
-                      </label>
+                      <div class="flex items-center justify-between mb-1">
+                        <label class="text-[11px] font-bold uppercase tracking-wider text-muted-fg">
+                          Terjual
+                        </label>
+                        {isFirstQueue && b.liveTerpakai > 0 && b.terjualStr !== String(b.liveTerpakai) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTerjualVals((prev) => ({
+                                ...prev,
+                                [rk.id]: { ...(prev[rk.id] || {}), [b.barang_id]: String(b.liveTerpakai) },
+                              }));
+                              setManualTerjual((prev) => ({
+                                ...prev,
+                                [rk.id]: { ...(prev[rk.id] || {}), [b.barang_id]: true },
+                              }));
+                            }}
+                            class="inline-flex items-center gap-0.5 text-[10px] font-bold text-primary hover:underline cursor-pointer"
+                            title={`Isi otomatis ${b.liveTerpakai} sesuai terpakai`}
+                          >
+                            <Lightning size={10} weight="fill" aria-hidden />
+                            <span>={nf(b.liveTerpakai)}</span>
+                          </button>
+                        )}
+                      </div>
                       <Input
                         inputmode="decimal"
                         value={b.terjualStr}
+                        placeholder="-"
                         onInput={(e) => {
                           const val = e.currentTarget.value;
                           setTerjualVals((prev) => ({
@@ -576,7 +612,7 @@ export function RekapPage() {
                           }));
                         }}
                         aria-invalid={b.badTerjual}
-                        class="num text-center font-bold text-sm w-full"
+                        class="num text-center font-bold text-sm w-full placeholder:text-muted-fg/40"
                         disabled={!isFirstQueue}
                       />
                       {b.badTerjual && <p class="mt-1 text-[10px] font-semibold text-danger">Wajib ≥ 0</p>}
@@ -586,7 +622,7 @@ export function RekapPage() {
               );
 
               const setujui = async () => {
-                if (!isFirstQueue || adaSalah || !itemRows.length) return;
+                if (!isFirstQueue || adaSalah || belumLengkap || !itemRows.length) return;
                 const items = itemRows.map((b) => ({
                   barang_id: b.barang_id,
                   sisa: String(parseNum(b.sisaStr)),
@@ -703,6 +739,31 @@ export function RekapPage() {
                         </div>
                       )}
 
+                      {/* Quick Action Bar di atas tabel */}
+                      {isFirstQueue && itemRows.length > 0 && needsAutoFill && (
+                        <div class="flex flex-wrap items-center justify-between gap-2.5 rounded-lg border border-line bg-muted/40 p-2.5 sm:px-3 text-xs">
+                          <div class="flex items-center gap-2 text-muted-fg min-w-0">
+                            <span class="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary font-bold">
+                              <Lightning size={14} weight="fill" aria-hidden />
+                            </span>
+                            <span class="truncate sm:overflow-visible">
+                              Aksi Cepat: Isi otomatis <strong>Terjual = Terpakai</strong> untuk semua barang
+                            </span>
+                          </div>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            type="button"
+                            onClick={isiOtomatisTerjual}
+                            class="min-h-8 text-xs px-2.5 py-1 gap-1.5 font-bold text-primary border-primary/30 bg-primary-soft hover:bg-primary/20 hover:text-primary shrink-0"
+                            title="Isi otomatis nilai terjual = terpakai tanpa menimpa angka yang sudah Anda isi manual"
+                          >
+                            <Lightning size={14} weight="fill" aria-hidden />
+                            <span>Isi Terjual Otomatis</span>
+                          </Button>
+                        </div>
+                      )}
+
                       <DataTable
                         cols={pendingCols}
                         rows={itemRows}
@@ -715,25 +776,17 @@ export function RekapPage() {
                         <Button
                           variant="primary"
                           guard
-                          onClick={setujui}
-                          disabled={!isFirstQueue || adaSalah || !rk.baris.length}
+                          onClick={() => setConfirmApproveId(rk.id)}
+                          disabled={!isFirstQueue || adaSalah || belumLengkap || !rk.baris.length}
+                          title={belumLengkap ? 'Isi nilai terjual untuk semua barang sebelum menyetujui rekap' : undefined}
                         >
                           Setujui Rekap
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          type="button"
-                          onClick={isiOtomatisTerjual}
-                          disabled={!isFirstQueue || !itemRows.length}
-                          title="Isi otomatis nilai terjual = terpakai tanpa menimpa angka yang sudah Anda isi manual"
-                        >
-                          Isi Terjual Otomatis
                         </Button>
                         {hasDraft && (
                           <Button
                             variant="ghost"
                             type="button"
-                            onClick={resetDraf}
+                            onClick={() => setConfirmResetId(rk.id)}
                             disabled={!isFirstQueue}
                             title="Kembalikan sisa fisik dan terjual ke nilai asli dari tablet"
                           >
@@ -742,10 +795,55 @@ export function RekapPage() {
                         )}
                         <p class="text-xs text-muted-fg">
                           {isFirstQueue
-                            ? 'Menyimpan sisa fisik, terjual, dan selisih ke Riwayat Rekap. Draf tersimpan otomatis di perangkat ini.'
+                            ? belumLengkap
+                              ? 'Isi nilai terjual (atau gunakan tombol Isi Terjual Otomatis di atas) sebelum menyetujui rekap.'
+                              : 'Menyimpan sisa fisik, terjual, dan selisih ke Riwayat Rekap. Draf tersimpan otomatis di perangkat ini.'
                             : `Terkunci: setujui rekap ${pendingRekaps[0].waktu} terlebih dahulu.`}
                         </p>
                       </div>
+
+                      {confirmApproveId === rk.id && (
+                        <Confirm
+                          open={confirmApproveId === rk.id}
+                          title="Setujui Rekap?"
+                          okLabel="Ya, Setujui"
+                          tone="primary"
+                          onCancel={() => setConfirmApproveId(null)}
+                          onOk={async () => {
+                            setConfirmApproveId(null);
+                            await setujui();
+                          }}
+                        >
+                          <div class="flex flex-col gap-2 text-sm">
+                            <p>
+                              Apakah Anda yakin ingin menyetujui rekap tanggal{' '}
+                              <strong class="text-fg num">{rk.waktu}</strong> dari staf{' '}
+                              <strong class="text-fg">{rk.karyawan}</strong> ({itemRows.length} barang)?
+                            </p>
+                            <p class="text-xs text-muted-fg">
+                              Sisa fisik, nilai terjual, dan selisih akan disimpan secara permanen ke Riwayat Rekap.
+                            </p>
+                          </div>
+                        </Confirm>
+                      )}
+
+                      {confirmResetId === rk.id && (
+                        <Confirm
+                          open={confirmResetId === rk.id}
+                          title="Reset Draf Rekap?"
+                          okLabel="Ya, Reset Draf"
+                          tone="danger"
+                          onCancel={() => setConfirmResetId(null)}
+                          onOk={() => {
+                            setConfirmResetId(null);
+                            resetDraf();
+                          }}
+                        >
+                          <p class="text-sm">
+                            Semua angka sisa fisik dan terjual yang Anda ubah akan dikembalikan ke nilai awal yang dikirim dari tablet.
+                          </p>
+                        </Confirm>
+                      )}
                     </div>
                   )}
                 </Card>
@@ -897,7 +995,7 @@ export function RekapPage() {
           <span>
             Menampilkan <strong class="num text-fg">{filteredApproved.length}</strong> dari <span class="num">{approvedRekaps.length}</span> rekap disetujui
             {(dari || sampai) && (
-              <span> · Rentang: <strong>{dari || 'Awal'}</strong> s/d <strong>{sampai || 'Sekarang'}</strong></span>
+              <span> · Rentang: <strong>{formatDisplayDate(dari) || 'Awal'}</strong> s/d <strong>{formatDisplayDate(sampai) || 'Sekarang'}</strong></span>
             )}
           </span>
           <span class="inline-flex items-center gap-1.5 text-[11px] text-muted-fg bg-muted/60 px-2.5 py-1 rounded-ctl border border-line">

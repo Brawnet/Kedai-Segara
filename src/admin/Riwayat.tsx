@@ -2,7 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { FunnelSimple } from '@phosphor-icons/react';
 import { katOf, urutKat, ymd } from '../lib/format';
 import type { Barang, Transaksi } from '../lib/types';
-import { Button, Card, Field, Input, PageTitle, Select } from '../components/ui';
+import { Button, Card, Field, Input, PageTitle, Select, formatDisplayDate } from '../components/ui';
 import { useAdmin } from './shared';
 import { TxList } from './Tx';
 
@@ -180,7 +180,7 @@ export function RiwayatPage() {
         <strong class="num text-fg">{list.length}</strong> transaksi · <span class="num">{n('AMBIL')}</span> ambil · <span class="num">{n('MASUK')}</span> masuk ·{' '}
         <span class="num">{n('PRODUKSI')}</span> produksi · <span class="num">{n('OPNAME')}</span> opname
         {(f.dari || f.sampai) && (
-          <span> · Rentang: <strong>{f.dari || 'Awal'}</strong> s/d <strong>{f.sampai || 'Sekarang'}</strong></span>
+          <span> · Rentang: <strong>{formatDisplayDate(f.dari) || 'Awal'}</strong> s/d <strong>{formatDisplayDate(f.sampai) || 'Sekarang'}</strong></span>
         )}
       </p>
       <TxList list={list} withAct />

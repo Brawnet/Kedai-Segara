@@ -634,23 +634,17 @@ function ambil(karyawanId, barangId, jumlah, arg4, arg5, arg6) {
 }
 
 function batalAmbil(txId, pin, token) {
-  requireSession_(token, 'tablet');
+  var p = PropertiesService.getScriptProperties();
+  var skipAuth = p && p.getProperty('SKIP_AUTH_SESSION') === '1';
+  var sessEmail = 'admin';
+  if (!skipAuth) {
+    var sess = requireSession_(token, 'admin');
+    if (sess && sess.email) sessEmail = sess.email;
+  }
+  auth_(pin, token);
   return lock_(function () {
-    var adminEmail = null;
-    if (pin) {
-      var input = String(pin).trim();
-      adminEmail = cekAnyAdminPin_(input);
-      if (!adminEmail && cekAdminPin_(input)) adminEmail = 'admin@segara.com';
-    }
     var t = find_('Transaksi', txId);
     if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-    var isOverTime = Date.now() - num_(t.ts) > 65000;
-    if (isOverTime) {
-      if (!adminEmail) {
-        if (!pin || !String(pin).trim()) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
-        throw new Error('PIN admin salah');
-      }
-    }
     if (num_(t.ts) <= lastRekapTs_()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
     var b = find_('Barang', t.barang_id);
     if (!b) throw new Error('Barang tidak ditemukan');
@@ -658,7 +652,8 @@ function batalAmbil(txId, pin, token) {
     if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(num_(b.stok_luar) - num_(t.jumlah)));
     update_('Barang', b);
     t.status = 'BATAL';
-    if (adminEmail) t.dicatat_oleh = adminEmail;
+    t.catatan = (t.catatan ? String(t.catatan).trim() + ' · ' : '') + 'Dibatalkan admin';
+    t.dicatat_oleh = sessEmail;
     update_('Transaksi', t);
     return true;
   });
@@ -813,7 +808,8 @@ function adminData(pin, token) {
     urutan: urutanKategori_(),
     jamTutup: jamTutup_(),
     url: ss_().getUrl(),
-    daftarSupplier: daftarSupplier_()
+    daftarSupplier: daftarSupplier_(),
+    daftarSatuan: daftarSatuan_()
   };
 }
 
@@ -966,6 +962,50 @@ function tambahSupplier(pin, namaSupplier, token) {
     list.push(sup);
     setSetting_('daftar_supplier', JSON.stringify(list));
     return { status: 'created', nama: sup, message: 'Supplier "' + sup + '" berhasil ditambahkan' };
+  });
+}
+
+function daftarSatuan_() {
+  var s = getSetting_('daftar_satuan');
+  var list = [];
+  if (s) {
+    try { list = JSON.parse(s); } catch (e) {}
+  }
+  var set = {};
+  var res = [];
+  var tambah = function (nm) {
+    var clean = String(nm || '').trim();
+    if (!clean) return;
+    var lower = clean.toLowerCase();
+    if (!set[lower]) {
+      set[lower] = true;
+      res.push(clean);
+    }
+  };
+  ['Porsi', 'Pack', 'Pcs', 'Botol', 'Kaleng', 'Lbr', 'Kg', 'Gram', 'Liter', 'Cup', 'Bungkus', 'Dus', 'Piring', 'Mangkok'].forEach(tambah);
+  if (Array.isArray(list)) list.forEach(tambah);
+  rows_('Barang').forEach(function (b) {
+    tambah(b.satuan);
+  });
+  return res;
+}
+
+function tambahSatuan(pin, namaSatuan, token) {
+  auth_(pin, token);
+  var sat = String(namaSatuan || '').trim();
+  if (!sat) throw new Error('Nama satuan tidak boleh kosong');
+  return lock_(function () {
+    var list = daftarSatuan_();
+    var exists = list.some(function (s) { return s.toLowerCase() === sat.toLowerCase(); });
+    if (exists) throw new Error('Satuan "' + sat + '" sudah ada');
+    var s = getSetting_('daftar_satuan');
+    var savedList = [];
+    if (s) {
+      try { savedList = JSON.parse(s); } catch (e) {}
+    }
+    savedList.push(sat);
+    setSetting_('daftar_satuan', JSON.stringify(savedList));
+    return { status: 'created', nama: sat, message: 'Satuan "' + sat + '" berhasil ditambahkan' };
   });
 }
 
@@ -1485,14 +1525,8 @@ function getPublicAuthConfig() {
   var clientId = (p && p.getProperty('GOOGLE_CLIENT_ID')) || '';
   return {
     hasGoogleAuth: Boolean(clientId && clientId.trim()),
-    googleClientId: clientId ? clientId.trim() : '',
-    allowDummyAuth: isDummyAllowed_()
+    googleClientId: clientId ? clientId.trim() : ''
   };
-}
-
-function isDummyAllowed_() {
-  var p = PropertiesService.getScriptProperties();
-  return p && (p.getProperty('ALLOW_DUMMY_AUTH') === '1' || p.getProperty('SKIP_AUTH_SESSION') === '1');
 }
 
 function requestOtp(email) {
@@ -1508,13 +1542,12 @@ function requestOtp(email) {
 
   rateLimitGuard_('otp_req_' + em, 120);
 
-  var isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
   var c = cache_();
-  if (c && c.get('otp_cd_' + em) && !isDummy) {
+  if (c && c.get('otp_cd_' + em)) {
     throw new Error('Kode verifikasi baru saja dikirim. Tunggu 60 detik sebelum meminta kode baru.');
   }
 
-  var code = isDummy ? '123456' : (function () {
+  var code = (function () {
     var raw = Utilities.getUuid().replace(/\D/g, '');
     if (raw.length < 6) raw += String(Math.floor(100000 + Math.random() * 900000));
     return raw.slice(0, 6);
@@ -1522,13 +1555,6 @@ function requestOtp(email) {
   if (c) {
     c.put('otp_' + em, code, 300);
     c.put('otp_cd_' + em, '1', 60);
-  }
-  if (isDummy) {
-    return {
-      success: true,
-      message: 'Kode verifikasi dummy: 123456 (Gunakan kode ini untuk masuk)',
-      expSeconds: 300
-    };
   }
 
   try {
@@ -1554,16 +1580,14 @@ function verifyOtp(email, code, userAgent) {
   rateLimitGuard_('otp_ver_' + em, 60);
 
   var c = cache_();
-  var isDummy = em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com');
   var stored = c ? c.get('otp_' + em) : null;
-  if (!stored && !isDummy) {
+  if (!stored) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP', '-', 'GAGAL - OTP KADALUARSA', userAgent);
     throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
   }
 
-  var validDummy = isDummy && cd === '123456';
-  if (stored !== cd && !validDummy) {
+  if (!safeEqual_(stored, cd)) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP', '-', 'GAGAL - OTP SALAH', userAgent);
     throw new Error('Kode verifikasi salah.');
@@ -1726,16 +1750,14 @@ function resetAdminPinWithOtp(email, code, newPin, token) {
   rateLimitGuard_('otp_ver_' + em, 60);
 
   var c = cache_();
-  var isDummy = (typeof isDummyAllowed_ === 'function' ? isDummyAllowed_() : true) && (em === 'admin@segara.com' || em === 'tablet@segara.com' || em.endsWith('@segara.com'));
   var stored = c ? c.get('otp_' + em) : null;
-  if (!stored && !isDummy) {
+  if (!stored) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP_RESET_PIN', '-', 'GAGAL - OTP KADALUARSA', '');
     throw new Error('Kode verifikasi salah atau sudah kadaluarsa. Minta kode baru.');
   }
 
-  var validOtp = (stored && safeEqual_(stored, cd)) || (isDummy && cd === '123456');
-  if (!validOtp) {
+  if (!safeEqual_(stored, cd)) {
     rateLimitCatatGagal_('otp_ver_' + em, 60);
     catatLogLogin_(em, 'OTP_RESET_PIN', '-', 'GAGAL - OTP SALAH', '');
     throw new Error('Kode verifikasi salah');

@@ -1586,7 +1586,7 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
     );
 
   return (
-    <section class="flex flex-col gap-5">
+    <section class="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <BackBar onBack={onBack} label="Batal" />
       <PageTitle
         kicker={`${st.k.nama} · Rekap`}
@@ -1602,13 +1602,24 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
               key={r.barang_id}
               class={cx(
                 'rounded-card border bg-card p-4 sm:p-5 shadow-xs transition-all',
-                bad ? 'border-danger/80 ring-1 ring-danger/30' : 'border-line hover:border-line-strong/40',
+                bad
+                  ? 'border-danger/80 ring-1 ring-danger/30'
+                  : c === 'ok'
+                  ? 'border-primary/50 bg-card shadow-xs'
+                  : 'border-line hover:border-line-strong/40',
               )}
             >
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 {/* Kolom Kiri: Nama Barang */}
                 <div class="min-w-0 flex-1">
-                  <h3 class="text-base sm:text-lg font-bold text-fg leading-snug">{r.nama}</h3>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-base sm:text-lg font-bold text-fg leading-snug">{r.nama}</h3>
+                    {c === 'ok' && (
+                      <span class="inline-flex items-center gap-1 rounded-full bg-primary-soft text-primary px-2 py-0.5 text-xs font-bold">
+                        <CheckCircle size={13} weight="bold" /> Terisi
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Kolom Kanan: Input Sisa */}
@@ -1660,14 +1671,54 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
           );
         })}
       </ul>
-      <div class="safe-bottom sticky bottom-0 z-20 -mx-4 border-t border-line bg-card/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
-        <div class="flex items-center gap-3">
-          <p class="mr-auto text-sm font-semibold" aria-live="polite">
-            <span class="num">{terisi}</span> dari <span class="num">{st.rows.length}</span> barang terisi
-          </p>
-          <Button variant="primary" size="lg" guard onClick={simpan}>
-            <CheckCircle size={20} aria-hidden /> Simpan rekap
-          </Button>
+      <div class="safe-bottom sticky bottom-0 z-20 -mx-4 border-t border-line bg-card/95 px-4 py-3 sm:py-3.5 backdrop-blur-md md:-mx-6 md:px-6 shadow-lg">
+        <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 sm:gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            {/* Visual Mini Progress Bar */}
+            <div class="hidden sm:flex flex-col gap-1 w-28 lg:w-36 shrink-0">
+              <div class="flex items-center justify-between text-[11px] font-bold">
+                <span class="text-muted-fg uppercase tracking-wider">Progress</span>
+                <span class="num text-fg">{Math.round((terisi / st.rows.length) * 100)}%</span>
+              </div>
+              <div class="h-2 w-full overflow-hidden rounded-full bg-muted border border-line/60">
+                <div
+                  class="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${(terisi / st.rows.length) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Status text & Tag */}
+            <div class="flex flex-col min-w-0">
+              <div class="flex items-center gap-2">
+                <Tag tone={semua ? 'success' : 'warning'} class="font-bold text-xs shrink-0">
+                  {semua ? 'Lengkap' : `${terisi}/${st.rows.length} Terisi`}
+                </Tag>
+                <span class="num text-xs sm:text-sm font-bold text-fg truncate">
+                  {terisi} dari {st.rows.length} barang terisi
+                </span>
+              </div>
+              <span class="text-[11px] text-muted-fg font-medium truncate hidden xs:inline">
+                {semua ? 'Semua sisa dapur siap disimpan' : `${st.rows.length - terisi} barang lagi perlu diisi`}
+              </span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <Button variant="ghost" size="md" onClick={onBack} class="text-muted-fg hover:text-fg hidden sm:inline-flex">
+              Batal
+            </Button>
+            <Button
+              variant={semua ? 'primary' : 'secondary'}
+              size="lg"
+              guard
+              onClick={simpan}
+              class="font-bold shadow-sm min-h-12 px-4 sm:px-6"
+            >
+              <CheckCircle size={20} weight={semua ? 'bold' : 'regular'} aria-hidden />
+              <span>Simpan rekap</span>
+            </Button>
+          </div>
         </div>
       </div>
     </section>

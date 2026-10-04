@@ -149,6 +149,7 @@ export interface AdminData {
   jamTutup: string;
   url: string;
   daftarSupplier?: string[];
+  daftarSatuan?: string[];
 }
 
 export interface BarangInput {
@@ -242,6 +243,7 @@ export interface Api {
   tambahKategori(pin: string, namaKategori: string, token?: string): { status: 'created'; nama: string; message: string };
   hapusKategori(pin: string, namaKategori: string, token?: string): { status: 'deleted'; nama: string; jumlahBarang: number; message: string };
   tambahSupplier(pin: string, namaSupplier: string, token?: string): { status: 'created'; nama: string; message: string };
+  tambahSatuan(pin: string, namaSatuan: string, token?: string): { status: 'created'; nama: string; message: string };
   simpanKaryawan(pin: string, o: { id?: string; nama: string; aktif?: boolean; pin?: string }, token?: string): boolean;
   hapusKaryawan(pin: string, id: string, token?: string): { status: 'deleted' | 'archived'; nama: string; message: string };
   verifikasiPinKaryawan(karyawanId: string, pin: string): boolean;

@@ -380,7 +380,7 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     const ambilRes = ambil('k1', 'b1', 4);
     const txId = ambilRes.tx.id;
 
-    const ok = batalAmbil(txId, '');
+    const ok = batalAmbil(txId, '12345');
     assert.equal(ok, true);
 
     const b1 = sheetsData.Barang.find((r) => r[0] === 'b1');
@@ -414,7 +414,7 @@ describe('Google Apps Script (Kode.gs) Engine & Security Invariants', () => {
     assert.equal(txRow[9], 'LANGSUNG_HABIS');
 
     // Batal ambil
-    const ok = batalAmbil(res.tx.id, '');
+    const ok = batalAmbil(res.tx.id, '12345');
     assert.equal(ok, true);
 
     const b2AfterBatal = sheetsData.Barang.find((r: unknown[]) => r[0] === 'b2');
@@ -654,7 +654,7 @@ describe('Kode.gs regressions (real Google Sheets coercion & integrity)', () => 
     const ambil = runInContext('ambil', context);
     const batalAmbil = runInContext('batalAmbil', context);
     const r = ambil('k1', 'b1', 2);
-    assert.ok(batalAmbil(r.tx.id, ''));
+    assert.ok(batalAmbil(r.tx.id, '12345'));
   });
 
   it('text that looks like a date or number is kept verbatim', () => {
@@ -919,31 +919,45 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     );
   });
 
-  it('supports dummy login directly for @segara.com accounts with 123456 code in Kode.gs', () => {
-    const { context, properties } = createAppsScriptEnvironment();
+  it('generates real 6-digit OTP, sends via email, and verifies strictly against cache', () => {
+    const { context, properties, mockCache } = createAppsScriptEnvironment();
     properties.AUTH_WHITELIST = JSON.stringify([
       { email: 'admin@segara.com', role: 'admin', aktif: true, dibuat: Date.now() },
       { email: 'tablet@segara.com', role: 'tablet', aktif: true, dibuat: Date.now() },
     ]);
 
+    const requestOtp = runInContext('requestOtp', context);
     const verifyOtp = runInContext('verifyOtp', context);
-    const getPublicAuthConfig = runInContext('getPublicAuthConfig', context);
 
-    // Direct verify dummy admin
-    const adminSess = verifyOtp('admin@segara.com', '123456', 'Mozilla/5.0');
+    // Unrequested OTP fails immediately
+    assert.throws(
+      () => verifyOtp('admin@segara.com', '123456', 'Mozilla/5.0'),
+      /Kode verifikasi salah atau sudah kadaluarsa/,
+    );
+
+    // Request OTP generates random code in cache and sends email
+    const req = requestOtp('admin@segara.com');
+    assert.equal(req.success, true);
+    const code = mockCache.get('otp_admin@segara.com');
+    assert.match(code, /^\d{6}$/);
+
+    // Wrong code fails
+    assert.throws(
+      () => verifyOtp('admin@segara.com', '999999', 'Mozilla/5.0'),
+      /Kode verifikasi salah/,
+    );
+
+    // Valid code succeeds and returns session token
+    const adminSess = verifyOtp('admin@segara.com', code, 'Mozilla/5.0');
     assert.equal(adminSess.email, 'admin@segara.com');
     assert.equal(adminSess.role, 'admin');
     assert.ok(adminSess.token);
 
-    // Direct verify dummy tablet
-    const tabletSess = verifyOtp('tablet@segara.com', '123456', 'Mozilla/5.0');
-    assert.equal(tabletSess.email, 'tablet@segara.com');
-    assert.equal(tabletSess.role, 'tablet');
-    assert.ok(tabletSess.token);
-
-    // Public auth config reflects allowDummyAuth
-    const conf = getPublicAuthConfig();
-    assert.equal(conf.allowDummyAuth, true);
+    // Replay with used code fails (one-time use)
+    assert.throws(
+      () => verifyOtp('admin@segara.com', code, 'Mozilla/5.0'),
+      /Kode verifikasi salah atau sudah kadaluarsa/,
+    );
   });
 
   it('rejects getTablet and ambil when server session is missing or invalid in production', () => {
@@ -1043,6 +1057,7 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     const buatSessionToken_ = runInContext('buatSessionToken_', context);
 
     // All operations without session token must be rejected
+    const tambahSatuan = runInContext('tambahSatuan', context);
     assert.throws(() => adminData('12345'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => simpanBarang('12345', { nama: 'Test', satuan: 'kg', ambang_min: 0, alur: 'LUAR', kode: '', catatan: '' }), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => hapusBarang('12345', 'b1'), /Akses ditolak: sesi login wajib disertakan/);
@@ -1051,15 +1066,21 @@ describe('Google Apps Script (Kode.gs) Authentication, Session & Whitelist Invar
     assert.throws(() => tambahKategori('12345', 'KategoriBaru'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => hapusKategori('12345', 'Bahan'), /Akses ditolak: sesi login wajib disertakan/);
     assert.throws(() => tambahSupplier('12345', 'SupplierBaru'), /Akses ditolak: sesi login wajib disertakan/);
+    assert.throws(() => tambahSatuan('12345', 'SatuanBaru'), /Akses ditolak: sesi login wajib disertakan/);
     // With valid admin token, succeeds
     const sess = buatSessionToken_('admin@segara.com', 'admin');
     const res = adminData('12345', sess.token);
     assert.ok(res.barang.length > 0);
+    assert.ok(Array.isArray(res.daftarSatuan));
+    assert.ok(res.daftarSatuan.includes('Porsi'));
+    assert.ok(res.daftarSatuan.includes('Pack'));
     const supRes = tambahSupplier('12345', 'Supplier Uji', sess.token);
     assert.equal(supRes.status, 'created');
     assert.ok(adminData('12345', sess.token).daftarSupplier.includes('Supplier Uji'));
+    const satRes = tambahSatuan('12345', 'Krat', sess.token);
+    assert.equal(satRes.status, 'created');
+    assert.ok(adminData('12345', sess.token).daftarSatuan.includes('Krat'));
   });
-
   it('buatDummyRekap requires valid admin credentials and rejects unauthenticated calls', () => {
     const { context, properties } = createAppsScriptEnvironment();
     properties.SKIP_AUTH_SESSION = '0';

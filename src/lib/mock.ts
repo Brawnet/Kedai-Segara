@@ -86,6 +86,7 @@ export function createMock(): Impl {
   };
   const urutan = DATA.map((d) => d[0]);
   const daftarSupplier: string[] = ['CV. Dapur Rumah Rasa'];
+  const daftarSatuan: string[] = ['Porsi', 'Pack', 'Pcs', 'Botol', 'Kaleng', 'Lbr', 'Kg', 'Gram', 'Liter', 'Cup', 'Bungkus', 'Dus', 'Piring', 'Mangkok'];
   const barang: Barang[] = [];
   DATA.forEach(([kat, items], gi) =>
     items.forEach(([kode, nama, satuan, catatan], i) =>
@@ -463,32 +464,23 @@ export function createMock(): Impl {
         tx({ jenis: 'PRODUKSI', barang_id: b.id, barang: b.nama, jumlah: j, karyawan_id: k.id, karyawan: k.nama, alur: 'DALAM', supplier: '', catatan: supplier || 'Hasil produksi', dicatat_oleh: 'karyawan', kategori: b.kategori, satuan: b.satuan });
         return true;
       }),
-    batalAmbil: (txId, pin, _token) => {
+    batalAmbil: (txId, pin, token) => {
+      let email = 'admin';
+      if (token) {
+        const parts = token.split('_');
+        if (parts[3]) email = parts[3];
+      }
+      auth(pin, token);
       const t = transaksi.find((x) => x.id === txId);
       if (!t || t.jenis !== 'AMBIL' || t.status !== 'AKTIF') throw new Error('Transaksi tidak bisa dibatalkan');
-      let adminEmail: string | null = null;
-      if (pin) {
-        const input = String(pin).trim();
-        const matched = authWhitelist.find(
-          (a) => a.role === 'admin' && a.aktif && a.pinHash && (mockHash(input, a.salt || 'admin_salt') === a.pinHash || input === a.pinHash)
-        );
-        if (matched) adminEmail = matched.email;
-        else if (input === PIN) adminEmail = 'admin@segara.com';
-      }
-      const isOverTime = Date.now() - t.ts > 65000;
-      if (isOverTime) {
-        if (!adminEmail) {
-          if (!pin) throw new Error('Batas 60 detik lewat. Minta admin untuk membatalkan.');
-          throw new Error('PIN admin salah');
-        }
-      }
       if (t.ts <= lastRekapTs()) throw new Error('Sudah direkap. Koreksi lewat edit rekap atau opname.');
       const b = find(t.barang_id);
       if (!b) throw new Error('Barang tidak ditemukan');
       b.stok_dalam = r_(b.stok_dalam + t.jumlah);
       if (t.alur === 'LUAR') b.stok_luar = Math.max(0, r_(b.stok_luar - t.jumlah));
       t.status = 'BATAL';
-      if (adminEmail) t.dicatat_oleh = adminEmail;
+      t.catatan = (t.catatan ? t.catatan + ' · ' : '') + 'Dibatalkan admin';
+      t.dicatat_oleh = email;
       return true;
     },
     batalMasuk: (txId, pin, token) => {
@@ -602,6 +594,14 @@ export function createMock(): Impl {
             });
             return Array.from(set);
           })(),
+          daftarSatuan: (() => {
+            const set = new Set<string>(daftarSatuan);
+            barang.forEach((b) => {
+              const s = (b.satuan || '').trim();
+              if (s) set.add(s);
+            });
+            return Array.from(set);
+          })(),
         }),
       );
     },
@@ -680,6 +680,17 @@ export function createMock(): Impl {
       }
       daftarSupplier.push(sup);
       return { status: 'created', nama: sup, message: `Supplier "${sup}" berhasil ditambahkan` };
+    },
+    tambahSatuan: (pin, namaSatuan, token) => {
+      auth(pin, token);
+      const sat = String(namaSatuan || '').trim();
+      if (!sat) throw new Error('Nama satuan tidak boleh kosong');
+      const lower = sat.toLowerCase();
+      if (daftarSatuan.some((s) => s.toLowerCase() === lower)) {
+        throw new Error(`Satuan "${sat}" sudah ada`);
+      }
+      daftarSatuan.push(sat);
+      return { status: 'created', nama: sat, message: `Satuan "${sat}" berhasil ditambahkan` };
     },
     hapusKategori: (pin, namaKategori, token) => {
       auth(pin, token);

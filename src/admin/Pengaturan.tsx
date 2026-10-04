@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
   ArrowSquareOut,
   ArrowsClockwise,
@@ -11,12 +11,14 @@ import {
   GoogleLogo,
   Key,
   Link,
-   LockKey,
-   Moon,
+  LockKey,
+  Moon,
   PencilSimple,
-   ShieldCheck,
-   Sun,
-   Trash,
+  Plus,
+  Scales,
+  ShieldCheck,
+  Sun,
+  Trash,
   UserPlus,
   Warning,
   WarningCircle,
@@ -38,6 +40,23 @@ export function PengaturanPage() {
   const [tab, setTab] = useState<SubTab>('umum');
 
   const [modalKat, setModalKat] = useState(false);
+  const [modalTambahSatuan, setModalTambahSatuan] = useState(false);
+  const [satuanBaruInput, setSatuanBaruInput] = useState('');
+  const [errTambahSatuan, setErrTambahSatuan] = useState('');
+  const [loadingSatuan, setLoadingSatuan] = useState(false);
+
+  const daftarSatuanPengaturan = useMemo(() => {
+    const set = new Set<string>([
+      'Porsi', 'Pack', 'Pcs', 'Botol', 'Kaleng', 'Lbr', 'Kg', 'Gram', 'Liter', 'Cup', 'Bungkus', 'Dus', 'Piring', 'Mangkok',
+    ]);
+    if (d.daftarSatuan) d.daftarSatuan.forEach((s) => s && set.add(s.trim()));
+    d.barang.forEach((b) => {
+      const s = (b.satuan || '').trim();
+      if (s) set.add(s);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [d.daftarSatuan, d.barang]);
+
   // Pengaturan umum
   const [jam, setJam] = useState(d.jamTutup);
   const [pinLama, setPinLama] = useState('');
@@ -373,6 +392,38 @@ export function PengaturanPage() {
                 class="min-h-11 font-semibold"
               >
                 <FolderSimple size={18} weight="bold" aria-hidden /> Kelola & Hapus Kategori
+              </Button>
+            </div>
+          </Card>
+
+          <Card class="flex flex-col gap-3 p-4 md:p-5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 font-bold">
+                <Scales size={20} aria-hidden /> Satuan Hitung Barang
+              </div>
+              <Tag>{daftarSatuanPengaturan.length} satuan terdaftar</Tag>
+            </div>
+            <p class="text-sm text-muted-fg leading-relaxed">
+              Daftar satuan standar untuk pencatatan stok dan rekap. Satuan baru otomatis tersimpan permanen ke sistem dan dapat langsung dipilih di form tambah/edit barang.
+            </p>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              {daftarSatuanPengaturan.map((s) => (
+                <span
+                  key={s}
+                  class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-muted border border-line text-fg"
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+            <div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setModalTambahSatuan(true)}
+                class="min-h-11 font-semibold"
+              >
+                <Plus size={18} weight="bold" aria-hidden /> Tambah Satuan Baru
               </Button>
             </div>
           </Card>
@@ -811,6 +862,86 @@ export function PengaturanPage() {
       </Confirm>
       {/* Modal Kelola & Hapus Kategori */}
       <KelolaKategoriDialog open={modalKat} onClose={() => setModalKat(false)} />
+      {/* Modal Tambah Satuan Baru */}
+      {modalTambahSatuan && (
+        <Dialog
+          open={modalTambahSatuan}
+          title="Tambah Satuan Baru"
+          onClose={() => {
+            setModalTambahSatuan(false);
+            setSatuanBaruInput('');
+            setErrTambahSatuan('');
+          }}
+        >
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const val = satuanBaruInput.trim();
+              if (!val) {
+                setErrTambahSatuan('Nama satuan tidak boleh kosong');
+                return;
+              }
+              const lower = val.toLowerCase();
+              if (daftarSatuanPengaturan.some((s) => s.toLowerCase() === lower)) {
+                setErrTambahSatuan(`Satuan "${val}" sudah terdaftar`);
+                return;
+              }
+              setLoadingSatuan(true);
+              setErrTambahSatuan('');
+              try {
+                await A('tambahSatuan', [val], `Satuan "${val}" berhasil ditambahkan`);
+                setModalTambahSatuan(false);
+                setSatuanBaruInput('');
+              } catch (err) {
+                setErrTambahSatuan(String(err && (err as Error).message ? (err as Error).message : err));
+              } finally {
+                setLoadingSatuan(false);
+              }
+            }}
+            class="flex flex-col gap-4"
+          >
+            <p class="text-sm text-muted-fg leading-relaxed">
+              Tambahkan satuan hitung baru (misal: <strong>Dus</strong>, <strong>Krat</strong>, <strong>Cup</strong>, dll.). Satuan akan tersimpan permanen di Google Sheet dan otomatis muncul di seluruh pilihan satuan barang.
+            </p>
+            <Field label="Nama Satuan" error={errTambahSatuan}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={satuanBaruInput}
+                  onInput={(e) => {
+                    setSatuanBaruInput(e.currentTarget.value);
+                    if (errTambahSatuan) setErrTambahSatuan('');
+                  }}
+                  placeholder="mis. Dus, Krat, Cup, Galon"
+                  class="min-h-11 text-base font-medium"
+                  autoFocus
+                />
+              )}
+            </Field>
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setModalTambahSatuan(false);
+                  setSatuanBaruInput('');
+                  setErrTambahSatuan('');
+                }}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={loadingSatuan}
+                disabled={!satuanBaruInput.trim()}
+              >
+                Simpan Satuan
+              </Button>
+            </div>
+          </form>
+        </Dialog>
+      )}
     </div>
   );
 }

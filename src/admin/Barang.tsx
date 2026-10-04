@@ -15,9 +15,9 @@ import {
   Warning,
   X,
 } from '@phosphor-icons/react';
-import { alurLabel, cocok, grupKat, katOf, nf, parseNum, urutKat } from '../lib/format';
+import { alurLabel, cegahBukanAngka, cocok, grupKat, hanyaAngka, katOf, nf, parseNum, urutKat } from '../lib/format';
 import type { Alur, Barang, BarangInput } from '../lib/types';
-import { Banner, Button, Confirm, Dialog, Field, Input, PageTitle, Select, Tag, cx } from '../components/ui';
+import { Banner, Button, Confirm, Dialog, Field, Input, MultiSelect, PageTitle, ScrollPills, Select, Tag, cx } from '../components/ui';
 import { DataTable, useAdmin, type Col } from './shared';
 import { KelolaKategoriDialog } from './KelolaKategoriDialog';
 
@@ -44,7 +44,7 @@ const kosong: Form = {
 export function BarangPage() {
   const { d, A } = useAdmin();
   const [q, setQ] = useState('');
-  const [kat, setKat] = useState('');
+  const [kat, setKat] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('semua');
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -68,6 +68,10 @@ export function BarangPage() {
   const [err, setErr] = useState<Partial<Record<keyof Form, string>>>({});
   const [extraKat, setExtraKat] = useState<string[]>([]);
   const [modalKat, setModalKat] = useState(false);
+  const [modalTambahSatuan, setModalTambahSatuan] = useState(false);
+  const [satuanBaruInput, setSatuanBaruInput] = useState('');
+  const [errTambahSatuan, setErrTambahSatuan] = useState('');
+  const [loadingSatuan, setLoadingSatuan] = useState(false);
 
   const [modalHapus, setModalHapus] = useState<Barang | null>(null);
 
@@ -85,50 +89,107 @@ export function BarangPage() {
     });
     return list;
   }, [d, extraKat]);
-
   const isMenipis = (b: Barang) => b.aktif && b.stok_dalam + b.stok_luar < b.ambang_min;
   const isPorsi = (b: Barang) => b.satuan.trim().toLowerCase() === 'porsi';
 
+  const listSatuan = useMemo(() => {
+    const set = new Set<string>([
+      'Porsi', 'Pack', 'Pcs', 'Botol', 'Kaleng', 'Lbr', 'Kg', 'Gram', 'Liter', 'Cup', 'Bungkus', 'Dus', 'Piring', 'Mangkok',
+    ]);
+    if (d.daftarSatuan) d.daftarSatuan.forEach((s) => s && set.add(s.trim()));
+    d.barang.forEach((b) => {
+      const s = (b.satuan || '').trim();
+      if (s) set.add(s);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [d.daftarSatuan, d.barang]);
+
+  const barangKatFiltered = useMemo(() => {
+    if (kat.length === 0) return d.barang;
+    return d.barang.filter((b) => kat.includes(katOf(b)));
+  }, [d.barang, kat]);
+
+  const metricSatuan = useMemo(() => {
+    if (kat.length === 0) {
+      const porsiItems = barangKatFiltered.filter((b) => b.aktif && isPorsi(b));
+      const gudang = porsiItems.reduce((acc, b) => acc + b.stok_dalam, 0);
+      const luar = porsiItems.reduce((acc, b) => acc + b.stok_luar, 0);
+      return { label: 'Porsi', total: gudang + luar, gudang, luar };
+    }
+    const aktifItems = barangKatFiltered.filter((b) => b.aktif);
+    const freq: Record<string, number> = {};
+    aktifItems.forEach((b) => {
+      const s = (b.satuan || '').trim();
+      if (s) freq[s] = (freq[s] || 0) + 1;
+    });
+    const unik = Object.keys(freq);
+    if (unik.length === 1) {
+      const label = unik[0]!;
+      const gudang = aktifItems.reduce((acc, b) => acc + b.stok_dalam, 0);
+      const luar = aktifItems.reduce((acc, b) => acc + b.stok_luar, 0);
+      return { label, total: gudang + luar, gudang, luar };
+    }
+    if (unik.some((s) => s.toLowerCase() === 'porsi')) {
+      const porsiItems = aktifItems.filter((b) => isPorsi(b));
+      const gudang = porsiItems.reduce((acc, b) => acc + b.stok_dalam, 0);
+      const luar = porsiItems.reduce((acc, b) => acc + b.stok_luar, 0);
+      return { label: 'Porsi', total: gudang + luar, gudang, luar };
+    }
+    if (unik.length > 0) {
+      const top = unik.sort((a, b) => freq[b]! - freq[a]!)[0]!;
+      const topItems = aktifItems.filter((b) => (b.satuan || '').trim() === top);
+      const gudang = topItems.reduce((acc, b) => acc + b.stok_dalam, 0);
+      const luar = topItems.reduce((acc, b) => acc + b.stok_luar, 0);
+      return { label: top, total: gudang + luar, gudang, luar };
+    }
+    return { label: 'Porsi', total: 0, gudang: 0, luar: 0 };
+  }, [barangKatFiltered, kat]);
+
   const counts = useMemo(() => {
-    const total = d.barang.length;
-    const aktif = d.barang.filter((b) => b.aktif).length;
-    const menipis = d.barang.filter(isMenipis).length;
-    const arsip = d.barang.filter((b) => !b.aktif).length;
+    const total = barangKatFiltered.length;
+    const aktif = barangKatFiltered.filter((b) => b.aktif).length;
+    const menipis = barangKatFiltered.filter(isMenipis).length;
+    const arsip = barangKatFiltered.filter((b) => !b.aktif).length;
 
-    const porsiItems = d.barang.filter((b) => b.aktif && isPorsi(b));
-    const porsiGudang = porsiItems.reduce((acc, b) => acc + b.stok_dalam, 0);
-    const porsiLuar = porsiItems.reduce((acc, b) => acc + b.stok_luar, 0);
-    const totalPorsi = porsiGudang + porsiLuar;
-    const porsiCount = porsiItems.length;
-
-    return { total, aktif, menipis, arsip, totalPorsi, porsiGudang, porsiLuar, porsiCount };
-  }, [d.barang]);
-
+    return { total, aktif, menipis, arsip };
+  }, [barangKatFiltered]);
 
   const list = useMemo(() => {
     const query = q.trim().toLowerCase();
     return d.barang.filter((b) => {
       if (query && !cocok(b, query) && !b.kategori.toLowerCase().includes(query)) return false;
-      if (kat && katOf(b) !== kat) return false;
+      if (kat.length > 0 && !kat.includes(katOf(b))) return false;
       if (statusFilter === 'aktif' && !b.aktif) return false;
       if (statusFilter === 'arsip' && b.aktif) return false;
-      if (statusFilter === 'porsi' && (!b.aktif || !isPorsi(b))) return false;
+      if (statusFilter === 'porsi') {
+        if (!b.aktif) return false;
+        if (kat.length > 0) {
+          if ((b.satuan || '').trim().toLowerCase() !== metricSatuan.label.toLowerCase()) return false;
+        } else {
+          if (!isPorsi(b)) return false;
+        }
+      }
       if (statusFilter === 'menipis' && !isMenipis(b)) return false;
       return true;
     });
   }, [d.barang, q, kat, statusFilter]);
 
   const listPorsi = useMemo(() => {
-    const items = list.filter((b) => b.aktif && isPorsi(b));
+    const isTarget = (b: Barang) =>
+      b.aktif &&
+      (kat.length > 0
+        ? (b.satuan || '').trim().toLowerCase() === metricSatuan.label.toLowerCase()
+        : isPorsi(b));
+    const items = list.filter(isTarget);
     const gudang = items.reduce((acc, b) => acc + b.stok_dalam, 0);
     const luar = items.reduce((acc, b) => acc + b.stok_luar, 0);
-    return { total: gudang + luar, gudang, luar, count: items.length };
-  }, [list]);
+    return { label: metricSatuan.label, total: gudang + luar, gudang, luar, count: items.length };
+  }, [list, kat.length, metricSatuan.label]);
 
-  const hasActiveFilter = Boolean(q || kat || statusFilter !== 'semua');
+  const hasActiveFilter = Boolean(q || kat.length > 0 || statusFilter !== 'semua');
   const resetFilter = () => {
     setQ('');
-    setKat('');
+    setKat([]);
     setStatusFilter('semua');
   };
 
@@ -145,7 +206,23 @@ export function BarangPage() {
         : { ...kosong },
     );
   };
-  const up = (p: Partial<Form>) => setF((x) => x && { ...x, ...p });
+  const up = (p: Partial<Form>) => {
+    setF((x) => x && { ...x, ...p });
+    if (Object.keys(err).length > 0) {
+      const keys = Object.keys(p);
+      setErr((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        for (const k of keys) {
+          if (k in next) {
+            delete (next as Record<string, string | undefined>)[k];
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+  };
 
   const simpan = async (e: Event) => {
     e.preventDefault();
@@ -153,10 +230,12 @@ export function BarangPage() {
     const er: typeof err = {};
     if (!f.nama.trim()) er.nama = 'Nama wajib diisi';
     if (!f.satuan.trim()) er.satuan = 'Satuan wajib diisi';
-    const min = parseNum(f.ambang_min || '0');
+    const cleanMin = (f.ambang_min || '').replace(/^[.,]+|[.,]+$/g, '');
+    const min = parseNum(cleanMin || '0');
     if (isNaN(min) || min < 0) er.ambang_min = 'Ambang minimum tidak boleh negatif';
     if (!f.id) {
-      const awal = parseNum(f.stok_awal || '0');
+      const cleanAwal = (f.stok_awal || '').replace(/^[.,]+|[.,]+$/g, '');
+      const awal = parseNum(cleanAwal || '0');
       if (isNaN(awal) || awal < 0) er.stok_awal = 'Stok awal tidak boleh negatif';
     }
     setErr(er);
@@ -164,7 +243,14 @@ export function BarangPage() {
     const o: BarangInput = {
       ...f,
       id: f.id || '',
-      stok_awal: f.id ? undefined : f.stok_awal,
+      ambang_min: isNaN(min) ? 0 : min,
+      stok_awal: f.id
+        ? undefined
+        : String(
+            isNaN(parseNum((f.stok_awal || '').replace(/^[.,]+|[.,]+$/g, '') || '0'))
+              ? 0
+              : parseNum((f.stok_awal || '').replace(/^[.,]+|[.,]+$/g, '') || '0'),
+          ),
     };
     if (await A('simpanBarang', [o], 'Barang disimpan')) setF(null);
   };
@@ -436,8 +522,8 @@ export function BarangPage() {
         sub={
           <span>
             {counts.aktif} aktif · {counts.arsip} diarsipkan ·{' '}
-            <strong class="text-primary font-bold">{nf(counts.totalPorsi)} total porsi</strong>
-            <span class="hidden sm:inline text-muted-fg"> ({nf(counts.porsiGudang)} gudang · {nf(counts.porsiLuar)} dapur)</span>
+            <strong class="text-primary font-bold">{nf(metricSatuan.total)} total {metricSatuan.label.toLowerCase()}</strong>
+            <span class="hidden sm:inline text-muted-fg"> ({nf(metricSatuan.gudang)} gudang · {nf(metricSatuan.luar)} dapur)</span>
           </span>
         }
         actions={
@@ -484,15 +570,14 @@ export function BarangPage() {
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex items-baseline gap-1.5">
-              <span class="num text-xl sm:text-2xl font-extrabold tracking-tight text-primary">{nf(counts.totalPorsi)}</span>
-              <span class="text-xs font-bold text-primary">Porsi</span>
+              <span class="num text-xl sm:text-2xl font-extrabold tracking-tight text-primary">{nf(metricSatuan.total)}</span>
+              <span class="text-xs font-bold text-primary">{metricSatuan.label}</span>
             </div>
             <div class="truncate text-[11px] font-semibold text-muted-fg">
-              {nf(counts.porsiGudang)} gudang · {nf(counts.porsiLuar)} dapur
+              {nf(metricSatuan.gudang)} gudang · {nf(metricSatuan.luar)} dapur
             </div>
           </div>
         </button>
-
         {/* Card 2: Semua Barang */}
         <button
           type="button"
@@ -510,7 +595,13 @@ export function BarangPage() {
           </div>
           <div class="min-w-0 flex-1">
             <div class="num text-xl font-extrabold tracking-tight text-fg">{counts.total}</div>
-            <div class="truncate text-xs font-semibold text-muted-fg">Semua Barang</div>
+            <div class="truncate text-xs font-semibold text-muted-fg">
+              {kat.length === 0
+                ? 'Semua Barang'
+                : kat.length === 1
+                ? `Total ${kat[0]}`
+                : `Total (${kat.length} Kategori)`}
+            </div>
           </div>
         </button>
 
@@ -613,58 +704,63 @@ export function BarangPage() {
               </button>
             )}
           </div>
-          <div class="hidden sm:block w-56 shrink-0">
+          {/* Dropdown multi-select kategori desktop/tablet dengan ukuran tetap */}
+          <div class="hidden sm:block w-64 md:w-72 shrink-0">
             <label class="sr-only" for="barang-kat-filter">Filter Kategori</label>
-            <Select
+            <MultiSelect
               id="barang-kat-filter"
               value={kat}
-              onChange={(e) => setKat(e.currentTarget.value)}
-              class="min-h-11 font-medium text-sm"
-            >
-              <option value="">Semua Kategori ({d.barang.length})</option>
-              {urutKat(d.barang, d.urutan).map((k) => (
-                <option key={k} value={k}>
-                  {k} ({d.barang.filter((b) => katOf(b) === k).length})
-                </option>
-              ))}
-            </Select>
+              onChange={setKat}
+              options={kats.map((k) => ({
+                value: k,
+                label: k,
+                count: d.barang.filter((b) => katOf(b) === k).length,
+              }))}
+              allLabel={`Semua Kategori (${d.barang.length})`}
+              placeholder="Pilih Kategori"
+              class="w-full min-h-11 font-medium text-sm"
+            />
           </div>
         </div>
 
         {/* Horizontal Scrolling Category Carousel untuk Sentuhan Jempol Cepat */}
-        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1" role="tablist" aria-label="Filter kategori barang">
+        <ScrollPills class="-mx-1 px-1">
           <button
             type="button"
             role="tab"
-            aria-selected={!kat}
-            onClick={() => setKat('')}
+            aria-selected={kat.length === 0}
+            onClick={() => setKat([])}
             class={cx(
-              'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 min-h-9 select-none cursor-pointer',
-              !kat
+              'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 min-h-9 select-none cursor-pointer active:scale-95',
+              kat.length === 0
                 ? 'bg-primary text-white shadow-xs'
-                : 'bg-muted text-muted-fg hover:bg-line hover:text-fg'
+                : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:text-fg'
             )}
           >
             <span>Semua</span>
-            <span class={cx('rounded-full px-1.5 py-0.5 text-[10px] font-bold', !kat ? 'bg-white/20 text-white' : 'bg-line/70 text-fg')}>
+            <span class={cx('rounded-full px-1.5 py-0.5 text-[10px] font-bold', kat.length === 0 ? 'bg-white/20 text-white' : 'bg-line/70 text-fg')}>
               {d.barang.length}
             </span>
           </button>
-          {urutKat(d.barang, d.urutan).map((k) => {
+          {kats.map((k) => {
             const count = d.barang.filter((b) => katOf(b) === k).length;
-            const active = kat === k;
+            const active = kat.includes(k);
             return (
               <button
                 key={k}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => setKat(active ? '' : k)}
+                onClick={() =>
+                  setKat((prev) =>
+                    prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k],
+                  )
+                }
                 class={cx(
-                  'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 min-h-9 select-none cursor-pointer',
+                  'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 min-h-9 select-none cursor-pointer active:scale-95',
                   active
                     ? 'bg-primary text-white shadow-xs'
-                    : 'bg-muted text-muted-fg hover:bg-line hover:text-fg'
+                    : 'border border-line bg-card text-muted-fg hover:border-line-strong hover:text-fg'
                 )}
               >
                 <span>{k}</span>
@@ -684,7 +780,7 @@ export function BarangPage() {
             <FolderSimple size={14} weight="bold" aria-hidden />
             <span>Kelola</span>
           </button>
-        </div>
+        </ScrollPills>
 
         {/* Filter Summary & Quick Reset */}
         {hasActiveFilter && (
@@ -692,10 +788,17 @@ export function BarangPage() {
             <span>
               Menampilkan <strong>{list.length}</strong> dari {d.barang.length} barang
               {listPorsi.total > 0 && (
-                <span class="font-semibold text-primary"> · {nf(listPorsi.total)} porsi ({nf(listPorsi.gudang)} gudang · {nf(listPorsi.luar)} dapur)</span>
+                <span class="font-semibold text-primary"> · {nf(listPorsi.total)} {listPorsi.label.toLowerCase()} ({nf(listPorsi.gudang)} gudang · {nf(listPorsi.luar)} dapur)</span>
               )}
               {statusFilter !== 'semua' && <span class="capitalize font-semibold text-fg"> · Status: {statusFilter}</span>}
-              {kat && <span> · Kategori: <strong class="text-fg">{kat}</strong></span>}
+              {kat.length > 0 && (
+                <span>
+                  {' '}· Kategori:{' '}
+                  <strong class="text-fg">
+                    {kat.length === 1 ? kat[0] : `${kat.length} kategori`}
+                  </strong>
+                </span>
+              )}
             </span>
             <button
               type="button"
@@ -838,17 +941,34 @@ export function BarangPage() {
                   />
                 )}
               </Field>
-              <Field label="Satuan" error={err.satuan} hint="Satuan hitung stok">
+              <Field label="Satuan" error={err.satuan} hint="Pilih atau tambah satuan standar">
                 {(id, dId) => (
-                  <Input
+                  <Select
                     id={id}
                     value={f.satuan}
-                    onInput={(e) => up({ satuan: e.currentTarget.value })}
-                    placeholder="mis. Porsi, Pack, Kg, Pcs"
+                    onChange={(e) => {
+                      const val = e.currentTarget.value;
+                      if (val === '__TAMBAH__') {
+                        setModalTambahSatuan(true);
+                      } else {
+                        up({ satuan: val });
+                      }
+                    }}
                     aria-invalid={!!err.satuan}
                     aria-describedby={dId}
-                    class="min-h-11 text-base"
-                  />
+                    class="min-h-11 text-base w-full"
+                  >
+                    <option value="">-- Pilih Satuan --</option>
+                    {listSatuan.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                    {f.satuan && !listSatuan.includes(f.satuan) && (
+                      <option value={f.satuan}>{f.satuan} (Data Lama)</option>
+                    )}
+                    <option value="__TAMBAH__">+ Tambah Satuan Baru...</option>
+                  </Select>
                 )}
               </Field>
               <Field label="Kategori" class="sm:col-span-2">
@@ -896,26 +1016,29 @@ export function BarangPage() {
 
                     {/* Quick Category Chips: sleek single-line horizontal scroll */}
                     {kats.length > 0 && (
-                      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                      <div class="flex items-center gap-1.5 py-0.5">
                         <span class="text-[11px] font-semibold text-muted-fg shrink-0 mr-0.5">Pilih cepat:</span>
-                        {kats.map((k) => {
-                          const sel = f.kategori === k;
-                          return (
-                            <button
-                              key={k}
-                              type="button"
-                              onClick={() => up({ kategori: k })}
-                              class={cx(
-                                'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer select-none',
-                                sel
-                                  ? 'bg-primary text-white font-bold shadow-xs'
-                                  : 'bg-muted text-fg hover:bg-primary-soft hover:text-primary'
-                              )}
-                            >
-                              {k}
-                            </button>
-                          );
-                        })}
+                        <ScrollPills class="flex-1 min-w-0" activeSelector="[data-active=true]">
+                          {kats.map((k) => {
+                            const sel = f.kategori === k;
+                            return (
+                              <button
+                                key={k}
+                                type="button"
+                                data-active={sel ? 'true' : undefined}
+                                onClick={() => up({ kategori: k })}
+                                class={cx(
+                                  'shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors cursor-pointer select-none',
+                                  sel
+                                    ? 'bg-primary text-white font-bold shadow-xs'
+                                    : 'bg-muted text-fg hover:bg-primary-soft hover:text-primary'
+                                )}
+                              >
+                                {k}
+                              </button>
+                            );
+                          })}
+                        </ScrollPills>
                       </div>
                     )}
                   </div>
@@ -949,7 +1072,12 @@ export function BarangPage() {
                       id={id}
                       inputmode="decimal"
                       value={f.ambang_min}
-                      onInput={(e) => up({ ambang_min: e.currentTarget.value })}
+                      onKeyDown={(e) => cegahBukanAngka(e, f.ambang_min)}
+                      onInput={(e) => up({ ambang_min: hanyaAngka(e.currentTarget.value) })}
+                      onBlur={(e) => {
+                        const v = e.currentTarget.value.trim().replace(/^[.,]+|[.,]+$/g, '');
+                        up({ ambang_min: v });
+                      }}
                       aria-invalid={!!err.ambang_min}
                       aria-describedby={dId}
                       placeholder="0"
@@ -992,7 +1120,12 @@ export function BarangPage() {
                         id={id}
                         inputmode="decimal"
                         value={f.stok_awal}
-                        onInput={(e) => up({ stok_awal: e.currentTarget.value })}
+                        onKeyDown={(e) => cegahBukanAngka(e, f.stok_awal)}
+                        onInput={(e) => up({ stok_awal: hanyaAngka(e.currentTarget.value) })}
+                        onBlur={(e) => {
+                          const v = e.currentTarget.value.trim().replace(/^[.,]+|[.,]+$/g, '');
+                          up({ stok_awal: v });
+                        }}
                         aria-invalid={!!err.stok_awal}
                         aria-describedby={dId}
                         placeholder="0"
@@ -1017,14 +1150,14 @@ export function BarangPage() {
                     </Select>
                   )}
                 </Field>
-                <Field label="Catatan" hint="Keterangan tambahan kemasan/penyimpanan">
+                <Field label="Catatan" hint="Keterangan tambahan kemasan/penyimpanan" class="sm:col-span-2">
                   {(id) => (
                     <Input
                       id={id}
                       value={f.catatan}
                       onInput={(e) => up({ catatan: e.currentTarget.value })}
                       placeholder="mis. 1 Pack isi 10 pcs"
-                      class="min-h-11 text-base"
+                      class="min-h-11 text-base w-full"
                     />
                   )}
                 </Field>
@@ -1042,7 +1175,9 @@ export function BarangPage() {
         selectedKategori={f?.kategori}
         onSelect={f ? (k) => up({ kategori: k }) : undefined}
         onKategoriDeleted={(k) => {
-          if (kat.toLowerCase() === k.toLowerCase()) setKat('');
+          if (kat.some((x) => x.toLowerCase() === k.toLowerCase())) {
+            setKat((prev) => prev.filter((x) => x.toLowerCase() !== k.toLowerCase()));
+          }
           if (f && f.kategori.toLowerCase() === k.toLowerCase()) up({ kategori: '' });
           setExtraKat((prev) => prev.filter((x) => x.toLowerCase() !== k.toLowerCase()));
         }}
@@ -1108,6 +1243,87 @@ export function BarangPage() {
             </div>
           )}
         </Confirm>
+      )}
+      {/* Modal Tambah Satuan Baru */}
+      {modalTambahSatuan && (
+        <Dialog
+          open={modalTambahSatuan}
+          title="Tambah Satuan Baru"
+          onClose={() => {
+            setModalTambahSatuan(false);
+            setSatuanBaruInput('');
+            setErrTambahSatuan('');
+          }}
+        >
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const val = satuanBaruInput.trim();
+              if (!val) {
+                setErrTambahSatuan('Nama satuan tidak boleh kosong');
+                return;
+              }
+              const lower = val.toLowerCase();
+              if (listSatuan.some((s) => s.toLowerCase() === lower)) {
+                setErrTambahSatuan(`Satuan "${val}" sudah terdaftar`);
+                return;
+              }
+              setLoadingSatuan(true);
+              setErrTambahSatuan('');
+              try {
+                await A('tambahSatuan', [val], `Satuan "${val}" berhasil ditambahkan`);
+                if (f) up({ satuan: val });
+                setModalTambahSatuan(false);
+                setSatuanBaruInput('');
+              } catch (err) {
+                setErrTambahSatuan(String(err && (err as Error).message ? (err as Error).message : err));
+              } finally {
+                setLoadingSatuan(false);
+              }
+            }}
+            class="flex flex-col gap-4"
+          >
+            <p class="text-sm text-muted-fg leading-relaxed">
+              Tambahkan satuan hitung baru (misal: <strong>Dus</strong>, <strong>Krat</strong>, <strong>Cup</strong>, dll.). Satuan akan tersimpan permanen dan otomatis muncul di pilihan.
+            </p>
+            <Field label="Nama Satuan" error={errTambahSatuan}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={satuanBaruInput}
+                  onInput={(e) => {
+                    setSatuanBaruInput(e.currentTarget.value);
+                    if (errTambahSatuan) setErrTambahSatuan('');
+                  }}
+                  placeholder="mis. Dus, Krat, Cup, Galon"
+                  class="min-h-11 text-base font-medium"
+                  autoFocus
+                />
+              )}
+            </Field>
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setModalTambahSatuan(false);
+                  setSatuanBaruInput('');
+                  setErrTambahSatuan('');
+                }}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={loadingSatuan}
+                disabled={!satuanBaruInput.trim()}
+              >
+                Simpan Satuan
+              </Button>
+            </div>
+          </form>
+        </Dialog>
       )}
     </div>
   );
