@@ -1561,7 +1561,7 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
   };
   const terisi = st.rows.filter((_, i) => cek(i) === 'ok').length;
   const semua = terisi === st.rows.length;
-
+  const pct = st.rows.length ? Math.round((terisi / st.rows.length) * 100) : 0;
   const set = (i: number, v: string) => setVals((a) => a.map((x, j) => (j === i ? v : x)));
 
   const simpan = async () => {
@@ -1671,41 +1671,84 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
           );
         })}
       </ul>
-      <div class="sticky bottom-3 sm:bottom-4 z-20 w-full rounded-2xl border border-line bg-card/95 p-3 sm:px-5 sm:py-3.5 backdrop-blur-md shadow-lg shadow-black/10 dark:shadow-black/30 transition-all">
+      <div class="relative sticky bottom-3 sm:bottom-4 z-20 w-full rounded-2xl sm:rounded-3xl border border-line-strong/30 dark:border-white/10 bg-card/95 dark:bg-[#16161b]/95 p-3 sm:px-5 sm:py-3.5 backdrop-blur-xl shadow-xl shadow-black/10 dark:shadow-black/40 overflow-hidden transition-all">
+        {/* Subtle accent highlight line on top edge */}
+        <div class="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" aria-hidden="true" />
+
         <div class="flex items-center justify-between gap-3 sm:gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            {/* Visual Mini Progress Bar */}
-            <div class="hidden sm:flex flex-col gap-1 w-28 lg:w-36 shrink-0">
-              <div class="flex items-center justify-between text-[11px] font-bold">
-                <span class="text-muted-fg uppercase tracking-wider">Progress</span>
-                <span class="num text-fg">{Math.round((terisi / st.rows.length) * 100)}%</span>
-              </div>
-              <div class="h-2 w-full overflow-hidden rounded-full bg-muted border border-line/60">
-                <div
-                  class="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${(terisi / st.rows.length) * 100}%` }}
+          <div class="flex items-center gap-3 sm:gap-3.5 min-w-0">
+            {/* Visual Gauge: Circular Progress Ring */}
+            <div class="relative size-10.5 sm:size-11 shrink-0 flex items-center justify-center">
+              <svg class="size-10.5 sm:size-11 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+                <path
+                  class="text-muted/80 dark:text-white/10 stroke-current"
+                  stroke-width="3.5"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
-              </div>
+                <path
+                  class={cx(
+                    'stroke-current transition-all duration-500 ease-out',
+                    semua ? 'text-success' : 'text-primary',
+                  )}
+                  stroke-width="3.5"
+                  stroke-dasharray={`${pct}, 100`}
+                  stroke-linecap="round"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span class="num absolute text-[11px] font-extrabold text-fg">
+                {pct}%
+              </span>
             </div>
 
-            {/* Status text & Tag */}
+            {/* Status Info Capsule */}
             <div class="flex flex-col min-w-0">
               <div class="flex items-center gap-2">
-                <Tag tone={semua ? 'success' : 'warning'} class="font-bold text-xs shrink-0">
-                  {semua ? 'Lengkap' : `${terisi}/${st.rows.length} Terisi`}
-                </Tag>
-                <span class="num text-xs sm:text-sm font-bold text-fg truncate">
-                  {terisi} dari {st.rows.length} barang terisi
+                <span
+                  class={cx(
+                    'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border transition-colors shrink-0',
+                    semua
+                      ? 'bg-success/15 text-success border-success/30'
+                      : terisi > 0
+                      ? 'bg-primary-soft text-primary border-primary/25'
+                      : 'bg-muted text-muted-fg border-line',
+                  )}
+                >
+                  {semua ? (
+                    <>
+                      <CheckCircle size={13} weight="fill" aria-hidden /> Lengkap
+                    </>
+                  ) : (
+                    <>
+                      <Clock size={13} weight="bold" aria-hidden /> {terisi}/{st.rows.length} Terisi
+                    </>
+                  )}
+                </span>
+                <span class="text-xs sm:text-sm font-bold text-fg truncate hidden xs:inline">
+                  {semua ? 'Semua terisi' : `${st.rows.length - terisi} belum diisi`}
                 </span>
               </div>
-              <span class="text-[11px] text-muted-fg font-medium truncate hidden xs:inline">
-                {semua ? 'Semua sisa dapur siap disimpan' : `${st.rows.length - terisi} barang lagi perlu diisi`}
+              <span class="text-[11px] text-muted-fg font-medium truncate mt-0.5 hidden sm:inline">
+                {semua
+                  ? 'Semua sisa dapur siap disimpan'
+                  : 'Isi sisa bahan lalu ketuk simpan'}
               </span>
             </div>
           </div>
 
+          {/* Vertical divider */}
+          <div class="hidden sm:block h-9 w-px bg-line/80 dark:bg-white/10 shrink-0" aria-hidden="true" />
+
+          {/* Action buttons */}
           <div class="flex items-center gap-2 shrink-0">
-            <Button variant="ghost" size="md" onClick={onBack} class="text-muted-fg hover:text-fg hidden sm:inline-flex">
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={onBack}
+              class="text-muted-fg hover:text-fg hover:bg-muted/80 rounded-xl sm:rounded-full hidden sm:inline-flex font-semibold px-4"
+            >
               Batal
             </Button>
             <Button
@@ -1713,7 +1756,12 @@ function RekapForm({ st, onBack, onSaved }: { st: Extract<Step, { s: 'rekap' }>;
               size="lg"
               guard
               onClick={simpan}
-              class="font-bold shadow-sm min-h-12 px-4 sm:px-6"
+              class={cx(
+                'rounded-xl sm:rounded-full font-bold min-h-12 px-5 sm:px-6 transition-all active:scale-95 shadow-sm',
+                semua
+                  ? 'shadow-md shadow-primary/25 ring-2 ring-primary/30'
+                  : 'border-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/60 dark:bg-primary/15 dark:hover:bg-primary/25',
+              )}
             >
               <CheckCircle size={20} weight={semua ? 'bold' : 'regular'} aria-hidden />
               <span>Simpan rekap</span>
